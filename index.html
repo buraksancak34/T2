@@ -48,7 +48,7 @@
         
         <!-- Auth Form -->
         <div class="space-y-3" id="authFormContainer">
-            <input type="email" id="emailInput" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-sm" placeholder="E-posta Adresi">
+            <input type="text" id="emailInput" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-sm" placeholder="E-posta veya Kullanıcı Adı">
             <input type="password" id="passwordInput" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-sm" placeholder="Şifre">
             
             <button id="loginBtn" onclick="firebaseLogin()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-blue-200 active:scale-95 transition-all hover:bg-blue-700 flex justify-center items-center gap-2">
@@ -304,36 +304,61 @@
         }
 
         function getAuthInputs() {
-            const email = document.getElementById('emailInput').value;
+            const email = document.getElementById('emailInput').value.trim();
             const pass = document.getElementById('passwordInput').value;
-            if(!email || !pass) { alert("Lütfen e-posta ve şifre alanlarını doldurun."); return null; }
+            if(!email || !pass) { alert("Lütfen kullanıcı adı/e-posta ve şifre alanlarını doldurun."); return null; }
             return { email, pass };
         }
 
-        function firebaseLogin() {
+        async function firebaseLogin() {
             if(!isFirebaseReady) return alert("Firebase ayarları yapılmamış.");
-            const creds = getAuthInputs();
-            if(!creds) return;
+            const inputs = getAuthInputs();
+            if(!inputs) return;
+            
+            let { email, pass } = inputs;
             
             const btn = document.getElementById('loginBtn');
             const originalText = btn.innerHTML;
             btn.innerHTML = '<div class="loader"></div>';
 
-            auth.signInWithEmailAndPassword(creds.email, creds.pass)
-                .then(() => {
-                    showDashboard();
-                })
-                .catch((error) => {
-                    alert("Giriş Hatası: " + error.message);
-                })
-                .finally(() => btn.innerHTML = originalText);
+            try {
+                // Eğer girişte @ yoksa, Kullanıcı Adı olarak dene
+                if (!email.includes('@')) {
+                    // Kullanıcı adından E-posta bulma sorgusu
+                    const snapshot = await db.collection('users').where('username', '==', email).limit(1).get();
+                    
+                    if (snapshot.empty) {
+                        throw new Error("Bu kullanıcı adı ile kayıt bulunamadı.");
+                    }
+                    
+                    const userData = snapshot.docs[0].data();
+                    if (userData.email) {
+                        email = userData.email; // E-postayı bulduk, şimdi giriş yapabiliriz
+                    } else {
+                        throw new Error("Bu kullanıcıya ait e-posta bilgisi bulunamadı.");
+                    }
+                }
+
+                await auth.signInWithEmailAndPassword(email, pass);
+                // Başarılı olursa authStateListener Dashboard'u açacak
+                
+            } catch (error) {
+                console.error(error);
+                let msg = error.message;
+                if(error.code === 'permission-denied') msg = "Erişim reddedildi. Veritabanı kurallarınızı kontrol edin.";
+                alert("Giriş Hatası: " + msg);
+                btn.innerHTML = originalText;
+            }
         }
 
         function firebaseRegister() {
             // Bu fonksiyon "Plana Dahil Ol" kısmından çağrılır
             if(!isFirebaseReady) return alert("Firebase ayarları yapılmamış.");
-            const creds = getAuthInputs();
-            if(!creds) return;
+            const inputs = getAuthInputs();
+            if(!inputs) return;
+            
+            const { email, pass } = inputs;
+            if(!email.includes('@')) return alert("Kayıt olmak için geçerli bir e-posta adresi girmelisiniz.");
             
             const btn = document.getElementById('registerBtn');
             const originalText = btn.innerHTML;
@@ -341,12 +366,15 @@
 
             isRegistering = true; // Kilit aç
             
-            auth.createUserWithEmailAndPassword(creds.email, creds.pass)
+            auth.createUserWithEmailAndPassword(email, pass)
                 .then((userCredential) => {
                     const user = userCredential.user;
                     currentUser = user;
-                    // Boş state ile başlat, çünkü bir plana dahil olacak
-                    db.collection("users").doc(user.uid).set(defaultState)
+                    // Boş state ile başlat, email bilgisini de kaydet
+                    const initialState = JSON.parse(JSON.stringify(defaultState));
+                    initialState.email = email; // E-postayı kaydet ki username login çalışsın
+                    
+                    db.collection("users").doc(user.uid).set(initialState)
                         .then(() => {
                             isRegistering = false; // Kilit kapat
                             showDashboard();
@@ -356,8 +384,8 @@
                 .catch((error) => {
                     isRegistering = false;
                     alert("Kayıt Hatası: " + error.message);
-                })
-                .finally(() => btn.innerHTML = originalText);
+                    btn.innerHTML = originalText;
+                });
         }
         
         // SİHİRBAZ SONUNDA KAYIT İÇİN ÖZEL FONKSİYON
@@ -386,7 +414,8 @@
                     // Sihirbazdaki state'i kaydet (En önemli kısım)
                     const stateToSave = JSON.parse(JSON.stringify(state));
                     stateToSave.registrationDate = state.registrationDate.toISOString();
-                    stateToSave.username = name; // Veritabanına da ekle
+                    stateToSave.username = name; // Veritabanına kullanıcı adı ekle
+                    stateToSave.email = email;   // Veritabanına e-posta ekle (Giriş için şart)
                     
                     // Önce veriyi yaz
                     return db.collection("users").doc(user.uid).set(stateToSave);
@@ -451,6 +480,8 @@
             if(!currentUser) return;
             const stateToSave = JSON.parse(JSON.stringify(state));
             stateToSave.registrationDate = state.registrationDate.toISOString();
+            // Mevcut kullanıcı adını ve maili koru (State içinde yoksa currentUser'dan al)
+            if(!stateToSave.email && currentUser.email) stateToSave.email = currentUser.email;
 
             db.collection("users").doc(currentUser.uid).set(stateToSave)
                 .then(() => console.log("Buluta kaydedildi"))
@@ -561,8 +592,8 @@
             stepEl.innerText = `${state.step}/8`;
             prog.innerHTML = Array(8).fill(0).map((_,i) => `<div class="h-1.5 flex-1 rounded-full ${i+1<=state.step?'bg-blue-600':'bg-gray-200'} transition-all"></div>`).join('');
 
-            // Steps 1-3 (Aynı)
-            if(state.step === 1) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-green-600">Gelirler (Yeşil)</h3><div id="wiz_inc_list" class="custom-scrollbar overflow-y-auto max-h-[300px]"></div><button onclick="addItem('incomes', 'wiz_inc_list', 'green')" class="w-full py-3 border-2 border-dashed border-green-200 rounded-2xl text-green-500 font-bold mt-4">+ Gelir Ekle</button><div class="pt-4 mt-6 border-t"><p class="text-[10px] font-bold text-gray-400 uppercase mb-2">Gelir Hesabı Günü / Maaş Günü</p><input type="number" id="wiz_salary_day_val" oninput="state.salaryDay=this.value" value="${state.salaryDay || 15}" class="w-20 p-3 bg-gray-50 rounded-xl font-black text-center text-xl outline-none focus:ring-2 focus:ring-green-200" placeholder="15"></div>`;
+            // Steps 1-3 (Güncellendi: Yeşil yazısı kalktı)
+            if(state.step === 1) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-green-600">Gelirler</h3><div id="wiz_inc_list" class="custom-scrollbar overflow-y-auto max-h-[300px]"></div><button onclick="addItem('incomes', 'wiz_inc_list', 'green')" class="w-full py-3 border-2 border-dashed border-green-200 rounded-2xl text-green-500 font-bold mt-4">+ Gelir Ekle</button><div class="pt-4 mt-6 border-t"><p class="text-[10px] font-bold text-gray-400 uppercase mb-2">Gelir Hesabı Günü / Maaş Günü</p><input type="number" id="wiz_salary_day_val" oninput="state.salaryDay=this.value" value="${state.salaryDay || 15}" class="w-20 p-3 bg-gray-50 rounded-xl font-black text-center text-xl outline-none focus:ring-2 focus:ring-green-200" placeholder="15"></div>`;
             if(state.step === 2) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-red-600">Sabit Giderler</h3><div id="wiz_bill_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div><button onclick="addItem('bills', 'wiz_bill_list', 'red')" class="w-full py-3 border-2 border-dashed border-red-200 rounded-2xl text-red-500 font-bold mt-4">+ Gider Ekle</button>`;
             if(state.step === 3) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-red-600">Banka Kredileri</h3><div id="wiz_loan_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div><button onclick="addItem('loans', 'wiz_loan_list')" class="w-full py-3 border-2 border-dashed border-red-200 rounded-2xl text-red-500 font-bold mt-4">+ Kredi Ekle</button>`;
             
