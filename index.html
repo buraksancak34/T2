@@ -37,40 +37,47 @@
     <div id="overlay" class="overlay fixed inset-0 z-40" onclick="closeAllPopups()"></div>
 
     <!-- 1. GİRİŞ EKRANI -->
-    <div id="loginScreen" class="max-w-md w-full glass-card p-10 rounded-[2.5rem] shadow-2xl space-y-8 my-auto relative overflow-hidden animate-fade-in">
+    <div id="loginScreen" class="max-w-md w-full glass-card p-10 rounded-[2.5rem] shadow-2xl space-y-6 my-auto relative overflow-hidden animate-fade-in">
         <div class="text-center">
-            <div class="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center mx-auto mb-6 text-blue-600 shadow-sm transform hover:rotate-12 transition-transform duration-300">
-                <i class="fas fa-cloud text-3xl"></i>
+            <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-blue-600 shadow-sm transform hover:rotate-12 transition-transform duration-300">
+                <i class="fas fa-cloud text-2xl"></i>
             </div>
-            <h1 class="text-3xl font-black text-gray-900 tracking-tight">Bizim Bütçe</h1>
-            <p class="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">Bulut Tabanlı Finans</p>
+            <h1 class="text-2xl font-black text-gray-900 tracking-tight" id="loginTitle">Giriş Yap</h1>
+            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-1" id="loginSubtitle">Hesabına Eriş</p>
         </div>
         
         <!-- Auth Form -->
-        <div class="space-y-4" id="authFormContainer">
-            <input type="email" id="emailInput" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all" placeholder="E-posta Adresi">
-            <input type="password" id="passwordInput" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all" placeholder="Şifre">
+        <div class="space-y-3" id="authFormContainer">
+            <input type="email" id="emailInput" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-sm" placeholder="E-posta Adresi">
+            <input type="password" id="passwordInput" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-sm" placeholder="Şifre">
             
             <button id="loginBtn" onclick="firebaseLogin()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-blue-200 active:scale-95 transition-all hover:bg-blue-700 flex justify-center items-center gap-2">
                 <span>Giriş Yap</span>
             </button>
             
             <button id="registerBtn" onclick="firebaseRegister()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-xl hidden active:scale-95 transition-all hover:bg-indigo-700 flex justify-center items-center gap-2">
-                <span>Kayıt Ol</span>
+                <span>Üye Ol ve Katıl</span>
             </button>
+            
+            <p id="backToLoginText" class="text-center text-xs font-bold text-gray-400 cursor-pointer hover:text-blue-500 hidden pt-2" onclick="showLoginMode()">
+                <i class="fas fa-arrow-left mr-1"></i> Giriş ekranına dön
+            </p>
         </div>
         
-        <div class="text-center pt-2">
-            <p id="authToggleText" class="text-xs text-gray-500 font-bold cursor-pointer hover:text-blue-600 select-none" onclick="toggleAuthMode()">Hesabın yok mu? Kayıt Ol</p>
+        <div class="relative py-2">
+            <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-200"></div></div>
+            <div class="relative flex justify-center"><span class="bg-white px-4 text-xs font-bold text-gray-400 uppercase">veya</span></div>
         </div>
 
-        <div class="space-y-3 pt-4 border-t border-gray-100">
-            <button onclick="startWizard(false)" class="w-full bg-white border-2 border-gray-100 text-gray-700 font-bold py-4 rounded-2xl active:scale-95 transition-all hover:border-blue-200 hover:text-blue-600">Demo Modu (Üyesiz)</button>
-        </div>
-        
-        <!-- API Key Uyarısı -->
-        <div id="configWarning" class="p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-xs font-bold text-center hidden">
-            Lütfen kodun içindeki firebaseConfig alanına kendi proje bilgilerinizi giriniz.
+        <div class="space-y-3" id="actionButtons">
+            <button onclick="startWizard(false)" class="w-full bg-green-500 text-white font-black py-4 rounded-2xl shadow-lg shadow-green-100 active:scale-95 transition-all hover:bg-green-600 flex items-center justify-center gap-2">
+                <i class="fas fa-magic"></i> <span>Plana Başla</span>
+            </button>
+            <p class="text-[10px] text-center text-gray-400 px-4">Bütçeni oluşturmaya başla, en son adımda kaydedip üye ol.</p>
+
+            <button onclick="showRegisterMode()" class="w-full bg-white border-2 border-gray-100 text-gray-600 font-bold py-3 rounded-2xl active:scale-95 transition-all hover:border-indigo-200 hover:text-indigo-600 mt-2">
+                Bir Plana Dahil Ol
+            </button>
         </div>
     </div>
 
@@ -81,11 +88,11 @@
             <span class="text-xs font-bold text-gray-300" id="stepCount">1/6</span>
         </div>
         
-        <div id="wizardContent" class="min-h-[420px] flex flex-col">
+        <div id="wizardContent" class="min-h-[420px] flex flex-col relative">
             <!-- Dinamik İçerik Buraya Gelecek -->
         </div>
         
-        <div class="flex gap-3 mt-4">
+        <div class="flex gap-3 mt-4" id="wizardNavBtns">
              <button onclick="wizardBack()" class="flex-1 bg-gray-100 text-gray-600 font-bold py-4 rounded-2xl hover:bg-gray-200 transition-all">Geri</button>
              <button onclick="wizardNext()" id="wizNextBtn" class="flex-[2] bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all hover:bg-blue-700">Devam Et</button>
         </div>
@@ -98,7 +105,7 @@
                 <h2 class="text-2xl font-black text-gray-800 tracking-tight" id="dashWelcome">Panelim</h2>
                 <div class="flex items-center gap-2" id="connectionStatus">
                     <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
-                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Demo Modu</p>
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Bağlanıyor...</p>
                 </div>
             </div>
             <div class="flex gap-2">
@@ -238,7 +245,6 @@
 
         // Firebase Başlatma Kontrolü
         try {
-            // Config kontrolünü kaldırdık çünkü artık gerçek veriler var
             firebase.initializeApp(firebaseConfig);
             auth = firebase.auth();
             db = firebase.firestore();
@@ -263,30 +269,39 @@
             alert("Firebase bağlantısında bir sorun oluştu. Lütfen konsolu kontrol edin.");
         }
 
-        // --- AUTH FONKSİYONLARI ---
-        let isLoginMode = true;
-
-        function toggleAuthMode() {
-            isLoginMode = !isLoginMode;
-            const loginBtn = document.getElementById('loginBtn');
-            const registerBtn = document.getElementById('registerBtn');
-            const toggleText = document.getElementById('authToggleText');
+        // --- AUTH UI YÖNETİMİ ---
+        function showLoginMode() {
+            // Başlıklar
+            document.getElementById('loginTitle').innerText = "Giriş Yap";
+            document.getElementById('loginSubtitle').innerText = "Hesabına Eriş";
             
-            if(isLoginMode) {
-                loginBtn.classList.remove('hidden');
-                registerBtn.classList.add('hidden');
-                toggleText.innerText = "Hesabın yok mu? Kayıt Ol";
-            } else {
-                loginBtn.classList.add('hidden');
-                registerBtn.classList.remove('hidden');
-                toggleText.innerText = "Zaten hesabın var mı? Giriş Yap";
-            }
+            // Form Elemanları
+            document.getElementById('loginBtn').classList.remove('hidden');
+            document.getElementById('registerBtn').classList.add('hidden');
+            
+            // Alt Butonlar
+            document.getElementById('actionButtons').classList.remove('hidden');
+            document.getElementById('backToLoginText').classList.add('hidden');
+        }
+
+        function showRegisterMode() {
+            // Başlıklar
+            document.getElementById('loginTitle').innerText = "Ailene Katıl";
+            document.getElementById('loginSubtitle').innerText = "Hızlı Üyelik";
+            
+            // Form Elemanları
+            document.getElementById('loginBtn').classList.add('hidden');
+            document.getElementById('registerBtn').classList.remove('hidden');
+            
+            // Alt Butonlar
+            document.getElementById('actionButtons').classList.add('hidden');
+            document.getElementById('backToLoginText').classList.remove('hidden');
         }
 
         function getAuthInputs() {
             const email = document.getElementById('emailInput').value;
             const pass = document.getElementById('passwordInput').value;
-            if(!email || !pass) { alert("Lütfen alanları doldurun."); return null; }
+            if(!email || !pass) { alert("Lütfen e-posta ve şifre alanlarını doldurun."); return null; }
             return { email, pass };
         }
 
@@ -310,6 +325,7 @@
         }
 
         function firebaseRegister() {
+            // Bu fonksiyon "Plana Dahil Ol" kısmından çağrılır
             if(!isFirebaseReady) return alert("Firebase ayarları yapılmamış.");
             const creds = getAuthInputs();
             if(!creds) return;
@@ -320,15 +336,53 @@
 
             auth.createUserWithEmailAndPassword(creds.email, creds.pass)
                 .then((userCredential) => {
-                    // Yeni kullanıcı için boş state kaydet
                     const user = userCredential.user;
+                    // Boş state ile başlat, çünkü bir plana dahil olacak
                     db.collection("users").doc(user.uid).set(defaultState)
-                        .then(() => showDashboard());
+                        .then(() => {
+                            showDashboard();
+                            alert("Üyelik oluşturuldu! Şimdi ailenizden sizi eklemelerini isteyebilirsiniz.");
+                        });
                 })
                 .catch((error) => {
                     alert("Kayıt Hatası: " + error.message);
                 })
                 .finally(() => btn.innerHTML = originalText);
+        }
+        
+        // SİHİRBAZ SONUNDA KAYIT İÇİN ÖZEL FONKSİYON
+        function registerFromWizard() {
+            const email = document.getElementById('wizRegEmail').value;
+            const pass = document.getElementById('wizRegPass').value;
+            
+            if(!email || !pass) { alert("Kaydetmek için e-posta ve şifre belirlemelisiniz."); return; }
+            if(!isFirebaseReady) return alert("Firebase hatası.");
+
+            const btn = document.getElementById('wizNextBtn');
+            btn.innerHTML = '<div class="loader"></div>';
+
+            auth.createUserWithEmailAndPassword(email, pass)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    // Sihirbazdaki state'i kaydet
+                    const stateToSave = JSON.parse(JSON.stringify(state));
+                    stateToSave.registrationDate = state.registrationDate.toISOString();
+                    
+                    db.collection("users").doc(user.uid).set(stateToSave)
+                        .then(() => {
+                            showDashboard();
+                        });
+                })
+                .catch((error) => {
+                    if(error.code === 'auth/email-already-in-use') {
+                        // Eğer mail zaten varsa, giriş yapmayı deneyip üzerine yazalım mı? 
+                        // Güvenlik için şimdilik sadece uyarı verelim
+                        alert("Bu e-posta zaten kullanımda. Lütfen giriş yapın veya başka bir e-posta kullanın.");
+                    } else {
+                        alert("Kayıt Hatası: " + error.message);
+                    }
+                })
+                .finally(() => btn.innerHTML = "Kaydı Tamamla");
         }
 
         function handleLogout() {
@@ -349,12 +403,10 @@
             docRef.get().then((doc) => {
                 if (doc.exists) {
                     const data = doc.data();
-                    // Tarihleri stringden objeye çevir
                     if(data.registrationDate) data.registrationDate = new Date(data.registrationDate.seconds ? data.registrationDate.seconds * 1000 : data.registrationDate);
                     state = data;
                     showDashboard();
                 } else {
-                    // Doküman yoksa oluştur
                     saveToCloud();
                     showDashboard();
                 }
@@ -364,19 +416,13 @@
         }
 
         function saveToCloud() {
-            if(!currentUser) return; // Sadece giriş yapmış kullanıcılar kaydeder
-            
-            // Tarih objesini Firestore'un anlayacağı formata veya string'e çevirmek daha güvenli
+            if(!currentUser) return;
             const stateToSave = JSON.parse(JSON.stringify(state));
             stateToSave.registrationDate = state.registrationDate.toISOString();
 
             db.collection("users").doc(currentUser.uid).set(stateToSave)
-                .then(() => {
-                    console.log("Buluta kaydedildi");
-                })
-                .catch((error) => {
-                    console.error("Kayıt hatası: ", error);
-                });
+                .then(() => console.log("Buluta kaydedildi"))
+                .catch((error) => console.error("Kayıt hatası: ", error));
         }
         
         function forceSave() {
@@ -387,9 +433,6 @@
                 saveToCloud();
                 setTimeout(() => btn.innerHTML = '<i class="fas fa-check"></i>', 1000);
                 setTimeout(() => btn.innerHTML = oldHTML, 2000);
-            } else {
-                alert("Demo modunda veriler sadece tarayıcıda saklanır.");
-                localStorage.setItem('bizimButceState', JSON.stringify(state));
             }
         }
         
@@ -398,7 +441,7 @@
             if(isOnline) {
                 el.innerHTML = '<div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div><p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Bulut Bağlı</p>';
             } else {
-                el.innerHTML = '<div class="w-2 h-2 bg-gray-300 rounded-full"></div><p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Demo / Yerel</p>';
+                el.innerHTML = '<div class="w-2 h-2 bg-gray-300 rounded-full"></div><p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Giriş Yapılmadı</p>';
             }
         }
 
@@ -415,40 +458,14 @@
             manualDailyLimit: null, expenses: []
         };
 
-        const demoData = {
-            incomes: [{ name: 'Maaş', val: 45000 }],
-            bills: [{ name: 'Kira', val: 16000 }, { name: 'İnternet', val: 700 }, {name: 'Faturalar', val: 1200}],
-            loans: [{ name: 'İhtiyaç Kredisi', totalDebt: 49000, totalMonths: 7, monthly: 7000, excludeFromBudget: false, excludeFromDebt: false }],
-            debts: [{ name: 'Kredi Kartı', val: 14000, calcMode: false, limit: 100000, avail: 86000 }],
-            assets: [{ name: 'Altın', val: 55000 }, { name: 'BES', val: 12000}]
-        };
-
         let state = JSON.parse(JSON.stringify(defaultState));
 
-        // State Yönetimi: Kayıt fonksiyonunu override et
         function saveState() {
-            if(currentUser) {
-                saveToCloud();
-            } else {
-                localStorage.setItem('bizimButceState', JSON.stringify(state));
-            }
+            if(currentUser) saveToCloud();
         }
 
-        window.onload = () => {
-            // Demo modu veya LocalStorage kontrolü (Firebase yüklenene kadar)
-            const stored = localStorage.getItem('bizimButceState');
-            if(stored) { 
-                try {
-                    state = JSON.parse(stored);
-                    state.registrationDate = new Date(state.registrationDate);
-                    if(!state.expenses) state.expenses = [];
-                    if(!state.loans) state.loans = [];
-                } catch(e) { console.error("Local state error", e); }
-            }
-        };
-
         // --- NAVIGATION ---
-        function showLoginScreen() { hideAll(); document.getElementById('loginScreen').classList.remove('hidden'); }
+        function showLoginScreen() { hideAll(); document.getElementById('loginScreen').classList.remove('hidden'); showLoginMode(); }
         function showDashboard() { hideAll(); document.getElementById('dashboardScreen').classList.remove('hidden'); updateDashboardUI(); }
         function hideAll() { 
             ['loginScreen', 'wizardScreen', 'dashboardScreen'].forEach(id => {
@@ -462,7 +479,7 @@
             ['calcModal'].forEach(id => document.getElementById(id).classList.add('hidden'));
         }
 
-        // --- WIZARD & APP FUNCTIONS ---
+        // --- WIZARD FUNCTIONS ---
         function startWizard(isEditMode) {
             hideAll(); document.getElementById('wizardScreen').classList.remove('hidden');
             if(!isEditMode) {
@@ -479,78 +496,83 @@
             if (state.step === 1 && (!state.salaryDay || state.salaryDay > 31 || state.salaryDay < 1)) { 
                 alert("Lütfen geçerli bir maaş günü giriniz (1-31)."); return; 
             }
-            if (state.step < 6) { state.step++; renderWizard(); }
-            else { saveState(); showDashboard(); }
+            
+            // Eğer son adımdaysa (Kayıt Ekranı)
+            if (state.step === 6) {
+                if(document.getElementById('wizRegEmail')) {
+                    // Kayıt fonksiyonunu çağır
+                    registerFromWizard();
+                } else {
+                     // Düzenleme moduysa direkt dashboard
+                     saveState(); 
+                     showDashboard();
+                }
+                return;
+            }
+
+            state.step++;
+            renderWizard();
         }
+        
         function wizardBack() { if (state.step > 1) { state.step--; renderWizard(); } else { showLoginScreen(); } }
 
         function renderWizard() {
             const content = document.getElementById('wizardContent');
             const stepEl = document.getElementById('stepCount');
             const prog = document.getElementById('wizardProgress');
+            const nextBtn = document.getElementById('wizNextBtn');
+            
             stepEl.innerText = `${state.step}/6`;
             prog.innerHTML = Array(6).fill(0).map((_,i) => `<div class="h-1.5 flex-1 rounded-full ${i+1<=state.step?'bg-blue-600':'bg-gray-200'} transition-all"></div>`).join('');
 
-            // STEP 1: GELİRLER
-            if(state.step === 1) content.innerHTML = `
-                <h3 class="text-2xl font-black mb-6 text-green-600">Gelirler (Yeşil)</h3>
-                <div id="wiz_inc_list" class="custom-scrollbar overflow-y-auto max-h-[300px]"></div>
-                <button onclick="addItem('incomes', 'wiz_inc_list', 'green')" class="w-full py-3 border-2 border-dashed border-green-200 rounded-2xl text-green-500 font-bold mt-4">+ Gelir Ekle</button>
-                <div class="pt-4 mt-6 border-t">
-                    <p class="text-[10px] font-bold text-gray-400 uppercase mb-2">Gelir Hesabı Günü / Maaş Günü</p>
-                    <input type="number" id="wiz_salary_day_val" oninput="state.salaryDay=this.value" value="${state.salaryDay || 15}" class="w-20 p-3 bg-gray-50 rounded-xl font-black text-center text-xl outline-none focus:ring-2 focus:ring-green-200" placeholder="15">
-                </div>`;
+            // Steps 1-5 (Same as before)
+            if(state.step === 1) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-green-600">Gelirler (Yeşil)</h3><div id="wiz_inc_list" class="custom-scrollbar overflow-y-auto max-h-[300px]"></div><button onclick="addItem('incomes', 'wiz_inc_list', 'green')" class="w-full py-3 border-2 border-dashed border-green-200 rounded-2xl text-green-500 font-bold mt-4">+ Gelir Ekle</button><div class="pt-4 mt-6 border-t"><p class="text-[10px] font-bold text-gray-400 uppercase mb-2">Gelir Hesabı Günü / Maaş Günü</p><input type="number" id="wiz_salary_day_val" oninput="state.salaryDay=this.value" value="${state.salaryDay || 15}" class="w-20 p-3 bg-gray-50 rounded-xl font-black text-center text-xl outline-none focus:ring-2 focus:ring-green-200" placeholder="15"></div>`;
+            if(state.step === 2) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-red-600">Sabit Giderler</h3><div id="wiz_bill_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div><button onclick="addItem('bills', 'wiz_bill_list', 'red')" class="w-full py-3 border-2 border-dashed border-red-200 rounded-2xl text-red-500 font-bold mt-4">+ Gider Ekle</button>`;
+            if(state.step === 3) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-red-600">Banka Kredileri</h3><div id="wiz_loan_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div><button onclick="addItem('loans', 'wiz_loan_list')" class="w-full py-3 border-2 border-dashed border-red-200 rounded-2xl text-red-500 font-bold mt-4">+ Kredi Ekle</button>`;
+            if(state.step === 4) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-purple-600">Borçlar & Kartlar</h3><div id="wiz_debt_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div><button onclick="addItem('debts', 'wiz_debt_list')" class="w-full py-3 border-2 border-dashed border-purple-200 rounded-2xl text-purple-500 font-bold mt-4">+ Borç/Kart Ekle</button>`;
+            if(state.step === 5) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-green-600">Varlıklar</h3><div id="wiz_asset_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div><button onclick="addItem('assets', 'wiz_asset_list', 'green')" class="w-full py-3 border-2 border-dashed border-green-200 rounded-2xl text-green-500 font-bold mt-4">+ Varlık Ekle</button>`;
             
-            // STEP 2: SABİT GİDERLER
-            if(state.step === 2) content.innerHTML = `
-                <h3 class="text-2xl font-black mb-6 text-red-600">Sabit Giderler</h3>
-                <div id="wiz_bill_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div>
-                <button onclick="addItem('bills', 'wiz_bill_list', 'red')" class="w-full py-3 border-2 border-dashed border-red-200 rounded-2xl text-red-500 font-bold mt-4">+ Gider Ekle</button>`;
-            
-            // STEP 3: KREDİLER
-            if(state.step === 3) content.innerHTML = `
-                <h3 class="text-2xl font-black mb-6 text-red-600">Banka Kredileri</h3>
-                <div id="wiz_loan_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div>
-                <button onclick="addItem('loans', 'wiz_loan_list')" class="w-full py-3 border-2 border-dashed border-red-200 rounded-2xl text-red-500 font-bold mt-4">+ Kredi Ekle</button>`;
-            
-            // STEP 4: KART/BORÇ
-            if(state.step === 4) content.innerHTML = `
-                <h3 class="text-2xl font-black mb-6 text-purple-600">Borçlar & Kartlar</h3>
-                <div id="wiz_debt_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div>
-                <button onclick="addItem('debts', 'wiz_debt_list')" class="w-full py-3 border-2 border-dashed border-purple-200 rounded-2xl text-purple-500 font-bold mt-4">+ Borç/Kart Ekle</button>`;
-            
-            // STEP 5: VARLIKLAR
-            if(state.step === 5) content.innerHTML = `
-                <h3 class="text-2xl font-black mb-6 text-green-600">Varlıklar</h3>
-                <div id="wiz_asset_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div>
-                <button onclick="addItem('assets', 'wiz_asset_list', 'green')" class="w-full py-3 border-2 border-dashed border-green-200 rounded-2xl text-green-500 font-bold mt-4">+ Varlık Ekle</button>`;
-            
-            // STEP 6: PLANLAMA
+            // STEP 6: PLANLAMA & KAYIT
             if(state.step === 6) { 
-                content.innerHTML = `
-                    <h3 class="text-2xl font-black mb-4">Birikim Planı</h3>
+                let html = `
+                    <h3 class="text-2xl font-black mb-2">Birikim Planı</h3>
                     <p class="text-sm text-gray-500 mb-6 text-center">Net Kalan: <button onclick="openCalcModal()" class="text-blue-600 font-black underline underline-offset-4">₺<span id="remainingCalcText">0</span></button></p>
-                    <div class="space-y-8">
-                        <div class="p-6 bg-white border border-gray-200 rounded-[2rem] shadow-sm text-center">
-                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Hedef Günlük Limit</label>
-                            <input type="number" id="idealDailyLimitInput" oninput="updateFromDailyLimitInput(this.value)" class="w-32 text-center text-4xl font-black text-blue-600 border-b-2 border-gray-100 outline-none pb-2" placeholder="0">
-                        </div>
-                        <div class="flex justify-between gap-4">
-                            <div class="flex-1 text-center">
-                                <p class="text-[9px] font-bold text-gray-400 block mb-1">BİRİKİM HEDEFİ</p>
-                                <input type="text" id="manualSavingsInput" disabled class="w-full bg-transparent text-center font-black text-lg text-green-700">
-                            </div>
-                            <div class="flex-1 text-center">
-                                <p class="text-[9px] font-bold text-gray-400 block mb-1">AYLIK HARCAMA</p>
-                                <div id="allocSpendingVal" class="font-black text-lg text-blue-700">₺0</div>
-                            </div>
+                    <div class="space-y-6">
+                        <div class="p-4 bg-white border border-gray-200 rounded-[2rem] shadow-sm text-center">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Hedef Günlük Limit</label>
+                            <input type="number" id="idealDailyLimitInput" oninput="updateFromDailyLimitInput(this.value)" class="w-32 text-center text-3xl font-black text-blue-600 border-b-2 border-gray-100 outline-none pb-2" placeholder="0">
                         </div>
                         <input type="range" id="allocationSlider" min="0" max="100" value="30" oninput="handleSliderChange(this.value)" class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                    </div>`; 
+                        <div class="flex justify-between gap-4">
+                            <div class="flex-1 text-center"><p class="text-[9px] font-bold text-gray-400 block mb-1">BİRİKİM</p><input type="text" id="manualSavingsInput" disabled class="w-full bg-transparent text-center font-black text-lg text-green-700"></div>
+                            <div class="flex-1 text-center"><p class="text-[9px] font-bold text-gray-400 block mb-1">HARCAMA</p><div id="allocSpendingVal" class="font-black text-lg text-blue-700">₺0</div></div>
+                        </div>
+                    </div>`;
+
+                // Eğer kullanıcı zaten giriş yapmamışsa, kayıt formu göster
+                if(!currentUser) {
+                    html += `
+                    <div class="mt-6 pt-6 border-t border-gray-100 space-y-3 bg-blue-50 p-4 rounded-3xl">
+                        <h4 class="font-black text-gray-800 text-sm text-center">Planını Kaydet & Üye Ol</h4>
+                        <input type="email" id="wizRegEmail" class="w-full p-3 bg-white rounded-xl text-sm font-bold border border-blue-100" placeholder="E-posta Adresi">
+                        <input type="password" id="wizRegPass" class="w-full p-3 bg-white rounded-xl text-sm font-bold border border-blue-100" placeholder="Şifre Belirle">
+                    </div>`;
+                    nextBtn.innerText = "Kaydı Tamamla";
+                    nextBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                    nextBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                } else {
+                    nextBtn.innerText = "Planı Güncelle";
+                }
+                
+                content.innerHTML = html;
                 updateAllocationUI(); 
+            } else {
+                nextBtn.innerText = "Devam Et";
+                nextBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                nextBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
             }
+
             renderWizardLists();
-            document.getElementById('wizNextBtn').innerText = state.step === 6 ? "Plana Başla" : "Devam Et";
         }
 
         function renderWizardLists() {
