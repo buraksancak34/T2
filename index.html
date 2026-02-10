@@ -56,7 +56,9 @@
         <!-- Auth Form -->
         <div class="space-y-3" id="authFormContainer">
             <!-- Kayıt Modunda Görünecek (Kullanıcı Adı) -->
-            <input type="text" id="regUsernameInput" class="hidden w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-sm" placeholder="Kullanıcı Adı Belirle">
+            <div id="registerFields" class="hidden space-y-3">
+                <input type="text" id="regUsernameInput" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-sm" placeholder="Kullanıcı Adı Belirle (Zorunlu)">
+            </div>
             
             <input type="text" id="emailInput" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-sm" placeholder="E-posta veya Kullanıcı Adı">
             <input type="password" id="passwordInput" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-sm" placeholder="Şifre">
@@ -341,7 +343,7 @@
             document.getElementById('loginSubtitle').innerText = "Hesabına Eriş";
             document.getElementById('loginBtn').classList.remove('hidden');
             document.getElementById('registerBtn').classList.add('hidden');
-            document.getElementById('regUsernameInput').classList.add('hidden');
+            document.getElementById('registerFields').classList.add('hidden'); // Register fields gizle
             document.getElementById('emailInput').placeholder = "E-posta veya Kullanıcı Adı";
             document.getElementById('actionButtons').classList.remove('hidden');
             document.getElementById('backToLoginText').classList.add('hidden');
@@ -352,7 +354,7 @@
             document.getElementById('loginSubtitle').innerText = "Hızlı Üyelik";
             document.getElementById('loginBtn').classList.add('hidden');
             document.getElementById('registerBtn').classList.remove('hidden');
-            document.getElementById('regUsernameInput').classList.remove('hidden');
+            document.getElementById('registerFields').classList.remove('hidden'); // Kullanıcı adı görünür
             document.getElementById('emailInput').placeholder = "E-posta Adresi";
             document.getElementById('actionButtons').classList.add('hidden');
             document.getElementById('backToLoginText').classList.remove('hidden');
@@ -411,6 +413,19 @@
                         });
                 })
                 .catch((e) => { isRegistering = false; alert(e.message); btn.innerHTML = "Üye Ol ve Katıl"; });
+        }
+
+        function handleLogout() {
+            if(auth.currentUser) {
+                auth.signOut().then(() => {
+                    window.location.reload();
+                }).catch((error) => {
+                    console.error("Çıkış hatası:", error);
+                    window.location.reload(); // Hata olsa bile yenile
+                });
+            } else {
+                window.location.reload();
+            }
         }
 
         // --- FAMILY MANAGEMENT ---
