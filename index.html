@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bizim Bütçe | Finansal Asistan</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <!-- FIREBASE SDKs (Compat sürümü) -->
+    <!-- FIREBASE SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -23,18 +24,24 @@
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         
-        /* Animasyonlar */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
         
-        /* Yükleniyor Spinner */
         .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .health-detail { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .health-detail.open { max-height: 500px; transition: max-height 0.3s ease-in; }
     </style>
 </head>
 <body class="min-h-screen p-4 flex flex-col items-center justify-center bg-slate-50">
 
     <div id="overlay" class="overlay fixed inset-0 z-40" onclick="closeAllPopups()"></div>
+    
+    <!-- Kayıt İndikatörü -->
+    <div id="saveIndicator" class="fixed bottom-4 right-4 bg-white px-4 py-2 rounded-full shadow-lg border border-gray-100 flex items-center gap-2 text-xs font-bold text-gray-500 opacity-0 transition-opacity duration-500 pointer-events-none z-50">
+        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> Kaydedildi
+    </div>
 
     <!-- 1. GİRİŞ EKRANI -->
     <div id="loginScreen" class="max-w-md w-full glass-card p-10 rounded-[2.5rem] shadow-2xl space-y-6 my-auto relative overflow-hidden animate-fade-in">
@@ -48,6 +55,9 @@
         
         <!-- Auth Form -->
         <div class="space-y-3" id="authFormContainer">
+            <!-- Kayıt Modunda Görünecek (Kullanıcı Adı) -->
+            <input type="text" id="regUsernameInput" class="hidden w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-sm" placeholder="Kullanıcı Adı Belirle">
+            
             <input type="text" id="emailInput" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-sm" placeholder="E-posta veya Kullanıcı Adı">
             <input type="password" id="passwordInput" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-sm" placeholder="Şifre">
             
@@ -87,11 +97,7 @@
             <div id="wizardProgress" class="flex gap-1 flex-1 mr-4"></div>
             <span class="text-xs font-bold text-gray-300" id="stepCount">1/8</span>
         </div>
-        
-        <div id="wizardContent" class="min-h-[420px] flex flex-col relative">
-            <!-- Dinamik İçerik Buraya Gelecek -->
-        </div>
-        
+        <div id="wizardContent" class="min-h-[420px] flex flex-col relative"></div>
         <div class="flex gap-3 mt-4" id="wizardNavBtns">
              <button onclick="wizardBack()" class="flex-1 bg-gray-100 text-gray-600 font-bold py-4 rounded-2xl hover:bg-gray-200 transition-all">Geri</button>
              <button onclick="wizardNext()" id="wizNextBtn" class="flex-[2] bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all hover:bg-blue-700">Devam Et</button>
@@ -103,13 +109,13 @@
         <div class="flex justify-between items-center">
             <div>
                 <h2 class="text-2xl font-black text-gray-800 tracking-tight" id="dashWelcome">Panelim</h2>
-                <div class="flex items-center gap-2" id="connectionStatus">
-                    <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
-                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Bağlanıyor...</p>
+                <div class="flex items-center gap-2">
+                    <span id="roleBadge" class="text-[9px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded uppercase tracking-wide">Yönetici</span>
                 </div>
             </div>
             <div class="flex gap-2">
-                 <button onclick="forceSave()" class="text-[10px] font-black bg-white text-blue-500 border border-blue-200 px-4 py-2 rounded-full uppercase tracking-widest shadow-sm hover:bg-blue-50"><i class="fas fa-save mr-1"></i> Kaydet</button>
+                <button onclick="showFamilyModal()" id="btnFamily" class="text-[10px] font-black bg-white text-orange-500 border border-orange-200 px-4 py-2 rounded-full uppercase tracking-widest shadow-sm hover:bg-orange-50"><i class="fas fa-users mr-1"></i> Aile</button>
+                <button onclick="showAnalysisScreen()" id="btnAnalysis" class="text-[10px] font-black bg-white text-indigo-500 border border-indigo-200 px-4 py-2 rounded-full uppercase tracking-widest shadow-sm hover:bg-indigo-50"><i class="fas fa-chart-pie mr-1"></i> Analiz</button>
                 <button onclick="handleLogout()" class="text-[10px] font-black bg-white text-red-500 border border-red-50 px-4 py-2 rounded-full uppercase tracking-widest shadow-sm hover:bg-red-50">Çıkış</button>
             </div>
         </div>
@@ -117,9 +123,7 @@
         <!-- Limit Kartı -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="md:col-span-2 glass-card p-8 rounded-[3rem] bg-gradient-to-br from-slate-800 to-slate-900 text-white shadow-2xl relative overflow-hidden group">
-                <!-- Arka plan dekorasyon -->
                 <div class="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full mix-blend-overlay filter blur-3xl opacity-20 -mr-16 -mt-16"></div>
-                
                 <div class="relative z-10">
                     <div class="flex justify-between items-start mb-6">
                         <div>
@@ -131,7 +135,6 @@
                             <h4 id="displayCumulativeLimit" class="text-4xl font-black text-white tracking-tight">₺0</h4>
                         </div>
                     </div>
-                    
                     <div class="flex items-center gap-3 mt-8 pt-6 border-t border-white/10">
                         <div class="bg-white/10 px-4 py-2 rounded-xl backdrop-blur-md border border-white/5">
                             <span class="text-[9px] text-slate-300 font-bold uppercase block">Maaşa Kalan</span>
@@ -158,7 +161,7 @@
                         <span id="sumGiderTotal" class="text-lg font-black text-red-600">₺0</span>
                     </div>
                 </div>
-                <button onclick="startWizard(true)" class="w-full py-3 bg-gray-50 text-gray-600 font-bold rounded-xl text-xs hover:bg-gray-100 transition-colors">Planı Düzenle</button>
+                <button onclick="startWizard(true)" id="btnEditPlan" class="w-full py-3 bg-gray-50 text-gray-600 font-bold rounded-xl text-xs hover:bg-gray-100 transition-colors">Planı Düzenle</button>
             </div>
         </div>
 
@@ -171,7 +174,8 @@
             <div class="flex gap-3">
                 <input type="number" id="expAmt" placeholder="Tutar (₺)" onkeyup="if(event.key === 'Enter') addExpense()" class="w-1/3 p-4 bg-gray-50 rounded-2xl font-black text-lg outline-none focus:ring-4 focus:ring-blue-100 transition-all">
                 <input type="text" id="expDesc" value="" placeholder="Açıklama (Opsiyonel)" onkeyup="if(event.key === 'Enter') addExpense()" class="flex-1 p-4 bg-gray-50 rounded-2xl font-bold text-gray-600 outline-none focus:ring-2 focus:ring-blue-500 transition-all">
-                <button onclick="addExpense()" class="bg-blue-600 text-white w-20 rounded-2xl hover:bg-blue-700 active:scale-90 transition-all shadow-lg shadow-blue-200 flex items-center justify-center"><i class="fas fa-plus text-xl"></i></button>
+                <input type="hidden" id="editExpIndex" value="-1">
+                <button id="addExpBtn" onclick="addExpense()" class="bg-blue-600 text-white w-20 rounded-2xl hover:bg-blue-700 active:scale-90 transition-all shadow-lg shadow-blue-200 flex items-center justify-center"><i class="fas fa-plus text-xl"></i></button>
             </div>
         </div>
 
@@ -179,12 +183,12 @@
         <div class="glass-card p-10 rounded-[3rem] shadow-xl bg-white border border-gray-100">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="font-black text-xl text-gray-800 uppercase tracking-widest text-[11px]">Son İşlemler</h3>
-                <button onclick="clearHistory()" class="text-[9px] text-red-400 font-bold hover:text-red-600">Temizle</button>
+                <button onclick="clearHistory()" id="btnClearHist" class="text-[9px] text-red-400 font-bold hover:text-red-600">Tümünü Sil</button>
             </div>
             <div id="historyList" class="space-y-3 pb-4 max-h-60 overflow-y-auto custom-scrollbar pr-1"></div>
         </div>
 
-        <!-- Finansal Sağlık (En Altta) -->
+        <!-- Finansal Sağlık (Sadece Tam Yetki) -->
         <div id="financialHealthSection" class="glass-card p-10 rounded-[3rem] space-y-8 bg-white border border-blue-50 shadow-xl">
             <div class="flex flex-col items-center border-b pb-8">
                 <h3 class="font-black text-3xl text-gray-800 mb-2">Finansal Sağlık</h3>
@@ -193,41 +197,78 @@
                     <span id="netStatusVal">₺0</span>
                 </div>
             </div>
-            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Borçlar -->
                 <div class="space-y-4">
-                    <div class="flex items-center gap-2 mb-2 pb-2 border-b border-red-100">
-                        <div class="w-3 h-3 bg-red-500 rounded-full"></div>
-                        <span class="text-xs font-black text-red-600 uppercase tracking-widest">Borçlar & Krediler</span>
-                    </div>
+                    <div class="flex items-center gap-2 mb-2 pb-2 border-b border-red-100"><div class="w-3 h-3 bg-red-500 rounded-full"></div><span class="text-xs font-black text-red-600 uppercase tracking-widest">Borçlar & Krediler</span></div>
                     <div id="detailedDebtsList" class="space-y-3 min-h-[50px]"></div>
                 </div>
-                <!-- Varlıklar -->
                 <div class="space-y-4">
-                    <div class="flex items-center gap-2 mb-2 pb-2 border-b border-green-100">
-                        <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                        <span class="text-xs font-black text-green-600 uppercase tracking-widest">Varlıklar</span>
-                    </div>
+                    <div class="flex items-center gap-2 mb-2 pb-2 border-b border-green-100"><div class="w-3 h-3 bg-green-500 rounded-full"></div><span class="text-xs font-black text-green-600 uppercase tracking-widest">Varlıklar</span></div>
                     <div id="detailedAssetsList" class="space-y-3 min-h-[50px]"></div>
                 </div>
             </div>
         </div>
-
     </div>
 
-    <!-- MODALS (Calc & Loan) -->
-    <div id="calcModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm glass-card p-8 rounded-[2rem] z-50 shadow-2xl hidden text-center border-2 border-blue-50 animate-fade-in">
+    <!-- 4. ANALİZ EKRANI -->
+    <div id="analysisScreen" class="max-w-4xl w-full hidden space-y-8 pb-32 animate-fade-in my-auto">
         <div class="flex justify-between items-center mb-6">
-            <h4 class="font-black text-xl text-gray-800 tracking-tight w-full">Hesaplama Özeti</h4>
-            <button onclick="closeCalcModal()" class="text-gray-300 hover:text-red-500 absolute right-6"><i class="fas fa-times"></i></button>
+            <div><h2 class="text-2xl font-black text-gray-800 tracking-tight">Finansal Analiz</h2><p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Geçmiş Veriler & Grafikler</p></div>
+            <button onclick="showDashboard()" class="text-[10px] font-black bg-gray-100 text-gray-600 border border-gray-200 px-4 py-2 rounded-full uppercase tracking-widest shadow-sm hover:bg-gray-200">Geri Dön</button>
         </div>
-        <div id="calcModalContent" class="space-y-4 text-sm"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="glass-card p-6 rounded-[2.5rem] bg-white border border-gray-100 shadow-lg"><h3 class="font-black text-lg text-gray-800 mb-4 text-center">Varlık vs Borç</h3><div class="h-64"><canvas id="assetsChart"></canvas></div></div>
+            <div class="glass-card p-6 rounded-[2.5rem] bg-white border border-gray-100 shadow-lg"><h3 class="font-black text-lg text-gray-800 mb-4 text-center">Harcamalar</h3><div class="h-64"><canvas id="expensesChart"></canvas></div></div>
+        </div>
+        <div class="glass-card p-8 rounded-[2.5rem] bg-white border border-gray-100 shadow-lg">
+            <h3 class="font-black text-xl text-gray-800 mb-4 border-b pb-2">Geçmiş Kayıt Ekle</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+                <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Dönem</label><input type="month" id="histDate" class="w-full p-3 bg-gray-50 rounded-xl font-bold text-sm outline-none"></div>
+                <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Varlık</label><input type="number" id="histAssets" placeholder="0" class="w-full p-3 bg-gray-50 rounded-xl font-bold text-sm outline-none text-green-600"></div>
+                <div><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Borç</label><input type="number" id="histDebts" placeholder="0" class="w-full p-3 bg-gray-50 rounded-xl font-bold text-sm outline-none text-red-600"></div>
+                <button onclick="addHistoryRecord()" class="bg-indigo-600 text-white font-black py-3 rounded-xl shadow-lg hover:bg-indigo-700 active:scale-95 transition-all">Kaydet</button>
+            </div>
+            <div id="historyTable" class="mt-6 space-y-2"></div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div id="calcModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm glass-card p-8 rounded-[2rem] z-50 shadow-2xl hidden text-center border-2 border-blue-50 animate-fade-in">
+        <div class="flex justify-between items-center mb-6"><h4 class="font-black text-xl text-gray-800 tracking-tight w-full">Hesaplama Özeti</h4><button onclick="closeCalcModal()" class="text-gray-300 hover:text-red-500 absolute right-6"><i class="fas fa-times"></i></button></div><div id="calcModalContent" class="space-y-4 text-sm"></div>
+    </div>
+
+    <div id="editItemModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm glass-card p-8 rounded-[2rem] z-50 shadow-2xl hidden text-center border-2 border-gray-50 animate-fade-in">
+        <h4 class="font-black text-xl text-gray-800 mb-4">Düzenle</h4><input type="text" id="editItemName" class="w-full p-3 mb-3 bg-gray-50 rounded-xl font-bold text-sm"><input type="number" id="editItemVal" class="w-full p-3 mb-6 bg-gray-50 rounded-xl font-bold text-sm"><input type="hidden" id="editItemType"><input type="hidden" id="editItemIndex"><div class="flex gap-2"><button onclick="closeEditModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl">İptal</button><button onclick="saveEditedItem()" class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl">Kaydet</button></div>
+    </div>
+
+    <!-- AİLE YÖNETİM MODALI -->
+    <div id="familyModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-md glass-card p-8 rounded-[2.5rem] z-50 shadow-2xl hidden border-2 border-orange-50 animate-fade-in">
+        <div class="flex justify-between items-center mb-6">
+            <h4 class="font-black text-xl text-gray-800 tracking-tight">Aile Üyeleri</h4>
+            <button onclick="document.getElementById('familyModal').classList.add('hidden'); document.getElementById('overlay').classList.remove('active')" class="text-gray-300 hover:text-red-500"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div class="space-y-4 mb-6">
+            <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Yeni Üye Ekle</h5>
+            <div class="flex flex-col gap-2">
+                <input type="text" id="famInput" class="w-full p-3 bg-gray-50 rounded-xl font-bold text-sm outline-none border border-gray-100" placeholder="Kullanıcı Adı veya E-posta">
+                <div class="flex gap-2">
+                    <select id="famRole" class="flex-1 p-3 bg-white border border-gray-100 rounded-xl text-sm font-bold text-gray-600 outline-none">
+                        <option value="full">Tam Yetki</option>
+                        <option value="limited">Sınırlı Yetki</option>
+                    </select>
+                    <button onclick="addFamilyMember()" class="bg-orange-500 text-white font-black px-6 rounded-xl hover:bg-orange-600 active:scale-95 transition-all">Ekle</button>
+                </div>
+                <p class="text-[9px] text-gray-400 px-1">* Sınırlı yetki: Sadece harcama ekler ve görür.</p>
+            </div>
+        </div>
+
+        <div id="familyList" class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar"></div>
     </div>
 
     <script>
         // --------------------------------------------------------
-        // FIREBASE YAPILANDIRMASI (HesapGuvende Projesi)
+        // FIREBASE YAPILANDIRMASI
         // --------------------------------------------------------
         const firebaseConfig = {
             apiKey: "AIzaSyAyUQaeoVWnT4AuzSwD2M17-z1g2optqdA",
@@ -238,757 +279,522 @@
             appId: "1:710002620092:web:94f3ebb8dd2461af29c2b9",
             measurementId: "G-VE0EVVBM0V"
         };
-        // --------------------------------------------------------
 
         let db, auth, currentUser = null;
+        let currentPlanId = null; // Aktif planın ID'si (Kendi veya Aile)
+        let currentUserRole = 'owner'; // owner, full, limited
         let isFirebaseReady = false;
-        let isRegistering = false; // Kayıt olma kilidi (veri kaybını önlemek için)
+        let isRegistering = false; 
+        let assetsChartInstance = null;
+        let expensesChartInstance = null;
 
-        // Firebase Başlatma Kontrolü
         try {
             firebase.initializeApp(firebaseConfig);
             auth = firebase.auth();
             db = firebase.firestore();
             isFirebaseReady = true;
             
-            // Auth Durumu Dinleyicisi
             auth.onAuthStateChanged(user => {
-                // Eğer kayıt işlemi sürüyorsa, auth state değişimini yoksay (veri kaybını önle)
                 if(isRegistering) return;
-
                 if (user) {
                     currentUser = user;
-                    // Giriş başarılı, veriyi çek
                     const name = user.displayName || user.email.split('@')[0];
                     document.getElementById('dashWelcome').innerText = `Hoşgeldin, ${name}`;
-                    updateConnectionStatus(true);
-                    loadFromCloud(); 
+                    initUserPlan(); 
                 } else {
                     currentUser = null;
-                    updateConnectionStatus(false);
                 }
             });
+        } catch(e) { console.error(e); }
 
-        } catch(e) {
-            console.error("Firebase Hatası:", e);
-            alert("Firebase bağlantısında bir sorun oluştu. Lütfen konsolu kontrol edin.");
+        // --- AUTH & PLAN LOGIC ---
+        async function initUserPlan() {
+            const userDoc = await db.collection("users").doc(currentUser.uid).get();
+            if(!userDoc.exists) {
+                saveToCloud(); // Kendi ID'sine kaydeder
+                currentPlanId = currentUser.uid;
+                currentUserRole = 'owner';
+            } else {
+                const userData = userDoc.data();
+                if (userData.connectedPlanId) {
+                    currentPlanId = userData.connectedPlanId;
+                    const planDoc = await db.collection("users").doc(currentPlanId).get();
+                    if(planDoc.exists) {
+                        const planData = planDoc.data();
+                        const member = planData.familyMembers ? planData.familyMembers.find(m => m.uid === currentUser.uid) : null;
+                        currentUserRole = member ? member.role : 'limited';
+                    } else {
+                        currentPlanId = currentUser.uid;
+                        currentUserRole = 'owner';
+                    }
+                } else {
+                    currentPlanId = currentUser.uid;
+                    currentUserRole = 'owner';
+                }
+            }
+            loadFromCloud();
         }
 
-        // --- AUTH UI YÖNETİMİ ---
+        // --- AUTH UI ---
         function showLoginMode() {
-            // Başlıklar
             document.getElementById('loginTitle').innerText = "Giriş Yap";
             document.getElementById('loginSubtitle').innerText = "Hesabına Eriş";
-            
-            // Form Elemanları
             document.getElementById('loginBtn').classList.remove('hidden');
             document.getElementById('registerBtn').classList.add('hidden');
-            
-            // Alt Butonlar
+            document.getElementById('regUsernameInput').classList.add('hidden');
+            document.getElementById('emailInput').placeholder = "E-posta veya Kullanıcı Adı";
             document.getElementById('actionButtons').classList.remove('hidden');
             document.getElementById('backToLoginText').classList.add('hidden');
         }
 
         function showRegisterMode() {
-            // Başlıklar
             document.getElementById('loginTitle').innerText = "Ailene Katıl";
             document.getElementById('loginSubtitle').innerText = "Hızlı Üyelik";
-            
-            // Form Elemanları
             document.getElementById('loginBtn').classList.add('hidden');
             document.getElementById('registerBtn').classList.remove('hidden');
-            
-            // Alt Butonlar
+            document.getElementById('regUsernameInput').classList.remove('hidden');
+            document.getElementById('emailInput').placeholder = "E-posta Adresi";
             document.getElementById('actionButtons').classList.add('hidden');
             document.getElementById('backToLoginText').classList.remove('hidden');
         }
 
-        function getAuthInputs() {
-            const email = document.getElementById('emailInput').value.trim();
-            const pass = document.getElementById('passwordInput').value;
-            if(!email || !pass) { alert("Lütfen kullanıcı adı/e-posta ve şifre alanlarını doldurun."); return null; }
-            return { email, pass };
-        }
-
         async function firebaseLogin() {
-            if(!isFirebaseReady) return alert("Firebase ayarları yapılmamış.");
-            const inputs = getAuthInputs();
-            if(!inputs) return;
-            
-            let { email, pass } = inputs;
+            if(!isFirebaseReady) return;
+            const emailInp = document.getElementById('emailInput').value.trim();
+            const pass = document.getElementById('passwordInput').value;
+            if(!emailInp || !pass) return alert("Alanları doldurun.");
             
             const btn = document.getElementById('loginBtn');
             const originalText = btn.innerHTML;
             btn.innerHTML = '<div class="loader"></div>';
 
             try {
-                // Eğer girişte @ yoksa, Kullanıcı Adı olarak dene
+                let email = emailInp;
                 if (!email.includes('@')) {
-                    // Kullanıcı adından E-posta bulma sorgusu
                     const snapshot = await db.collection('users').where('username', '==', email).limit(1).get();
-                    
-                    if (snapshot.empty) {
-                        throw new Error("Bu kullanıcı adı ile kayıt bulunamadı.");
-                    }
-                    
-                    const userData = snapshot.docs[0].data();
-                    if (userData.email) {
-                        email = userData.email; // E-postayı bulduk, şimdi giriş yapabiliriz
-                    } else {
-                        throw new Error("Bu kullanıcıya ait e-posta bilgisi bulunamadı.");
-                    }
+                    if (snapshot.empty) throw new Error("Kullanıcı bulunamadı.");
+                    email = snapshot.docs[0].data().email;
                 }
-
                 await auth.signInWithEmailAndPassword(email, pass);
-                // Başarılı olursa authStateListener Dashboard'u açacak
-                
             } catch (error) {
-                console.error(error);
-                let msg = error.message;
-                if(error.code === 'permission-denied') msg = "Erişim reddedildi. Veritabanı kurallarınızı kontrol edin.";
-                alert("Giriş Hatası: " + msg);
+                alert("Hata: " + error.message);
                 btn.innerHTML = originalText;
             }
         }
 
         function firebaseRegister() {
-            // Bu fonksiyon "Plana Dahil Ol" kısmından çağrılır
-            if(!isFirebaseReady) return alert("Firebase ayarları yapılmamış.");
-            const inputs = getAuthInputs();
-            if(!inputs) return;
+            if(!isFirebaseReady) return;
+            const username = document.getElementById('regUsernameInput').value.trim();
+            const email = document.getElementById('emailInput').value.trim();
+            const pass = document.getElementById('passwordInput').value;
             
-            const { email, pass } = inputs;
-            if(!email.includes('@')) return alert("Kayıt olmak için geçerli bir e-posta adresi girmelisiniz.");
+            if(!email.includes('@') || !username || !pass) return alert("Tüm alanları doğru doldurun.");
             
             const btn = document.getElementById('registerBtn');
-            const originalText = btn.innerHTML;
             btn.innerHTML = '<div class="loader"></div>';
-
-            isRegistering = true; // Kilit aç
+            isRegistering = true;
             
             auth.createUserWithEmailAndPassword(email, pass)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    currentUser = user;
-                    // Boş state ile başlat, email bilgisini de kaydet
-                    const initialState = JSON.parse(JSON.stringify(defaultState));
-                    initialState.email = email; // E-postayı kaydet ki username login çalışsın
+                .then((cred) => {
+                    currentUser = cred.user;
+                    cred.user.updateProfile({ displayName: username });
                     
-                    db.collection("users").doc(user.uid).set(initialState)
-                        .then(() => {
-                            isRegistering = false; // Kilit kapat
+                    const initState = JSON.parse(JSON.stringify(defaultState));
+                    initState.email = email;
+                    initState.username = username;
+                    
+                    db.collection("users").doc(cred.user.uid).set(initState)
+                        .then(() => { 
+                            isRegistering = false; 
                             showDashboard();
-                            alert("Üyelik oluşturuldu! Şimdi ailenizden sizi eklemelerini isteyebilirsiniz.");
+                            alert("Kayıt Başarılı! Kullanıcı adı veya mailinizle plana eklenebilirsiniz.");
                         });
                 })
-                .catch((error) => {
-                    isRegistering = false;
-                    alert("Kayıt Hatası: " + error.message);
-                    btn.innerHTML = originalText;
-                });
+                .catch((e) => { isRegistering = false; alert(e.message); btn.innerHTML = "Üye Ol ve Katıl"; });
         }
-        
-        // SİHİRBAZ SONUNDA KAYIT İÇİN ÖZEL FONKSİYON
-        function registerFromWizard() {
-            const name = document.getElementById('wizRegName').value;
-            const email = document.getElementById('wizRegEmail').value;
-            const pass = document.getElementById('wizRegPass').value;
+
+        // --- FAMILY MANAGEMENT ---
+        function showFamilyModal() {
+            if(currentUserRole !== 'owner' && currentUserRole !== 'full') return alert("Bu işlem için yetkiniz yok.");
+            renderFamilyList();
+            document.getElementById('familyModal').classList.remove('hidden');
+            document.getElementById('overlay').classList.add('active');
+        }
+
+        async function addFamilyMember() {
+            const input = document.getElementById('famInput').value.trim();
+            const role = document.getElementById('famRole').value;
+            if(!input) return;
+
+            // Kullanıcıyı bul (username veya email)
+            let targetUser = null;
+            let snapshot = await db.collection('users').where('username', '==', input).limit(1).get();
+            if(snapshot.empty) {
+                snapshot = await db.collection('users').where('email', '==', input).limit(1).get();
+            }
             
-            if(!name) { alert("Lütfen bir kullanıcı adı belirleyiniz."); return; }
-            if(!email || !pass) { alert("Kaydetmek için e-posta ve şifre belirlemelisiniz."); return; }
-            if(!isFirebaseReady) return alert("Firebase hatası.");
+            if(snapshot.empty) return alert("Kullanıcı bulunamadı. Lütfen önce kayıt olmasını isteyin.");
+            
+            const targetDoc = snapshot.docs[0];
+            const targetData = targetDoc.data();
+            const targetUid = targetDoc.id;
 
-            const btn = document.getElementById('wizNextBtn');
-            btn.innerHTML = '<div class="loader"></div>';
+            if(targetUid === currentUser.uid) return alert("Kendinizi ekleyemezsiniz.");
 
-            isRegistering = true; // KRİTİK: Auth listener'ı durdur
+            // 1. Hedef kullanıcının connectedPlanId'sini güncelle
+            await db.collection('users').doc(targetUid).update({
+                connectedPlanId: currentUser.uid // Plan sahibi benim
+            });
 
-            auth.createUserWithEmailAndPassword(email, pass)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    currentUser = user; // Manuel set et
-                    
-                    // Kullanıcı adını Firebase profiline işle
-                    user.updateProfile({ displayName: name });
-
-                    // Sihirbazdaki state'i kaydet (En önemli kısım)
-                    const stateToSave = JSON.parse(JSON.stringify(state));
-                    stateToSave.registrationDate = state.registrationDate.toISOString();
-                    stateToSave.username = name; // Veritabanına kullanıcı adı ekle
-                    stateToSave.email = email;   // Veritabanına e-posta ekle (Giriş için şart)
-                    
-                    // Önce veriyi yaz
-                    return db.collection("users").doc(user.uid).set(stateToSave);
-                })
-                .then(() => {
-                    // Veri yazıldıktan sonra yönlendir
-                    isRegistering = false; // Kilidi kaldır
-                    updateConnectionStatus(true);
-                    document.getElementById('dashWelcome').innerText = `Hoşgeldin, ${name}`;
-                    showDashboard();
-                })
-                .catch((error) => {
-                    isRegistering = false;
-                    if(error.code === 'auth/email-already-in-use') {
-                        alert("Bu e-posta zaten kullanımda. Lütfen giriş yapın veya başka bir e-posta kullanın.");
-                    } else {
-                        alert("Kayıt Hatası: " + error.message);
-                    }
-                    btn.innerHTML = "Kaydı Tamamla";
+            // 2. Plan sahibinin (benim) familyMembers listesine ekle
+            if(!state.familyMembers) state.familyMembers = [];
+            
+            // Zaten var mı kontrol et
+            const existingIdx = state.familyMembers.findIndex(m => m.uid === targetUid);
+            if(existingIdx > -1) {
+                state.familyMembers[existingIdx].role = role; // Rol güncelle
+            } else {
+                state.familyMembers.push({
+                    uid: targetUid,
+                    name: targetData.username || targetData.email,
+                    role: role
                 });
+            }
+            
+            saveToCloud(); // Plan verisini kaydet
+            renderFamilyList();
+            document.getElementById('famInput').value = '';
+            alert(`${targetData.username} plana eklendi!`);
         }
 
-        function handleLogout() {
-            if(currentUser) {
-                auth.signOut().then(() => {
-                    location.reload();
-                });
-            } else {
-                location.reload();
+        async function updateMemberRole(idx, newRole) {
+            state.familyMembers[idx].role = newRole;
+            saveToCloud();
+            // Kullanıcı arayüzünü yenilemeye gerek yok, select zaten değişti
+        }
+
+        async function removeFamilyMember(idx) {
+            const member = state.familyMembers[idx];
+            if(confirm(`${member.name} plandan çıkarılacak?`)) {
+                await db.collection('users').doc(member.uid).update({ connectedPlanId: null });
+                state.familyMembers.splice(idx, 1);
+                saveToCloud();
+                renderFamilyList();
             }
         }
 
-        // --- CLOUD VERİ YÖNETİMİ ---
+        function renderFamilyList() {
+            const list = document.getElementById('familyList');
+            if(!state.familyMembers || state.familyMembers.length === 0) {
+                list.innerHTML = '<p class="text-gray-400 text-xs text-center py-4">Henüz aile üyesi yok.</p>';
+                return;
+            }
+            list.innerHTML = state.familyMembers.map((m, i) => `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl text-sm">
+                    <p class="font-bold text-gray-800">${m.name}</p>
+                    <div class="flex items-center gap-2">
+                        <select onchange="updateMemberRole(${i}, this.value)" class="text-[10px] font-bold uppercase bg-transparent outline-none cursor-pointer text-blue-500">
+                            <option value="full" ${m.role === 'full' ? 'selected' : ''}>Tam Yetki</option>
+                            <option value="limited" ${m.role === 'limited' ? 'selected' : ''}>Sınırlı</option>
+                        </select>
+                        <button onclick="removeFamilyMember(${i})" class="text-red-400 hover:text-red-600 ml-2"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- CLOUD ---
         function loadFromCloud() {
-            if(!currentUser) return;
+            if(!currentUser || !currentPlanId) return;
             
-            const docRef = db.collection("users").doc(currentUser.uid);
-            docRef.get().then((doc) => {
+            db.collection("users").doc(currentPlanId).get().then((doc) => {
                 if (doc.exists) {
                     const data = doc.data();
                     if(data.registrationDate) data.registrationDate = new Date(data.registrationDate.seconds ? data.registrationDate.seconds * 1000 : data.registrationDate);
                     state = data;
-                    // Eski kullanıcılarda otherDebts yoksa ekle
                     if(!state.otherDebts) state.otherDebts = [];
-                    
-                    // Kullanıcı adını güncelle
-                    const name = data.username || currentUser.displayName || currentUser.email.split('@')[0];
-                    document.getElementById('dashWelcome').innerText = `Hoşgeldin, ${name}`;
-                    
-                    showDashboard();
-                } else {
-                    // Doküman yoksa oluştur (burası genelde manuel tetiklenmemeli ama güvenlik olsun)
-                    saveToCloud();
+                    if(!state.monthlyHistory) state.monthlyHistory = [];
+                    if(!state.familyMembers) state.familyMembers = [];
                     showDashboard();
                 }
-            }).catch((error) => {
-                console.log("Veri çekme hatası:", error);
             });
         }
 
         function saveToCloud() {
-            if(!currentUser) return;
+            if(!currentUser || !currentPlanId) return;
+            // Sınırlı yetki kontrolünü kaldırdık, harcama ekleyebilsinler.
+            
             const stateToSave = JSON.parse(JSON.stringify(state));
             stateToSave.registrationDate = state.registrationDate.toISOString();
-            // Mevcut kullanıcı adını ve maili koru (State içinde yoksa currentUser'dan al)
-            if(!stateToSave.email && currentUser.email) stateToSave.email = currentUser.email;
-
-            db.collection("users").doc(currentUser.uid).set(stateToSave)
-                .then(() => console.log("Buluta kaydedildi"))
-                .catch((error) => console.error("Kayıt hatası: ", error));
-        }
-        
-        function forceSave() {
-            if(currentUser) {
-                const btn = event.currentTarget;
-                const oldHTML = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                saveToCloud();
-                setTimeout(() => btn.innerHTML = '<i class="fas fa-check"></i>', 1000);
-                setTimeout(() => btn.innerHTML = oldHTML, 2000);
-            }
-        }
-        
-        function updateConnectionStatus(isOnline) {
-            const el = document.getElementById('connectionStatus');
-            if(isOnline) {
-                el.innerHTML = '<div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div><p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Bulut Bağlı</p>';
-            } else {
-                el.innerHTML = '<div class="w-2 h-2 bg-gray-300 rounded-full"></div><p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Giriş Yapılmadı</p>';
-            }
+            
+            db.collection("users").doc(currentPlanId).set(stateToSave, { merge: true })
+                .then(() => {
+                    const ind = document.getElementById('saveIndicator');
+                    ind.style.opacity = '1';
+                    setTimeout(() => ind.style.opacity = '0', 2000);
+                });
         }
 
-        // --- STATE & APP LOGIC ---
+        // --- STATE ---
         const defaultState = {
             step: 1, salaryDay: 15,
             registrationDate: new Date(),
-            incomes: [], 
-            bills: [
-                { name: 'Kira', val: null }, { name: 'Elektrik', val: null }, { name: 'Su', val: null }, 
-                { name: 'İnternet', val: null }, { name: 'Telefon', val: null }, { name: 'Dijital', val: null }
-            ], 
-            loans: [], 
-            debts: [], // Kredi Kartları
-            otherDebts: [], // Yeni eklenen Diğer Borçlar
-            assets: [],
-            manualDailyLimit: null, expenses: []
+            incomes: [], bills: [], loans: [], debts: [], otherDebts: [], assets: [],
+            manualDailyLimit: null, expenses: [], monthlyHistory: [], familyMembers: []
         };
-
         let state = JSON.parse(JSON.stringify(defaultState));
 
         function saveState() {
             if(currentUser && !isRegistering) saveToCloud();
         }
 
-        // --- NAVIGATION ---
-        function showLoginScreen() { hideAll(); document.getElementById('loginScreen').classList.remove('hidden'); showLoginMode(); }
-        function showDashboard() { hideAll(); document.getElementById('dashboardScreen').classList.remove('hidden'); updateDashboardUI(); }
-        function hideAll() { 
-            ['loginScreen', 'wizardScreen', 'dashboardScreen'].forEach(id => {
-                const el = document.getElementById(id);
-                if(el) el.classList.add('hidden');
-            });
-            closeAllPopups();
-        }
-        function closeAllPopups() { 
-            document.getElementById('overlay').classList.remove('active');
-            ['calcModal'].forEach(id => document.getElementById(id).classList.add('hidden'));
-        }
+        // --- UI UPDATES BASED ON ROLE ---
+        function applyPermissions() {
+            const roleLabel = currentUserRole === 'owner' ? 'Plan Sahibi' : currentUserRole === 'full' ? 'Tam Yetki' : 'Sınırlı Yetki';
+            document.getElementById('roleBadge').innerText = roleLabel;
+            document.getElementById('roleBadge').className = `text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wide ${currentUserRole==='limited'?'bg-gray-200 text-gray-500':'bg-blue-100 text-blue-600'}`;
 
-        // --- WIZARD FUNCTIONS ---
-        function startWizard(isEditMode) {
-            hideAll(); document.getElementById('wizardScreen').classList.remove('hidden');
-            if(!isEditMode) {
-                // CLEAN SLATE
-                state = JSON.parse(JSON.stringify(defaultState));
-                state.registrationDate = new Date();
-                state.incomes = [{ name: 'Maaş', val: null }];
-            }
-            state.step = 1;
-            renderWizard();
-        }
-
-        function wizardNext() {
-            if (state.step === 1 && (!state.salaryDay || state.salaryDay > 31 || state.salaryDay < 1)) { 
-                alert("Lütfen geçerli bir maaş günü giriniz (1-31)."); return; 
-            }
-            
-            // Eğer son adımdaysa (Kayıt)
-            if (state.step === 8) {
-                if(document.getElementById('wizRegEmail')) {
-                    // Kayıt fonksiyonunu çağır
-                    registerFromWizard();
-                } else {
-                     // Düzenleme moduysa direkt dashboard
-                     saveState(); 
-                     showDashboard();
-                }
-                return;
-            }
-
-            state.step++;
-            renderWizard();
-        }
-        
-        function wizardBack() { if (state.step > 1) { state.step--; renderWizard(); } else { showLoginScreen(); } }
-
-        function renderWizard() {
-            const content = document.getElementById('wizardContent');
-            const stepEl = document.getElementById('stepCount');
-            const prog = document.getElementById('wizardProgress');
-            const nextBtn = document.getElementById('wizNextBtn');
-            
-            // TOPLAM 8 ADIM OLDU
-            stepEl.innerText = `${state.step}/8`;
-            prog.innerHTML = Array(8).fill(0).map((_,i) => `<div class="h-1.5 flex-1 rounded-full ${i+1<=state.step?'bg-blue-600':'bg-gray-200'} transition-all"></div>`).join('');
-
-            // Steps 1-3 (Güncellendi: Yeşil yazısı kalktı)
-            if(state.step === 1) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-green-600">Gelirler</h3><div id="wiz_inc_list" class="custom-scrollbar overflow-y-auto max-h-[300px]"></div><button onclick="addItem('incomes', 'wiz_inc_list', 'green')" class="w-full py-3 border-2 border-dashed border-green-200 rounded-2xl text-green-500 font-bold mt-4">+ Gelir Ekle</button><div class="pt-4 mt-6 border-t"><p class="text-[10px] font-bold text-gray-400 uppercase mb-2">Gelir Hesabı Günü / Maaş Günü</p><input type="number" id="wiz_salary_day_val" oninput="state.salaryDay=this.value" value="${state.salaryDay || 15}" class="w-20 p-3 bg-gray-50 rounded-xl font-black text-center text-xl outline-none focus:ring-2 focus:ring-green-200" placeholder="15"></div>`;
-            if(state.step === 2) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-red-600">Sabit Giderler</h3><div id="wiz_bill_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div><button onclick="addItem('bills', 'wiz_bill_list', 'red')" class="w-full py-3 border-2 border-dashed border-red-200 rounded-2xl text-red-500 font-bold mt-4">+ Gider Ekle</button>`;
-            if(state.step === 3) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-red-600">Banka Kredileri</h3><div id="wiz_loan_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div><button onclick="addItem('loans', 'wiz_loan_list')" class="w-full py-3 border-2 border-dashed border-red-200 rounded-2xl text-red-500 font-bold mt-4">+ Kredi Ekle</button>`;
-            
-            // STEP 4: Sadece Kredi Kartları
-            if(state.step === 4) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-purple-600">Kredi Kartları</h3><p class="text-xs text-gray-400 mb-4">Kart limitini ve güncel borcunu girerek kullanılabilir bakiyeyi hesapla.</p><div id="wiz_debt_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div><button onclick="addItem('debts', 'wiz_debt_list')" class="w-full py-3 border-2 border-dashed border-purple-200 rounded-2xl text-purple-500 font-bold mt-4">+ Kredi Kartı Ekle</button>`;
-            
-            // STEP 5: (YENİ) Diğer Borçlar
-            if(state.step === 5) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-red-500">Diğer Borçlar</h3><p class="text-xs text-gray-400 mb-4">Elden alınan borçlar, vergi borçları vb.</p><div id="wiz_other_debt_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div><button onclick="addItem('otherDebts', 'wiz_other_debt_list', 'red')" class="w-full py-3 border-2 border-dashed border-red-200 rounded-2xl text-red-500 font-bold mt-4">+ Borç Ekle</button>`;
-
-            // STEP 6: Varlıklar
-            if(state.step === 6) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-green-600">Varlıklar</h3><div id="wiz_asset_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div><button onclick="addItem('assets', 'wiz_asset_list', 'green')" class="w-full py-3 border-2 border-dashed border-green-200 rounded-2xl text-green-500 font-bold mt-4">+ Varlık Ekle</button>`;
-            
-            // STEP 7: PLANLAMA (Sadece Planlama)
-            if(state.step === 7) { 
-                content.innerHTML = `
-                    <h3 class="text-2xl font-black mb-2">Birikim Planı</h3>
-                    <p class="text-sm text-gray-500 mb-6 text-center">Net Kalan: <button onclick="openCalcModal()" class="text-blue-600 font-black underline underline-offset-4">₺<span id="remainingCalcText">0</span></button></p>
-                    <div class="space-y-6">
-                        <div class="p-4 bg-white border border-gray-200 rounded-[2rem] shadow-sm text-center">
-                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Hedef Günlük Limit</label>
-                            <input type="number" id="idealDailyLimitInput" oninput="updateFromDailyLimitInput(this.value)" class="w-32 text-center text-3xl font-black text-blue-600 border-b-2 border-gray-100 outline-none pb-2" placeholder="0">
-                        </div>
-                        <input type="range" id="allocationSlider" min="0" max="100" value="30" oninput="handleSliderChange(this.value)" class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                        <div class="flex justify-between gap-4">
-                            <div class="flex-1 text-center"><p class="text-[9px] font-bold text-gray-400 block mb-1">BİRİKİM</p><input type="text" id="manualSavingsInput" disabled class="w-full bg-transparent text-center font-black text-lg text-green-700"></div>
-                            <div class="flex-1 text-center"><p class="text-[9px] font-bold text-gray-400 block mb-1">HARCAMA</p><div id="allocSpendingVal" class="font-black text-lg text-blue-700">₺0</div></div>
-                        </div>
-                    </div>`;
-                updateAllocationUI();
-                
-                nextBtn.innerText = "Devam Et";
-                nextBtn.className = "flex-[2] bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all hover:bg-blue-700";
-            } 
-            
-            // STEP 8: KAYIT (Yeni Adım)
-            if(state.step === 8) {
-                if(!currentUser) {
-                    content.innerHTML = `
-                    <div class="text-center mb-6">
-                        <div class="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600">
-                            <i class="fas fa-check text-2xl"></i>
-                        </div>
-                        <h3 class="text-2xl font-black text-gray-900">Planın Hazır!</h3>
-                        <p class="text-sm text-gray-500">Kaybetmemek için hemen ücretsiz üye ol.</p>
-                    </div>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Kullanıcı Adı</label>
-                            <input type="text" id="wizRegName" class="w-full p-4 bg-gray-50 rounded-2xl font-bold text-gray-700 border border-gray-100 focus:bg-white focus:border-green-200 outline-none transition-all" placeholder="Örn: Ahmet">
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">E-posta</label>
-                            <input type="email" id="wizRegEmail" class="w-full p-4 bg-gray-50 rounded-2xl font-bold text-gray-700 border border-gray-100 focus:bg-white focus:border-green-200 outline-none transition-all" placeholder="ornek@mail.com">
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Şifre</label>
-                            <input type="password" id="wizRegPass" class="w-full p-4 bg-gray-50 rounded-2xl font-bold text-gray-700 border border-gray-100 focus:bg-white focus:border-green-200 outline-none transition-all" placeholder="******">
-                        </div>
-                    </div>`;
-                    
-                    nextBtn.innerText = "Kaydı Tamamla";
-                    nextBtn.className = "flex-[2] bg-green-600 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all hover:bg-green-700";
-                } else {
-                    // Düzenleme moduysa
-                    content.innerHTML = `<div class="text-center py-10"><h3 class="text-2xl font-black text-gray-800">Düzenleme Tamamlandı</h3><p class="text-gray-500">Değişiklikleri kaydetmek için butona bas.</p></div>`;
-                    nextBtn.innerText = "Planı Güncelle";
-                    nextBtn.className = "flex-[2] bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all hover:bg-blue-700";
-                }
-            }
-
-            renderWizardLists();
-        }
-
-        function renderWizardLists() {
-            const listEl = (data, id, type, color) => {
-                const el = document.getElementById(id); if(!el) return;
-                el.innerHTML = data.map((item, idx) => `
-                    <div class="flex gap-2 mb-2 items-center">
-                        <input type="text" value="${item.name || ''}" onchange="state.${type}[${idx}].name=this.value" class="flex-1 p-3 bg-white border border-gray-100 rounded-xl font-bold text-sm outline-none ${color? 'text-'+color+'-700':''}" placeholder="${type==='incomes'?'Gelir Adı':'İsim'}"> 
-                        <input type="number" value="${item.val || ''}" onchange="state.${type}[${idx}].val=parseFloat(this.value)||0" class="w-24 p-3 bg-gray-50 border border-transparent rounded-xl text-right font-black text-sm" placeholder="0">
-                        <button onclick="removeItem('${type}', ${idx})" class="text-gray-300 hover:text-red-500 px-2"><i class="fas fa-trash"></i></button>
-                    </div>`).join('');
-            };
-            
-            // Step 1: Gelir
-            if(state.step === 1) listEl(state.incomes, 'wiz_inc_list', 'incomes', 'green');
-            // Step 2: Fatura
-            if(state.step === 2) listEl(state.bills, 'wiz_bill_list', 'bills', 'red');
-            
-            // Step 3: Krediler (Özel Yapı)
-            if(state.step === 3) {
-                 const lEl = document.getElementById('wiz_loan_list'); 
-                 if(lEl) lEl.innerHTML = state.loans.map((l, i) => `
-                    <div class="p-4 bg-white border border-gray-100 rounded-2xl mb-3 space-y-3 relative">
-                        <button onclick="removeItem('loans', ${i})" class="absolute top-2 right-2 text-gray-300 hover:text-red-500"><i class="fas fa-times"></i></button>
-                        <input type="text" value="${l.name}" onchange="state.loans[${i}].name=this.value" class="w-full border-b pb-1 font-black text-sm outline-none text-indigo-700" placeholder="Kredi Adı">
-                        <div class="grid grid-cols-3 gap-2">
-                            <div class="col-span-1"><label class="text-[8px] font-bold text-gray-400">AYLIK</label><input type="number" id="wiz_loan_m_${i}" value="${l.monthly || ''}" oninput="updateLoanData(${i}, 'monthly', this.value)" class="w-full p-2 bg-gray-50 rounded-lg text-xs font-black border-2 border-indigo-50" placeholder="0"></div>
-                            <div class="col-span-1"><label class="text-[8px] font-bold text-gray-400">VADE</label><input type="number" value="${l.totalMonths || ''}" oninput="updateLoanData(${i}, 'totalMonths', this.value)" class="w-full p-2 bg-gray-50 rounded-lg text-xs font-black" placeholder="0"></div>
-                            <div class="col-span-1"><label class="text-[8px] font-bold text-gray-400">TOPLAM</label><input type="number" id="wiz_loan_t_${i}" value="${l.totalDebt || ''}" oninput="updateLoanData(${i}, 'totalDebt', this.value)" class="w-full p-2 bg-gray-50 rounded-lg text-xs font-black" placeholder="0"></div>
-                        </div>
-                        <div class="flex flex-col gap-1 pt-1 border-t border-gray-50">
-                            <div class="flex items-center gap-2"><input type="checkbox" id="wiz_ex_${i}" ${l.excludeFromBudget ? 'checked' : ''} onchange="state.loans[${i}].excludeFromBudget=this.checked" class="w-3.5 h-3.5 rounded"><label for="wiz_ex_${i}" class="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Aylık gidere dahil etme</label></div>
-                            <div class="flex items-center gap-2"><input type="checkbox" id="wiz_ex_debt_${i}" ${l.excludeFromDebt ? 'checked' : ''} onchange="state.loans[${i}].excludeFromDebt=this.checked" class="w-3.5 h-3.5 rounded"><label for="wiz_ex_debt_${i}" class="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Genel borca dahil etme</label></div>
-                        </div>
-                    </div>`).join('');
-            }
-             
-            // Step 4: Kredi Kartları
-             if(state.step === 4) {
-                const dEl = document.getElementById('wiz_debt_list'); 
-                if(dEl) dEl.innerHTML = state.debts.map((d, i) => `
-                    <div class="p-4 bg-white border border-gray-100 rounded-2xl mb-3 space-y-3 text-left relative">
-                         <button onclick="removeItem('debts', ${i})" class="absolute top-2 right-2 text-gray-300 hover:text-red-500"><i class="fas fa-times"></i></button>
-                        <div class="flex justify-between items-center pr-6"><input type="text" value="${d.name}" onchange="state.debts[${i}].name=this.value" class="font-black text-sm outline-none flex-1 text-purple-700" placeholder="Kart Adı"><button onclick="toggleCardMode(${i})" class="text-[9px] font-black text-blue-500 uppercase px-2 py-1 bg-blue-50 rounded-lg">Mod: ${d.calcMode ? 'Limit' : 'Manuel'}</button></div>
-                        ${d.calcMode ? `<div class="grid grid-cols-3 gap-2"><div><label class="text-[8px] font-bold text-gray-400">LİMİT</label><input type="number" id="wiz_card_lim_${i}" value="${d.limit || ''}" oninput="calcCard(${i}, 'limit', this.value)" class="w-full p-2.5 bg-gray-50 rounded-xl font-black text-xs outline-none" placeholder="0"></div><div><label class="text-[8px] font-bold text-gray-400">KULLANILABİLİR</label><input type="number" id="wiz_card_avl_${i}" value="${d.avail || ''}" oninput="calcCard(${i}, 'avail', this.value)" class="w-full p-2.5 bg-gray-50 rounded-xl font-black text-xs border border-blue-50" placeholder="0"></div><div><label class="text-[8px] font-bold text-gray-400">BORÇ</label><div id="wiz_card_res_${i}" class="w-full p-2.5 bg-purple-50 text-purple-700 font-black text-xs rounded-xl">${d.val || 0}</div></div></div>` : `<div class="flex items-center gap-2 justify-end"><span class="text-gray-400 font-bold">₺</span><input type="number" value="${d.val || ''}" onchange="state.debts[${i}].val=parseFloat(this.value)||0" class="w-32 p-2.5 rounded-xl text-right font-black outline-none bg-gray-50" placeholder="0"></div>`}
-                    </div>`).join('');
-            }
-
-            // Step 5: Diğer Borçlar (YENİ)
-            if(state.step === 5) listEl(state.otherDebts, 'wiz_other_debt_list', 'otherDebts', 'red');
-
-            // Step 6: Varlıklar
-            if(state.step === 6) listEl(state.assets, 'wiz_asset_list', 'assets', 'green');
-        }
-        
-        function addItem(key, targetId, color) {
-            const newItem = key==='loans' ? {name:'Yeni Kredi', totalDebt:0, totalMonths:12, monthly:0, excludeFromBudget:false, excludeFromDebt:false} : 
-                            key==='debts' ? {name:'Yeni Kart', val:0, calcMode:true, limit:0, avail:0} : 
-                            key==='otherDebts' ? {name:'Yeni Borç', val:0} : {name:'', val:null};
-            state[key].push(newItem);
-            renderWizardLists();
-        }
-
-        function removeItem(key, index) {
-            state[key].splice(index, 1);
-            renderWizardLists();
-        }
-
-        function toggleCardMode(i) { state.debts[i].calcMode = !state.debts[i].calcMode; renderWizardLists(); }
-        
-        function calcCard(i, field, value) {
-            const d = state.debts[i];
-            d[field] = parseFloat(value) || 0;
-            d.val = Math.max(0, (d.limit||0) - (d.avail||0));
-            // Update DOM directly
-            const resEl = document.getElementById(`wiz_card_res_${i}`);
-            if(resEl) resEl.innerText = d.val;
-        }
-
-        // --- MATH HELPERS ---
-        function updateLoanData(idx, field, value) {
-            state.loans[idx][field] = parseFloat(value) || 0;
-            const l = state.loans[idx];
-            // 2 bilinen varsa 3.yü hesapla
-            if (field === 'monthly' && l.totalMonths > 0) {
-               l.totalDebt = l.monthly * l.totalMonths;
-               const el = document.getElementById(`wiz_loan_t_${idx}`);
-               if(el) el.value = l.totalDebt;
-            } 
-            else if (field === 'totalMonths' && l.monthly > 0) {
-               l.totalDebt = l.monthly * l.totalMonths;
-               const el = document.getElementById(`wiz_loan_t_${idx}`);
-               if(el) el.value = l.totalDebt;
-            }
-            else if (field === 'totalDebt' && l.totalMonths > 0) {
-               l.monthly = Math.ceil(l.totalDebt / l.totalMonths);
-               const el = document.getElementById(`wiz_loan_m_${idx}`);
-               if(el) el.value = l.monthly;
+            if(currentUserRole === 'limited') {
+                document.getElementById('financialHealthSection').classList.add('hidden');
+                document.getElementById('btnAnalysis').classList.add('hidden');
+                document.getElementById('btnFamily').classList.add('hidden');
+                document.getElementById('btnEditPlan').classList.add('hidden');
+                document.getElementById('btnClearHist').classList.add('hidden');
+            } else {
+                document.getElementById('financialHealthSection').classList.remove('hidden');
+                document.getElementById('btnAnalysis').classList.remove('hidden');
+                document.getElementById('btnFamily').classList.remove('hidden');
+                document.getElementById('btnEditPlan').classList.remove('hidden');
+                document.getElementById('btnClearHist').classList.remove('hidden');
             }
         }
 
-        function updateAllocationUI() {
-            const totalInc = state.incomes.reduce((s, i) => s + (i.val || 0), 0);
-            const totalFix = state.bills.reduce((s, b) => s + (b.val || 0), 0);
-            const incLoanPayments = state.loans.filter(l => !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
-            
-            state.remainingAfterFixed = totalInc - totalFix - incLoanPayments;
-            if(isNaN(state.remainingAfterFixed)) state.remainingAfterFixed = 0;
-            
-            // Set default manual limit if not set
-            if (state.manualDailyLimit === null) {
-                state.manualDailyLimit = Math.max(0, state.remainingAfterFixed / 30);
-            }
-            
-            applyAllocationFromLimit(state.manualDailyLimit);
-        }
-
-        function updateFromDailyLimitInput(val) {
-            const limit = parseFloat(val) || 0;
-            state.manualDailyLimit = limit;
-            applyAllocationFromLimit(limit);
-        }
-
-        function applyAllocationFromLimit(dailyLimit) {
-            const monthlySpending = dailyLimit * 30;
-            const savings = state.remainingAfterFixed - monthlySpending;
-            
-            if(document.getElementById('remainingCalcText')) document.getElementById('remainingCalcText').innerText = Math.max(0, state.remainingAfterFixed).toLocaleString(undefined, {maximumFractionDigits:0});
-            if(document.getElementById('manualSavingsInput')) document.getElementById('manualSavingsInput').value = `₺${Math.floor(savings).toLocaleString()}`; 
-            if(document.getElementById('allocSpendingVal')) document.getElementById('allocSpendingVal').innerText = `₺${Math.floor(monthlySpending).toLocaleString()}`;
-            
-            if(state.remainingAfterFixed > 0) {
-                const percent = (savings / state.remainingAfterFixed) * 100;
-                if(document.getElementById('allocationSlider')) {
-                     document.getElementById('allocationSlider').value = Math.max(0, Math.min(100, percent));
-                }
-            }
-
-            state.calculatedMonthlyPool = monthlySpending; 
-            state.calculatedMonthlySavings = savings;
-        }
-        
-        function handleSliderChange(v) {
-            const savingsPercent = parseFloat(v);
-            const savings = (state.remainingAfterFixed * savingsPercent) / 100;
-            const spending = state.remainingAfterFixed - savings;
-            const daily = spending / 30;
-            
-            document.getElementById('idealDailyLimitInput').value = Math.floor(daily);
-            updateFromDailyLimitInput(daily);
-        }
-
-        // --- DASHBOARD ---
+        // --- DASHBOARD UI ---
         function updateDashboardUI() {
+            applyPermissions();
+            // ... (Eski updateDashboardUI kodu aynı) ...
             const now = new Date();
             const todayStr = now.toLocaleDateString('tr-TR');
-            const dailyLimit = state.manualDailyLimit || 0;
-            
-            // Registration date logic (reset logic if weird date)
             let startCalc = state.registrationDate ? new Date(state.registrationDate) : new Date();
             if(isNaN(startCalc.getTime())) startCalc = new Date();
-
-            const msPassed = now - startCalc;
-            const daysPassed = Math.max(1, Math.ceil(msPassed / (1000 * 60 * 60 * 24)));
+            const daysPassed = Math.max(1, Math.ceil((now - startCalc) / (1000 * 60 * 60 * 24)));
             
-            // Calculate expenses
             const spentToday = state.expenses.filter(e => e.date === todayStr).reduce((s,e)=>s+e.amount,0);
             const totalSpent = state.expenses.reduce((s,e)=>s+e.amount,0);
-
-            // Cumulative Balance
-            const cumulative = (dailyLimit * daysPassed) - totalSpent;
+            const cumulative = ((state.manualDailyLimit||0) * daysPassed) - totalSpent;
             
-            document.getElementById('displayDailyLimit').innerText = `₺${Math.floor(dailyLimit - spentToday).toLocaleString()}`;
+            document.getElementById('displayDailyLimit').innerText = `₺${Math.floor((state.manualDailyLimit||0) - spentToday).toLocaleString()}`;
             document.getElementById('displayCumulativeLimit').innerText = `₺${Math.floor(cumulative).toLocaleString()}`;
             document.getElementById('todayTotal').innerText = `Bugün: ₺${Math.floor(spentToday).toLocaleString()}`;
             
-            // Salary Day Logic
-            const currentDay = now.getDate();
-            const salaryDay = parseInt(state.salaryDay) || 15;
-            let targetDate = new Date(now.getFullYear(), now.getMonth(), salaryDay);
-            
-            if (currentDay >= salaryDay) {
-                targetDate = new Date(now.getFullYear(), now.getMonth() + 1, salaryDay);
-            }
-            
-            const diffTime = Math.abs(targetDate - now);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-            document.getElementById('displayRemainingDays').innerText = `${diffDays} Gün`;
+            let targetDate = new Date(now.getFullYear(), now.getMonth(), state.salaryDay||15);
+            if (now.getDate() >= (state.salaryDay||15)) targetDate.setMonth(targetDate.getMonth()+1);
+            document.getElementById('displayRemainingDays').innerText = `${Math.ceil((targetDate - now)/(1000*60*60*24))} Gün`;
 
-            // Health Indicators
-            const assetsVal = state.assets.reduce((s,a)=>s+(a.val||0),0);
-            const loansVal = state.loans.filter(l=>!l.excludeFromDebt).reduce((s,l)=>s+(l.totalDebt||0),0);
-            const cardsVal = state.debts.reduce((s,d)=>s+(d.val||0),0);
-            const otherDebtVal = state.otherDebts ? state.otherDebts.reduce((s,d)=>s+(d.val||0),0) : 0;
-            
-            const totalDebt = loansVal + cardsVal + otherDebtVal;
-            const net = assetsVal - totalDebt;
-            const income = state.incomes.reduce((s,i)=>s+(i.val||0),0);
+            // Health Summary (Gizli olsa da hesapla, belki ilerde gösterilir)
+            const assets = state.assets.reduce((s,a)=>s+(a.val||0),0);
+            const loans = state.loans.reduce((s,l)=>s+(l.totalDebt||0),0);
+            const cards = state.debts.reduce((s,d)=>s+(d.val||0),0);
+            const others = state.otherDebts.reduce((s,d)=>s+(d.val||0),0);
+            const totalDebt = loans + cards + others;
+            const net = assets - totalDebt;
+            const inc = state.incomes.reduce((s,i)=>s+(i.val||0),0);
 
-            document.getElementById('sumSalaryMult').innerText = income>0 ? (totalDebt/income).toFixed(1)+' Maaş' : '0 Maaş';
-            document.getElementById('sumSavings').innerText = `₺${Math.floor(state.calculatedMonthlySavings || 0).toLocaleString()}`;
-            document.getElementById('sumGiderTotal').innerText = `₺${Math.floor(state.calculatedMonthlyPool || 0).toLocaleString()}`;
-
+            document.getElementById('sumSalaryMult').innerText = inc>0 ? (totalDebt/inc).toFixed(1)+' Maaş' : '0x';
+            document.getElementById('sumSavings').innerText = `₺${Math.floor(state.calculatedMonthlySavings||0).toLocaleString()}`;
+            document.getElementById('sumGiderTotal').innerText = `₺${Math.floor(state.calculatedMonthlyPool||0).toLocaleString()}`;
             document.getElementById('netStatusVal').innerText = `${net>=0?'+':'-'}₺${Math.abs(Math.floor(net)).toLocaleString()}`;
-            const badge = document.getElementById('netStatusBadge');
-            if(net >= 0) {
-                 badge.className = "text-4xl font-black text-green-600 px-8 py-4 bg-green-50 rounded-[2rem] transition-colors";
-            } else {
-                 badge.className = "text-4xl font-black text-red-600 px-8 py-4 bg-red-50 rounded-[2rem] transition-colors";
-            }
+            document.getElementById('netStatusBadge').className = `text-4xl font-black px-8 py-4 rounded-[2rem] ${net>=0?'text-green-600 bg-green-50':'text-red-600 bg-red-50'}`;
 
             renderDetailedHealthLists();
             renderHistoryList();
         }
 
-        function renderDetailedHealthLists() {
-            const createItem = (name, amount) => `
-                <div class="flex justify-between items-center p-3 rounded-xl text-xs font-bold text-gray-600 bg-gray-50 border border-gray-100 shadow-sm">
-                    <span>${name}</span>
-                    <span class="font-black text-gray-800">₺${Math.floor(amount).toLocaleString()}</span>
-                </div>`;
-
-            const debtContainer = document.getElementById('detailedDebtsList');
-            let debtHTML = '';
-            
-            state.loans.filter(l => !l.excludeFromDebt).forEach(l => {
-                debtHTML += createItem(l.name, l.totalDebt || 0);
-            });
-            state.debts.forEach(d => {
-                debtHTML += createItem(d.name + ' (Kart)', d.val || 0);
-            });
-            if(state.otherDebts) {
-                state.otherDebts.forEach(d => {
-                    debtHTML += createItem(d.name, d.val || 0);
-                });
-            }
-
-            if(debtHTML === '') debtHTML = '<div class="text-gray-300 text-[10px] text-center italic py-2">Borç kaydı bulunmuyor</div>';
-            debtContainer.innerHTML = debtHTML;
-
-            const assetContainer = document.getElementById('detailedAssetsList');
-            let assetHTML = '';
-            
-            state.assets.forEach(a => {
-                assetHTML += createItem(a.name, a.val || 0);
-            });
-
-            if(assetHTML === '') assetHTML = '<div class="text-gray-300 text-[10px] text-center italic py-2">Varlık kaydı bulunmuyor</div>';
-            assetContainer.innerHTML = assetHTML;
-        }
-
+        // --- EXPENSES ---
         function addExpense() {
             const amtInp = document.getElementById('expAmt');
             const descInp = document.getElementById('expDesc');
+            const editIndex = parseInt(document.getElementById('editExpIndex').value);
             const amt = parseFloat(amtInp.value);
-            const desc = descInp.value;
             
-            if(!amt) {
-                 amtInp.focus();
-                 return;
+            if(!amt) return amtInp.focus();
+
+            // Sınırlı yetkili düzenleme yaparken kendi harcaması mı kontrolü (UI'da buton gizli ama güvenlik için)
+            if(editIndex > -1 && currentUserRole === 'limited') {
+                const targetExp = state.expenses[editIndex];
+                const myName = currentUser.email.split('@')[0];
+                if(targetExp.addedBy !== myName && targetExp.addedBy !== 'Ben') {
+                    return alert("Sadece kendi harcamalarınızı düzenleyebilirsiniz.");
+                }
+            }
+
+            if(editIndex > -1) {
+                state.expenses[editIndex].amount = amt;
+                state.expenses[editIndex].desc = descInp.value || 'Diğer';
+                document.getElementById('editExpIndex').value = "-1";
+                document.getElementById('addExpBtn').innerHTML = '<i class="fas fa-plus text-xl"></i>';
+                document.getElementById('addExpBtn').classList.replace('bg-green-600', 'bg-blue-600');
+            } else {
+                state.expenses.unshift({ 
+                    amount: amt, 
+                    desc: descInp.value || 'Diğer', 
+                    date: new Date().toLocaleDateString('tr-TR'), 
+                    addedBy: currentUser ? currentUser.email.split('@')[0] : 'Ben',
+                    ts: Date.now()
+                });
             }
             
-            state.expenses.unshift({ 
-                amount: amt, 
-                desc: desc || 'Diğer', 
-                date: new Date().toLocaleDateString('tr-TR'), 
-                addedBy: currentUser ? currentUser.email.split('@')[0] : 'Ben',
-                ts: Date.now()
-            });
-            
-            amtInp.value = '';
-            descInp.value = '';
-            
-            // Eğer Firebase varsa kaydet
-            saveState();
-            
+            amtInp.value = ''; descInp.value = '';
+            saveToCloud(); 
             updateDashboardUI();
-            renderHistoryList();
         }
 
         function renderHistoryList() {
             const list = document.getElementById('historyList');
             if(!list) return;
+            if(state.expenses.length === 0) return list.innerHTML = '<div class="text-center text-gray-400 text-xs">Harcama yok.</div>';
             
-            if(state.expenses.length === 0) {
-                list.innerHTML = '<div class="text-center text-gray-400 text-xs py-4">Henüz harcama yok.</div>';
-                return;
-            }
+            const myName = currentUser ? currentUser.email.split('@')[0] : '';
 
-            list.innerHTML = state.expenses.map((e, idx) => `
+            list.innerHTML = state.expenses.map((e, idx) => {
+                // Yetki kontrolü: Sahibi, Tam yetkili veya Harcamayı yapan kişi
+                const canEdit = currentUserRole === 'owner' || currentUserRole === 'full' || e.addedBy === myName || e.addedBy === 'Ben';
+                
+                return `
                 <div class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-xl mb-2 hover:bg-gray-50 transition-colors group">
                     <div>
                         <p class="font-bold text-gray-800 text-xs">${e.desc}</p>
-                        <p class="text-[10px] text-gray-400">Ekleyen: ${e.addedBy} | ${e.date}</p>
+                        <p class="text-[10px] text-gray-400">${e.date} • ${e.addedBy}</p>
                     </div>
                     <div class="flex items-center gap-3">
                          <span class="font-black text-red-500 text-sm">-₺${Math.floor(e.amount).toLocaleString()}</span>
-                         <button onclick="deleteExpense(${idx})" class="text-gray-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-trash-alt"></i></button>
+                         ${canEdit ? `<div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="editExpense(${idx})" class="text-blue-300 hover:text-blue-500"><i class="fas fa-pen"></i></button>
+                            <button onclick="deleteExpense(${idx})" class="text-gray-200 hover:text-red-500"><i class="fas fa-trash-alt"></i></button>
+                         </div>` : ''}
                     </div>
-                </div>`).join('');
-        }
-        
-        function deleteExpense(idx) {
-            state.expenses.splice(idx, 1);
-            saveState();
-            updateDashboardUI();
-            renderHistoryList();
+                </div>`;
+            }).join('');
         }
 
-        function openCalcModal() { 
-             const totalInc = state.incomes.reduce((s, i) => s + (i.val||0), 0);
-             const totalFix = state.bills.reduce((s, b) => s + (b.val||0), 0);
-             const loanPayments = state.loans.filter(l => !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
-             
-             document.getElementById('calcModalContent').innerHTML = `
-                <div class="flex justify-between font-bold text-green-600 bg-green-50 p-2 rounded-lg"><span>Gelirler:</span><span>+ ₺${totalInc.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
-                <div class="flex justify-between text-red-500 text-xs px-2"><span>Sabit Giderler:</span><span>- ₺${totalFix.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
-                <div class="flex justify-between text-red-500 text-xs px-2"><span>Dahil Edilen Krediler:</span><span>- ₺${loanPayments.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
-                <div class="border-t pt-4 font-black text-blue-600 text-2xl mt-2">KALAN NET: ₺${(state.remainingAfterFixed||0).toLocaleString(undefined, {maximumFractionDigits:0})}</div>
-                <p class="text-[10px] text-gray-400 mt-2">Bu tutar üzerinden birikim ve harcama limitiniz belirlenir.</p>
-             `;
-             document.getElementById('calcModal').classList.remove('hidden'); 
-             document.getElementById('overlay').classList.add('active'); 
+        // --- DİĞER FONKSİYONLAR ---
+        function startWizard(isEditMode) {
+            hideAll(); document.getElementById('wizardScreen').classList.remove('hidden');
+            if(!isEditMode) { state = JSON.parse(JSON.stringify(defaultState)); state.registrationDate = new Date(); state.incomes = [{ name: 'Maaş', val: null }]; }
+            state.step = 1; renderWizard();
         }
+        function wizardNext() { if (state.step === 8) { if(document.getElementById('wizRegEmail')) registerFromWizard(); else { saveState(); showDashboard(); } return; } state.step++; renderWizard(); }
+        function wizardBack() { if (state.step > 1) { state.step--; renderWizard(); } else { showLoginScreen(); } }
+        
+        function renderWizard() {
+            const content = document.getElementById('wizardContent');
+            const stepEl = document.getElementById('stepCount');
+            stepEl.innerText = `${state.step}/8`;
+            document.getElementById('wizardProgress').innerHTML = Array(8).fill(0).map((_,i) => `<div class="h-1.5 flex-1 rounded-full ${i+1<=state.step?'bg-blue-600':'bg-gray-200'} transition-all"></div>`).join('');
+            
+            if(state.step === 8) {
+                if(!currentUser) {
+                    content.innerHTML = `<div class="text-center mb-6"><h3 class="text-2xl font-black">Planın Hazır!</h3></div><div class="space-y-4"><input type="text" id="wizRegName" class="w-full p-4 bg-gray-50 rounded-2xl border" placeholder="Adınız"><input type="email" id="wizRegEmail" class="w-full p-4 bg-gray-50 rounded-2xl border" placeholder="E-posta"><input type="password" id="wizRegPass" class="w-full p-4 bg-gray-50 rounded-2xl border" placeholder="Şifre"></div>`;
+                    document.getElementById('wizNextBtn').innerText = "Kaydı Tamamla";
+                } else {
+                    content.innerHTML = `<div class="text-center py-10"><h3 class="text-2xl font-black text-gray-800">Tamamlandı</h3></div>`;
+                    document.getElementById('wizNextBtn').innerText = "Planı Güncelle";
+                }
+            } else if (state.step === 1) {
+                 content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-green-600">Gelirler</h3><div id="wiz_inc_list" class="custom-scrollbar overflow-y-auto max-h-[300px]"></div><button onclick="addItem('incomes', 'wiz_inc_list')" class="w-full py-3 border-2 border-dashed border-green-200 rounded-2xl text-green-500 font-bold mt-4">+ Gelir Ekle</button><div class="pt-4 mt-6 border-t"><p class="text-[10px] font-bold text-gray-400 uppercase mb-2">Maaş Günü</p><input type="number" id="wiz_salary_day_val" oninput="state.salaryDay=this.value" value="${state.salaryDay || 15}" class="w-20 p-3 bg-gray-50 rounded-xl font-black text-center text-xl" placeholder="15"></div>`;
+            } else if(state.step === 7) {
+                content.innerHTML = `<h3 class="text-2xl font-black mb-2">Plan</h3><p class="text-center mb-6">Net Kalan: ₺${Math.floor(state.remainingAfterFixed||0)}</p><div class="p-4 bg-white border border-gray-200 rounded-[2rem] shadow-sm text-center mb-6"><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Hedef Günlük</label><input type="number" id="idealDailyLimitInput" oninput="updateFromDailyLimitInput(this.value)" class="w-32 text-center text-3xl font-black text-blue-600 border-b-2 outline-none pb-2" placeholder="0"></div><input type="range" id="allocationSlider" min="0" max="100" oninput="handleSliderChange(this.value)" class="w-full h-3 bg-gray-200 rounded-lg cursor-pointer">`;
+                updateAllocationUI();
+                document.getElementById('wizNextBtn').innerText = "Devam Et";
+            }
+            else {
+                const titles = ["", "Gelirler", "Sabit Giderler", "Banka Kredileri", "Kredi Kartları", "Diğer Borçlar", "Varlıklar"];
+                const colors = ["", "green", "red", "red", "purple", "red", "green"];
+                const keys = ["", "incomes", "bills", "loans", "debts", "otherDebts", "assets"];
+                const key = keys[state.step];
+                content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-${colors[state.step]}-600">${titles[state.step]}</h3><div id="wiz_${key}_list" class="custom-scrollbar overflow-y-auto max-h-[300px]"></div><button onclick="addItem('${key}', 'wiz_${key}_list')" class="w-full py-3 border-2 border-dashed border-${colors[state.step]}-200 rounded-2xl text-${colors[state.step]}-500 font-bold mt-4">+ Ekle</button>`;
+            }
+            renderWizardLists();
+        }
+        
+        function editExpense(idx) {
+            const exp = state.expenses[idx];
+            document.getElementById('expAmt').value = exp.amount;
+            document.getElementById('expDesc').value = exp.desc;
+            document.getElementById('editExpIndex').value = idx;
+            const btn = document.getElementById('addExpBtn');
+            btn.innerHTML = '<i class="fas fa-check"></i>';
+            btn.classList.replace('bg-blue-600', 'bg-green-600');
+            document.getElementById('expAmt').focus();
+        }
+        function deleteExpense(idx) { if(confirm('Silinecek?')) { state.expenses.splice(idx, 1); saveToCloud(); updateDashboardUI(); } }
+        function clearHistory() { if(confirm('Hepsi silinecek?')) { state.expenses = []; saveToCloud(); updateDashboardUI(); } }
+        function hideAll() { ['loginScreen', 'wizardScreen', 'dashboardScreen', 'analysisScreen'].forEach(id => document.getElementById(id).classList.add('hidden')); closeAllPopups(); }
+        function closeAllPopups() { document.getElementById('overlay').classList.remove('active'); ['calcModal', 'editItemModal', 'familyModal'].forEach(id => document.getElementById(id).classList.add('hidden')); }
+        function showAnalysisScreen() { hideAll(); document.getElementById('analysisScreen').classList.remove('hidden'); renderAnalysis(); }
+        function showDashboard() { hideAll(); document.getElementById('dashboardScreen').classList.remove('hidden'); updateDashboardUI(); }
+        function registerFromWizard() {
+            const name = document.getElementById('wizRegName').value;
+            const email = document.getElementById('wizRegEmail').value;
+            const pass = document.getElementById('wizRegPass').value;
+            if(!name || !email || !pass) return alert("Doldurunuz.");
+            
+            isRegistering = true;
+            auth.createUserWithEmailAndPassword(email, pass).then(cred => {
+                currentUser = cred.user;
+                cred.user.updateProfile({displayName: name});
+                const s = JSON.parse(JSON.stringify(state));
+                s.registrationDate = state.registrationDate.toISOString();
+                s.username = name; s.email = email;
+                db.collection("users").doc(cred.user.uid).set(s).then(()=>{
+                    isRegistering=false; document.getElementById('dashWelcome').innerText=`Hoşgeldin, ${name}`; showDashboard();
+                });
+            }).catch(e=>{ isRegistering=false; alert(e.message); });
+        }
+        
+        function renderWizardLists() {
+             const listEl = (data, id, type) => { const el = document.getElementById(id); if(!el) return; el.innerHTML = data.map((item, idx) => `<div class="flex gap-2 mb-2 items-center"><input type="text" value="${item.name||''}" onchange="state.${type}[${idx}].name=this.value" class="flex-1 p-3 bg-white border border-gray-100 rounded-xl text-sm outline-none" placeholder="İsim"> <input type="number" value="${item.val||''}" onchange="state.${type}[${idx}].val=parseFloat(this.value)||0" class="w-24 p-3 bg-gray-50 border rounded-xl text-right text-sm" placeholder="0"><button onclick="removeItem('${type}', ${idx})" class="text-gray-300 hover:text-red-500 px-2"><i class="fas fa-trash"></i></button></div>`).join(''); };
+             if(state.step===1) listEl(state.incomes, 'wiz_inc_list', 'incomes');
+             if(state.step===2) listEl(state.bills, 'wiz_bill_list', 'bills');
+             if(state.step===3) { const el = document.getElementById('wiz_loan_list'); if(el) el.innerHTML = state.loans.map((l, i) => `<div class="p-4 bg-white border rounded-2xl mb-3 space-y-3 relative"><button onclick="removeItem('loans', ${i})" class="absolute top-2 right-2 text-gray-300 hover:text-red-500"><i class="fas fa-times"></i></button><input type="text" value="${l.name}" onchange="state.loans[${i}].name=this.value" class="w-full border-b pb-1 font-black text-sm outline-none" placeholder="Kredi Adı"><div class="grid grid-cols-3 gap-2"><input type="number" value="${l.monthly||''}" oninput="updateLoanData(${i}, 'monthly', this.value)" class="p-2 bg-gray-50 rounded-lg text-xs" placeholder="Aylık"><input type="number" value="${l.totalMonths||''}" oninput="updateLoanData(${i}, 'totalMonths', this.value)" class="p-2 bg-gray-50 rounded-lg text-xs" placeholder="Vade"><input type="number" id="wiz_loan_t_${i}" value="${l.totalDebt||''}" oninput="updateLoanData(${i}, 'totalDebt', this.value)" class="p-2 bg-gray-50 rounded-lg text-xs" placeholder="Toplam"></div></div>`).join(''); }
+             if(state.step===4) { const el = document.getElementById('wiz_debt_list'); if(el) el.innerHTML = state.debts.map((d, i) => `<div class="p-4 bg-white border rounded-2xl mb-3 space-y-3 text-left relative"><button onclick="removeItem('debts', ${i})" class="absolute top-2 right-2 text-gray-300 hover:text-red-500"><i class="fas fa-times"></i></button><div class="flex justify-between items-center pr-6"><input type="text" value="${d.name}" onchange="state.debts[${i}].name=this.value" class="font-black text-sm outline-none flex-1" placeholder="Kart Adı"><button onclick="toggleCardMode(${i})" class="text-[9px] font-black text-blue-500 bg-blue-50 px-2 py-1 rounded-lg">Mod: ${d.calcMode?'Limit':'Manuel'}</button></div>${d.calcMode ? `<div class="grid grid-cols-3 gap-2"><input type="number" value="${d.limit||''}" oninput="calcCard(${i}, 'limit', this.value)" class="p-2 bg-gray-50 rounded-xl text-xs" placeholder="Limit"><input type="number" value="${d.avail||''}" oninput="calcCard(${i}, 'avail', this.value)" class="p-2 bg-gray-50 rounded-xl text-xs" placeholder="Kullanılabilir"><div id="wiz_card_res_${i}" class="p-2 bg-purple-50 text-purple-700 font-black text-xs rounded-xl">${d.val||0}</div></div>` : `<input type="number" value="${d.val||''}" onchange="state.debts[${i}].val=parseFloat(this.value)||0" class="w-full p-2 bg-gray-50 rounded-xl text-right text-sm" placeholder="Borç">`}</div>`).join(''); }
+             if(state.step===5) listEl(state.otherDebts, 'wiz_other_debt_list', 'otherDebts');
+             if(state.step===6) listEl(state.assets, 'wiz_asset_list', 'assets');
+        }
+        
+        function renderAnalysis() {
+            if(currentUserRole === 'limited') return; 
+            const ctxA = document.getElementById('assetsChart').getContext('2d');
+            const hist = state.monthlyHistory || [];
+            const currentAssets = state.assets.reduce((s,a)=>s+(a.val||0),0);
+            const currentDebts = state.loans.reduce((s,l)=>s+(l.totalDebt||0),0) + state.debts.reduce((s,d)=>s+(d.val||0),0) + state.otherDebts.reduce((s,d)=>s+(d.val||0),0);
+            const allData = [...hist, { date: 'Şimdi', assets: currentAssets, debts: currentDebts }];
+            if(assetsChartInstance) assetsChartInstance.destroy();
+            assetsChartInstance = new Chart(ctxA, { type: 'line', data: { labels: allData.map(d => d.date), datasets: [ { label: 'Varlık', data: allData.map(d => d.assets), borderColor: '#10b981', tension: 0.4 }, { label: 'Borç', data: allData.map(d => d.debts), borderColor: '#ef4444', tension: 0.4 } ] } });
+            const ctxE = document.getElementById('expensesChart').getContext('2d');
+            const expensesByMonth = {}; state.expenses.forEach(e => { const m = e.date.split('.')[1] + '/' + e.date.split('.')[2]; expensesByMonth[m] = (expensesByMonth[m] || 0) + e.amount; });
+            if(expensesChartInstance) expensesChartInstance.destroy();
+            expensesChartInstance = new Chart(ctxE, { type: 'bar', data: { labels: Object.keys(expensesByMonth), datasets: [{ label: 'Harcama', data: Object.values(expensesByMonth), backgroundColor: '#3b82f6', borderRadius: 10 }] } });
+            document.getElementById('historyTable').innerHTML = hist.map((h, i) => `<div class="flex justify-between p-3 bg-gray-50 rounded-xl text-xs"><span class="font-bold">${h.date}</span><span class="text-green-600">V: ₺${h.assets}</span><span class="text-red-600">B: ₺${h.debts}</span><button onclick="removeHistory(${i})" class="text-red-300"><i class="fas fa-times"></i></button></div>`).join('');
+        }
+        function addHistoryRecord() { const date = document.getElementById('histDate').value; const assets = parseFloat(document.getElementById('histAssets').value); const debts = parseFloat(document.getElementById('histDebts').value); if(date && !isNaN(assets)) { if(!state.monthlyHistory) state.monthlyHistory = []; state.monthlyHistory.push({ date, assets, debts }); state.monthlyHistory.sort((a,b) => a.date.localeCompare(b.date)); saveToCloud(); renderAnalysis(); } }
+        function removeHistory(i) { state.monthlyHistory.splice(i, 1); saveToCloud(); renderAnalysis(); }
+        function addItem(key, id) { const item = {name:'',val:0}; if(key==='loans') Object.assign(item, {name:'Kredi',totalDebt:0,totalMonths:12,monthly:0}); else if(key==='debts') Object.assign(item, {name:'Kart',val:0,calcMode:true}); state[key].push(item); renderWizardLists(); }
+        function removeItem(key, i) { state[key].splice(i, 1); renderWizardLists(); }
+        function updateLoanData(i, f, v) { state.loans[i][f] = parseFloat(v)||0; const l = state.loans[i]; if(f==='monthly' && l.totalMonths>0) l.totalDebt = l.monthly*l.totalMonths; else if(f==='totalMonths' && l.monthly>0) l.totalDebt = l.monthly*l.totalMonths; else if(f==='totalDebt' && l.totalMonths>0) l.monthly = l.totalDebt/l.totalMonths; document.getElementById(`wiz_loan_t_${i}`).value = Math.ceil(l.totalDebt); }
+        function calcCard(i, f, v) { state.debts[i][f] = parseFloat(v)||0; state.debts[i].val = Math.max(0, (state.debts[i].limit||0)-(state.debts[i].avail||0)); document.getElementById(`wiz_card_res_${i}`).innerText = state.debts[i].val; }
+        function toggleCardMode(i) { state.debts[i].calcMode = !state.debts[i].calcMode; renderWizardLists(); }
+        function updateAllocationUI() { const inc = state.incomes.reduce((s,i)=>s+(i.val||0),0); const bill = state.bills.reduce((s,i)=>s+(i.val||0),0); const loan = state.loans.filter(l=>!l.excludeFromBudget).reduce((s,i)=>s+(i.monthly||0),0); state.remainingAfterFixed = inc - bill - loan; if(!state.manualDailyLimit) state.manualDailyLimit = Math.max(0, state.remainingAfterFixed/30); applyAllocationFromLimit(state.manualDailyLimit); }
+        function updateFromDailyLimitInput(v) { state.manualDailyLimit = parseFloat(v)||0; applyAllocationFromLimit(state.manualDailyLimit); }
+        function handleSliderChange(v) { const save = (state.remainingAfterFixed * v) / 100; const spend = state.remainingAfterFixed - save; document.getElementById('idealDailyLimitInput').value = Math.floor(spend/30); updateFromDailyLimitInput(spend/30); }
+        function applyAllocationFromLimit(lim) { const spend = lim * 30; const save = state.remainingAfterFixed - spend; document.getElementById('manualSavingsInput').value = `₺${Math.floor(save)}`; document.getElementById('allocSpendingVal').innerText = `₺${Math.floor(spend)}`; document.getElementById('remainingCalcText').innerText = Math.floor(state.remainingAfterFixed); state.calculatedMonthlyPool = spend; state.calculatedMonthlySavings = save; }
+        function openEditModal(type, index) { const item = state[type][index]; document.getElementById('editItemName').value = item.name; document.getElementById('editItemVal').value = item.val || item.totalDebt || 0; document.getElementById('editItemType').value = type; document.getElementById('editItemIndex').value = index; document.getElementById('editItemModal').classList.remove('hidden'); document.getElementById('overlay').classList.add('active'); }
+        function saveEditedItem() { const type = document.getElementById('editItemType').value; const idx = parseInt(document.getElementById('editItemIndex').value); const name = document.getElementById('editItemName').value; const val = parseFloat(document.getElementById('editItemVal').value); if(state[type][idx]) { state[type][idx].name = name; if(type === 'loans') state[type][idx].totalDebt = val; else state[type][idx].val = val; saveToCloud(); updateDashboardUI(); closeEditModal(); } }
+        function closeEditModal() { document.getElementById('editItemModal').classList.add('hidden'); document.getElementById('overlay').classList.remove('active'); }
+        function deleteHealthItem(type, idx) { if(confirm('Sil?')) { state[type].splice(idx, 1); saveToCloud(); updateDashboardUI(); } }
+        function renderDetailedHealthLists() { const createRow = (name, amount, type, idx, extraClass='') => `<div class="flex justify-between items-center p-3 rounded-xl text-xs font-bold text-gray-600 bg-gray-50 border border-gray-100 shadow-sm group ${extraClass}"><span>${name}</span><div class="flex items-center gap-3"><span class="font-black text-gray-800">₺${Math.floor(amount).toLocaleString()}</span><div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="openEditModal('${type}', ${idx})" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pen"></i></button>${idx !== 'total' ? `<button onclick="deleteHealthItem('${type}', ${idx})" class="text-red-300 hover:text-red-500"><i class="fas fa-trash"></i></button>` : ''}</div></div></div>`; let debtHTML = ''; state.loans.forEach((l, i) => debtHTML += createRow(l.name, l.totalDebt, 'loans', i)); state.otherDebts.forEach((d, i) => debtHTML += createRow(d.name, d.val, 'otherDebts', i)); const totalCardDebt = state.debts.reduce((s,d)=>s+(d.val||0),0); if(totalCardDebt > 0 || state.debts.length > 0) { debtHTML += `<div class="border border-purple-100 rounded-xl overflow-hidden bg-purple-50/30"><div onclick="document.getElementById('cardDetails').classList.toggle('open');" class="flex justify-between items-center p-3 cursor-pointer"><div class="flex items-center gap-2"><i class="fas fa-chevron-down text-purple-400"></i> <span class="text-xs font-bold text-purple-800">Toplam Kredi Kartı</span></div><span class="font-black text-purple-900 text-sm">₺${totalCardDebt.toLocaleString()}</span></div><div id="cardDetails" class="health-detail space-y-1 px-2 pb-2">${state.debts.map((d, i) => createRow(d.name, d.val, 'debts', i, 'bg-white')).join('')}<button onclick="addNewHealthItem('debts')" class="w-full py-2 text-[10px] font-bold text-purple-400 hover:text-purple-600">+ Kart Ekle</button></div></div>`; } debtHTML += `<button onclick="addNewHealthItem('otherDebts')" class="w-full py-2 text-[10px] font-bold text-gray-400 hover:text-gray-600 border border-dashed rounded-lg">+ Borç/Kredi Ekle</button>`; document.getElementById('detailedDebtsList').innerHTML = debtHTML || '<span class="text-gray-300 text-xs">Borç yok</span>'; let assetHTML = state.assets.map((a, i) => createRow(a.name, a.val, 'assets', i)).join(''); assetHTML += `<button onclick="addNewHealthItem('assets')" class="w-full py-2 text-[10px] font-bold text-gray-400 hover:text-gray-600 border border-dashed rounded-lg">+ Varlık Ekle</button>`; document.getElementById('detailedAssetsList').innerHTML = assetHTML; }
+        function addNewHealthItem(type) { const name = prompt("Yeni Kalem Adı:"); if(name) { const val = parseFloat(prompt("Tutar:")) || 0; const newItem = type==='loans' ? {name, totalDebt:val, monthly:0, totalMonths:1} : {name, val:val}; state[type].push(newItem); saveToCloud(); updateDashboardUI(); } }
+        function openCalcModal() { const totalInc = state.incomes.reduce((s, i) => s + (i.val||0), 0); const totalFix = state.bills.reduce((s, b) => s + (b.val||0), 0); const loanPayments = state.loans.filter(l => !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0); document.getElementById('calcModalContent').innerHTML = `<div class="flex justify-between font-bold text-green-600 bg-green-50 p-2 rounded-lg"><span>Gelirler:</span><span>+ ₺${totalInc.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div><div class="flex justify-between text-red-500 text-xs px-2"><span>Sabit Giderler:</span><span>- ₺${totalFix.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div><div class="flex justify-between text-red-500 text-xs px-2"><span>Dahil Edilen Krediler:</span><span>- ₺${loanPayments.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div><div class="border-t pt-4 font-black text-blue-600 text-2xl mt-2">KALAN NET: ₺${(state.remainingAfterFixed||0).toLocaleString(undefined, {maximumFractionDigits:0})}</div><p class="text-[10px] text-gray-400 mt-2">Bu tutar üzerinden birikim ve harcama limitiniz belirlenir.</p>`; document.getElementById('calcModal').classList.remove('hidden'); document.getElementById('overlay').classList.add('active'); }
         function closeCalcModal() { document.getElementById('calcModal').classList.add('hidden'); document.getElementById('overlay').classList.remove('active'); }
     </script>
 </body>
