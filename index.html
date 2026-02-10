@@ -6,6 +6,12 @@
     <title>Bizim Bütçe | Finansal Asistan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- FIREBASE SDKs (Compat sürümü) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
@@ -20,6 +26,10 @@
         /* Animasyonlar */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        
+        /* Yükleniyor Spinner */
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="min-h-screen p-4 flex flex-col items-center justify-center bg-slate-50">
@@ -30,29 +40,44 @@
     <div id="loginScreen" class="max-w-md w-full glass-card p-10 rounded-[2.5rem] shadow-2xl space-y-8 my-auto relative overflow-hidden animate-fade-in">
         <div class="text-center">
             <div class="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center mx-auto mb-6 text-blue-600 shadow-sm transform hover:rotate-12 transition-transform duration-300">
-                <i class="fas fa-wallet text-3xl"></i>
+                <i class="fas fa-cloud text-3xl"></i>
             </div>
             <h1 class="text-3xl font-black text-gray-900 tracking-tight">Bizim Bütçe</h1>
-            <p class="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">Finansal Yönetim</p>
+            <p class="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">Bulut Tabanlı Finans</p>
         </div>
         
-        <div class="space-y-4">
-            <input type="text" id="usernameInput" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all" placeholder="Kullanıcı Adı (ilkersancak)">
+        <!-- Auth Form -->
+        <div class="space-y-4" id="authFormContainer">
+            <input type="email" id="emailInput" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all" placeholder="E-posta Adresi">
             <input type="password" id="passwordInput" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all" placeholder="Şifre">
-            <button onclick="handleLogin()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-blue-200 active:scale-95 transition-all hover:bg-blue-700">Giriş Yap</button>
+            
+            <button id="loginBtn" onclick="firebaseLogin()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-blue-200 active:scale-95 transition-all hover:bg-blue-700 flex justify-center items-center gap-2">
+                <span>Giriş Yap</span>
+            </button>
+            
+            <button id="registerBtn" onclick="firebaseRegister()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl shadow-xl hidden active:scale-95 transition-all hover:bg-indigo-700 flex justify-center items-center gap-2">
+                <span>Kayıt Ol</span>
+            </button>
         </div>
         
+        <div class="text-center pt-2">
+            <p id="authToggleText" class="text-xs text-gray-500 font-bold cursor-pointer hover:text-blue-600 select-none" onclick="toggleAuthMode()">Hesabın yok mu? Kayıt Ol</p>
+        </div>
+
         <div class="space-y-3 pt-4 border-t border-gray-100">
-            <button onclick="startWizard(false)" class="w-full bg-white border-2 border-gray-100 text-gray-700 font-bold py-4 rounded-2xl active:scale-95 transition-all hover:border-blue-200 hover:text-blue-600">Hemen Planla (Üyesiz)</button>
-            <button onclick="loadDemoData()" class="w-full text-blue-400 text-xs font-bold uppercase tracking-widest hover:text-blue-600">Demo Verisi Yükle</button>
+            <button onclick="startWizard(false)" class="w-full bg-white border-2 border-gray-100 text-gray-700 font-bold py-4 rounded-2xl active:scale-95 transition-all hover:border-blue-200 hover:text-blue-600">Demo Modu (Üyesiz)</button>
+        </div>
+        
+        <!-- API Key Uyarısı -->
+        <div id="configWarning" class="p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-xs font-bold text-center hidden">
+            Lütfen kodun içindeki firebaseConfig alanına kendi proje bilgilerinizi giriniz.
         </div>
     </div>
 
     <!-- 2. SİHİRBAZ (WIZARD) -->
     <div id="wizardScreen" class="max-w-xl w-full glass-card p-8 rounded-[2.5rem] shadow-2xl hidden space-y-6 my-auto relative animate-fade-in">
         <div class="flex justify-between items-center mb-4">
-            <button onclick="showLoginScreen()" class="text-gray-400 hover:text-blue-600 transition-colors"><i class="fas fa-arrow-left"></i></button>
-            <div id="wizardProgress" class="flex gap-1 flex-1 mx-4"></div>
+            <div id="wizardProgress" class="flex gap-1 flex-1 mr-4"></div>
             <span class="text-xs font-bold text-gray-300" id="stepCount">1/6</span>
         </div>
         
@@ -71,11 +96,14 @@
         <div class="flex justify-between items-center">
             <div>
                 <h2 class="text-2xl font-black text-gray-800 tracking-tight" id="dashWelcome">Panelim</h2>
-                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Finansal Durum</p>
+                <div class="flex items-center gap-2" id="connectionStatus">
+                    <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Demo Modu</p>
+                </div>
             </div>
             <div class="flex gap-2">
-                 <button onclick="resetApp()" class="text-[10px] font-black bg-white text-gray-500 border border-gray-200 px-4 py-2 rounded-full uppercase tracking-widest shadow-sm hover:bg-gray-50">Sıfırla</button>
-                <button onclick="logout()" class="text-[10px] font-black bg-white text-red-500 border border-red-50 px-4 py-2 rounded-full uppercase tracking-widest shadow-sm hover:bg-red-50">Çıkış</button>
+                 <button onclick="forceSave()" class="text-[10px] font-black bg-white text-blue-500 border border-blue-200 px-4 py-2 rounded-full uppercase tracking-widest shadow-sm hover:bg-blue-50"><i class="fas fa-save mr-1"></i> Kaydet</button>
+                <button onclick="handleLogout()" class="text-[10px] font-black bg-white text-red-500 border border-red-50 px-4 py-2 rounded-full uppercase tracking-widest shadow-sm hover:bg-red-50">Çıkış</button>
             </div>
         </div>
 
@@ -191,7 +219,190 @@
     </div>
 
     <script>
-        // --- STATE ---
+        // --------------------------------------------------------
+        // FIREBASE YAPILANDIRMASI (HesapGuvende Projesi)
+        // --------------------------------------------------------
+        const firebaseConfig = {
+            apiKey: "AIzaSyAyUQaeoVWnT4AuzSwD2M17-z1g2optqdA",
+            authDomain: "hesapguvende-b07ca.firebaseapp.com",
+            projectId: "hesapguvende-b07ca",
+            storageBucket: "hesapguvende-b07ca.firebasestorage.app",
+            messagingSenderId: "710002620092",
+            appId: "1:710002620092:web:94f3ebb8dd2461af29c2b9",
+            measurementId: "G-VE0EVVBM0V"
+        };
+        // --------------------------------------------------------
+
+        let db, auth, currentUser = null;
+        let isFirebaseReady = false;
+
+        // Firebase Başlatma Kontrolü
+        try {
+            // Config kontrolünü kaldırdık çünkü artık gerçek veriler var
+            firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            db = firebase.firestore();
+            isFirebaseReady = true;
+            
+            // Auth Durumu Dinleyicisi
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    currentUser = user;
+                    // Giriş başarılı, veriyi çek
+                    document.getElementById('dashWelcome').innerText = `Hoşgeldin, ${user.email.split('@')[0]}`;
+                    updateConnectionStatus(true);
+                    loadFromCloud(); 
+                } else {
+                    currentUser = null;
+                    updateConnectionStatus(false);
+                }
+            });
+
+        } catch(e) {
+            console.error("Firebase Hatası:", e);
+            alert("Firebase bağlantısında bir sorun oluştu. Lütfen konsolu kontrol edin.");
+        }
+
+        // --- AUTH FONKSİYONLARI ---
+        let isLoginMode = true;
+
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            const loginBtn = document.getElementById('loginBtn');
+            const registerBtn = document.getElementById('registerBtn');
+            const toggleText = document.getElementById('authToggleText');
+            
+            if(isLoginMode) {
+                loginBtn.classList.remove('hidden');
+                registerBtn.classList.add('hidden');
+                toggleText.innerText = "Hesabın yok mu? Kayıt Ol";
+            } else {
+                loginBtn.classList.add('hidden');
+                registerBtn.classList.remove('hidden');
+                toggleText.innerText = "Zaten hesabın var mı? Giriş Yap";
+            }
+        }
+
+        function getAuthInputs() {
+            const email = document.getElementById('emailInput').value;
+            const pass = document.getElementById('passwordInput').value;
+            if(!email || !pass) { alert("Lütfen alanları doldurun."); return null; }
+            return { email, pass };
+        }
+
+        function firebaseLogin() {
+            if(!isFirebaseReady) return alert("Firebase ayarları yapılmamış.");
+            const creds = getAuthInputs();
+            if(!creds) return;
+            
+            const btn = document.getElementById('loginBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<div class="loader"></div>';
+
+            auth.signInWithEmailAndPassword(creds.email, creds.pass)
+                .then(() => {
+                    showDashboard();
+                })
+                .catch((error) => {
+                    alert("Giriş Hatası: " + error.message);
+                })
+                .finally(() => btn.innerHTML = originalText);
+        }
+
+        function firebaseRegister() {
+            if(!isFirebaseReady) return alert("Firebase ayarları yapılmamış.");
+            const creds = getAuthInputs();
+            if(!creds) return;
+            
+            const btn = document.getElementById('registerBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<div class="loader"></div>';
+
+            auth.createUserWithEmailAndPassword(creds.email, creds.pass)
+                .then((userCredential) => {
+                    // Yeni kullanıcı için boş state kaydet
+                    const user = userCredential.user;
+                    db.collection("users").doc(user.uid).set(defaultState)
+                        .then(() => showDashboard());
+                })
+                .catch((error) => {
+                    alert("Kayıt Hatası: " + error.message);
+                })
+                .finally(() => btn.innerHTML = originalText);
+        }
+
+        function handleLogout() {
+            if(currentUser) {
+                auth.signOut().then(() => {
+                    location.reload();
+                });
+            } else {
+                location.reload();
+            }
+        }
+
+        // --- CLOUD VERİ YÖNETİMİ ---
+        function loadFromCloud() {
+            if(!currentUser) return;
+            
+            const docRef = db.collection("users").doc(currentUser.uid);
+            docRef.get().then((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    // Tarihleri stringden objeye çevir
+                    if(data.registrationDate) data.registrationDate = new Date(data.registrationDate.seconds ? data.registrationDate.seconds * 1000 : data.registrationDate);
+                    state = data;
+                    showDashboard();
+                } else {
+                    // Doküman yoksa oluştur
+                    saveToCloud();
+                    showDashboard();
+                }
+            }).catch((error) => {
+                console.log("Veri çekme hatası:", error);
+            });
+        }
+
+        function saveToCloud() {
+            if(!currentUser) return; // Sadece giriş yapmış kullanıcılar kaydeder
+            
+            // Tarih objesini Firestore'un anlayacağı formata veya string'e çevirmek daha güvenli
+            const stateToSave = JSON.parse(JSON.stringify(state));
+            stateToSave.registrationDate = state.registrationDate.toISOString();
+
+            db.collection("users").doc(currentUser.uid).set(stateToSave)
+                .then(() => {
+                    console.log("Buluta kaydedildi");
+                })
+                .catch((error) => {
+                    console.error("Kayıt hatası: ", error);
+                });
+        }
+        
+        function forceSave() {
+            if(currentUser) {
+                const btn = event.currentTarget;
+                const oldHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                saveToCloud();
+                setTimeout(() => btn.innerHTML = '<i class="fas fa-check"></i>', 1000);
+                setTimeout(() => btn.innerHTML = oldHTML, 2000);
+            } else {
+                alert("Demo modunda veriler sadece tarayıcıda saklanır.");
+                localStorage.setItem('bizimButceState', JSON.stringify(state));
+            }
+        }
+        
+        function updateConnectionStatus(isOnline) {
+            const el = document.getElementById('connectionStatus');
+            if(isOnline) {
+                el.innerHTML = '<div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div><p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Bulut Bağlı</p>';
+            } else {
+                el.innerHTML = '<div class="w-2 h-2 bg-gray-300 rounded-full"></div><p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Demo / Yerel</p>';
+            }
+        }
+
+        // --- STATE & APP LOGIC ---
         const defaultState = {
             step: 1, salaryDay: 15,
             registrationDate: new Date(),
@@ -214,40 +425,27 @@
 
         let state = JSON.parse(JSON.stringify(defaultState));
 
+        // State Yönetimi: Kayıt fonksiyonunu override et
+        function saveState() {
+            if(currentUser) {
+                saveToCloud();
+            } else {
+                localStorage.setItem('bizimButceState', JSON.stringify(state));
+            }
+        }
+
         window.onload = () => {
-            // Restore from local storage or use default
+            // Demo modu veya LocalStorage kontrolü (Firebase yüklenene kadar)
             const stored = localStorage.getItem('bizimButceState');
             if(stored) { 
                 try {
                     state = JSON.parse(stored);
-                    // Dates come back as strings
                     state.registrationDate = new Date(state.registrationDate);
-                    
-                    // Veri bütünlüğü kontrolü
                     if(!state.expenses) state.expenses = [];
                     if(!state.loans) state.loans = [];
-                    
-                    // If user logged in previously (has income data), show dashboard directly
-                    if(state.incomes.length > 0 && state.incomes[0].val > 0) {
-                        showDashboard(); 
-                    }
-                } catch(e) {
-                    console.error("State yüklenemedi", e);
-                    localStorage.removeItem('bizimButceState');
-                }
+                } catch(e) { console.error("Local state error", e); }
             }
         };
-
-        function saveState() {
-            localStorage.setItem('bizimButceState', JSON.stringify(state));
-        }
-        
-        function resetApp() {
-            if(confirm('Tüm verileriniz silinecek. Emin misiniz?')) {
-                localStorage.removeItem('bizimButceState');
-                location.reload();
-            }
-        }
 
         // --- NAVIGATION ---
         function showLoginScreen() { hideAll(); document.getElementById('loginScreen').classList.remove('hidden'); }
@@ -264,48 +462,19 @@
             ['calcModal'].forEach(id => document.getElementById(id).classList.add('hidden'));
         }
 
-        // --- LOGIN LOGIC ---
-        function handleLogin() {
-            const userVal = document.getElementById('usernameInput').value.trim();
-            if(userVal === 'ilkersancak') {
-                // Eğer kayıtlı veri yoksa demoyu yükleyelim ki boş gelmesin
-                const stored = localStorage.getItem('bizimButceState');
-                if(!stored) {
-                     loadDemoData();
-                } else {
-                     showDashboard();
-                }
-            } else {
-                alert('Demo Kullanıcı Adı: ilkersancak');
-            }
-        }
-        
-        function logout() {
-            showLoginScreen();
-        }
-
-        function loadDemoData() {
-            state = JSON.parse(JSON.stringify(defaultState));
-            Object.assign(state, JSON.parse(JSON.stringify(demoData)));
-            state.registrationDate = new Date(); // Reset date for correct calc
-            saveState();
-            showDashboard();
-        }
-
+        // --- WIZARD & APP FUNCTIONS ---
         function startWizard(isEditMode) {
             hideAll(); document.getElementById('wizardScreen').classList.remove('hidden');
             if(!isEditMode) {
                 // CLEAN SLATE
                 state = JSON.parse(JSON.stringify(defaultState));
                 state.registrationDate = new Date();
-                // Varsayılan boş kalemler
                 state.incomes = [{ name: 'Maaş', val: null }];
             }
             state.step = 1;
             renderWizard();
         }
 
-        // --- WIZARD RENDER ---
         function wizardNext() {
             if (state.step === 1 && (!state.salaryDay || state.salaryDay > 31 || state.salaryDay < 1)) { 
                 alert("Lütfen geçerli bir maaş günü giriniz (1-31)."); return; 
@@ -380,7 +549,6 @@
                     </div>`; 
                 updateAllocationUI(); 
             }
-
             renderWizardLists();
             document.getElementById('wizNextBtn').innerText = state.step === 6 ? "Plana Başla" : "Devam Et";
         }
@@ -503,10 +671,8 @@
             if(document.getElementById('allocSpendingVal')) document.getElementById('allocSpendingVal').innerText = `₺${Math.floor(monthlySpending).toLocaleString()}`;
             
             if(state.remainingAfterFixed > 0) {
-                // Calculate percentage for slider based on savings
                 const percent = (savings / state.remainingAfterFixed) * 100;
                 if(document.getElementById('allocationSlider')) {
-                     // Reverse logic for slider if it represents savings vs spending, assumed savings here
                      document.getElementById('allocationSlider').value = Math.max(0, Math.min(100, percent));
                 }
             }
@@ -525,129 +691,6 @@
             updateFromDailyLimitInput(daily);
         }
 
-        // --- DASHBOARD ---
-        function updateDashboardUI() {
-            const now = new Date();
-            const todayStr = now.toLocaleDateString('tr-TR');
-            const dailyLimit = state.manualDailyLimit || 0;
-            
-            // Registration date logic (reset logic if weird date)
-            let startCalc = state.registrationDate ? new Date(state.registrationDate) : new Date();
-            if(isNaN(startCalc.getTime())) startCalc = new Date();
-
-            const msPassed = now - startCalc;
-            const daysPassed = Math.max(1, Math.ceil(msPassed / (1000 * 60 * 60 * 24)));
-            
-            // Calculate expenses
-            const spentToday = state.expenses.filter(e => e.date === todayStr).reduce((s,e)=>s+e.amount,0);
-            const totalSpent = state.expenses.reduce((s,e)=>s+e.amount,0);
-
-            // Cumulative Balance: (DailyLimit * DaysPassed) - TotalSpent
-            // Logic: Every day you get +DailyLimit added to your pool.
-            const cumulative = (dailyLimit * daysPassed) - totalSpent;
-            
-            document.getElementById('displayDailyLimit').innerText = `₺${Math.floor(dailyLimit - spentToday).toLocaleString()}`;
-            document.getElementById('displayCumulativeLimit').innerText = `₺${Math.floor(cumulative).toLocaleString()}`;
-            document.getElementById('todayTotal').innerText = `Bugün: ₺${Math.floor(spentToday).toLocaleString()}`;
-            
-            // Salary Day Logic
-            const currentDay = now.getDate();
-            const salaryDay = parseInt(state.salaryDay) || 15;
-            let targetDate = new Date(now.getFullYear(), now.getMonth(), salaryDay);
-            
-            if (currentDay >= salaryDay) {
-                // Salary day passed this month, target is next month
-                targetDate = new Date(now.getFullYear(), now.getMonth() + 1, salaryDay);
-            }
-            
-            const diffTime = Math.abs(targetDate - now);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-            document.getElementById('displayRemainingDays').innerText = `${diffDays} Gün`;
-
-            // Health Indicators
-            const assets = state.assets.reduce((s,a)=>s+(a.val||0),0);
-            const loans = state.loans.filter(l=>!l.excludeFromDebt).reduce((s,l)=>s+(l.totalDebt||0),0);
-            const cards = state.debts.reduce((s,d)=>s+(d.val||0),0);
-            const totalDebt = loans + cards;
-            const net = assets - totalDebt;
-            const income = state.incomes.reduce((s,i)=>s+(i.val||0),0);
-
-            document.getElementById('sumSalaryMult').innerText = income>0 ? (totalDebt/income).toFixed(1)+' Maaş' : '0 Maaş';
-            document.getElementById('sumSavings').innerText = `₺${Math.floor(state.calculatedMonthlySavings || 0).toLocaleString()}`;
-            document.getElementById('sumGiderTotal').innerText = `₺${Math.floor(state.calculatedMonthlyPool || 0).toLocaleString()}`;
-
-            document.getElementById('netStatusVal').innerText = `${net>=0?'+':'-'}₺${Math.abs(Math.floor(net)).toLocaleString()}`;
-            const badge = document.getElementById('netStatusBadge');
-            if(net >= 0) {
-                 badge.className = "text-4xl font-black text-green-600 px-8 py-4 bg-green-50 rounded-[2rem] transition-colors";
-            } else {
-                 badge.className = "text-4xl font-black text-red-600 px-8 py-4 bg-red-50 rounded-[2rem] transition-colors";
-            }
-
-            // Render Health Lists
-            const renderH = (list) => list.map(i => `<div class="flex justify-between p-2 rounded text-xs font-bold text-gray-500 bg-gray-50 border border-gray-100"><span>${i.name}</span><span>₺${Math.floor(i.val||i.totalDebt||0).toLocaleString()}</span></div>`).join('');
-            document.getElementById('detailedDebtsList').innerHTML = renderH(state.loans.filter(l=>!l.excludeFromDebt)) + renderH(state.debts);
-            document.getElementById('detailedAssetsList').innerHTML = renderH(state.assets);
-
-            renderHistoryList();
-        }
-
-        function addExpense() {
-            const amtInp = document.getElementById('expAmt');
-            const descInp = document.getElementById('expDesc');
-            const amt = parseFloat(amtInp.value);
-            const desc = descInp.value;
-            
-            if(!amt) {
-                 amtInp.focus();
-                 return;
-            }
-            
-            state.expenses.unshift({ 
-                amount: amt, 
-                desc: desc || 'Diğer', 
-                date: new Date().toLocaleDateString('tr-TR'), 
-                addedBy: 'Ben',
-                ts: Date.now()
-            });
-            
-            amtInp.value = '';
-            descInp.value = '';
-            saveState();
-            
-            // UI Güncellemelerini garantiye al
-            updateDashboardUI();
-            renderHistoryList(); // Harcama listesini özellikle tetikle
-        }
-
-        function renderHistoryList() {
-            const list = document.getElementById('historyList');
-            if(!list) return;
-            
-            if(state.expenses.length === 0) {
-                list.innerHTML = '<div class="text-center text-gray-400 text-xs py-4">Henüz harcama yok.</div>';
-                return;
-            }
-
-            list.innerHTML = state.expenses.map((e, idx) => `
-                <div class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-xl mb-2 hover:bg-gray-50 transition-colors group">
-                    <div>
-                        <p class="font-bold text-gray-800 text-xs">${e.desc}</p>
-                        <p class="text-[10px] text-gray-400">Ekleyen: ${e.addedBy} | ${e.date}</p>
-                    </div>
-                    <div class="flex items-center gap-3">
-                         <span class="font-black text-red-500 text-sm">-₺${Math.floor(e.amount).toLocaleString()}</span>
-                         <button onclick="deleteExpense(${idx})" class="text-gray-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-trash-alt"></i></button>
-                    </div>
-                </div>`).join('');
-        }
-        
-        function deleteExpense(idx) {
-            state.expenses.splice(idx, 1);
-            saveState();
-            updateDashboardUI();
-            renderHistoryList();
-        }
         // --- DASHBOARD ---
         function updateDashboardUI() {
             const now = new Date();
@@ -705,28 +748,23 @@
                  badge.className = "text-4xl font-black text-red-600 px-8 py-4 bg-red-50 rounded-[2rem] transition-colors";
             }
 
-            // Render Health Lists (Fixed Logic)
             renderDetailedHealthLists();
             renderHistoryList();
         }
 
         function renderDetailedHealthLists() {
-            // Helper function for list items
             const createItem = (name, amount) => `
                 <div class="flex justify-between items-center p-3 rounded-xl text-xs font-bold text-gray-600 bg-gray-50 border border-gray-100 shadow-sm">
                     <span>${name}</span>
                     <span class="font-black text-gray-800">₺${Math.floor(amount).toLocaleString()}</span>
                 </div>`;
 
-            // Debts List (Loans + Cards)
             const debtContainer = document.getElementById('detailedDebtsList');
             let debtHTML = '';
             
-            // Add Loans
             state.loans.filter(l => !l.excludeFromDebt).forEach(l => {
                 debtHTML += createItem(l.name, l.totalDebt || 0);
             });
-            // Add Cards/Debts
             state.debts.forEach(d => {
                 debtHTML += createItem(d.name, d.val || 0);
             });
@@ -734,7 +772,6 @@
             if(debtHTML === '') debtHTML = '<div class="text-gray-300 text-[10px] text-center italic py-2">Borç kaydı bulunmuyor</div>';
             debtContainer.innerHTML = debtHTML;
 
-            // Assets List
             const assetContainer = document.getElementById('detailedAssetsList');
             let assetHTML = '';
             
@@ -746,7 +783,64 @@
             assetContainer.innerHTML = assetHTML;
         }
 
-        // --- UTILS ---
+        function addExpense() {
+            const amtInp = document.getElementById('expAmt');
+            const descInp = document.getElementById('expDesc');
+            const amt = parseFloat(amtInp.value);
+            const desc = descInp.value;
+            
+            if(!amt) {
+                 amtInp.focus();
+                 return;
+            }
+            
+            state.expenses.unshift({ 
+                amount: amt, 
+                desc: desc || 'Diğer', 
+                date: new Date().toLocaleDateString('tr-TR'), 
+                addedBy: currentUser ? currentUser.email.split('@')[0] : 'Ben',
+                ts: Date.now()
+            });
+            
+            amtInp.value = '';
+            descInp.value = '';
+            
+            // Eğer Firebase varsa kaydet
+            saveState();
+            
+            updateDashboardUI();
+            renderHistoryList();
+        }
+
+        function renderHistoryList() {
+            const list = document.getElementById('historyList');
+            if(!list) return;
+            
+            if(state.expenses.length === 0) {
+                list.innerHTML = '<div class="text-center text-gray-400 text-xs py-4">Henüz harcama yok.</div>';
+                return;
+            }
+
+            list.innerHTML = state.expenses.map((e, idx) => `
+                <div class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-xl mb-2 hover:bg-gray-50 transition-colors group">
+                    <div>
+                        <p class="font-bold text-gray-800 text-xs">${e.desc}</p>
+                        <p class="text-[10px] text-gray-400">Ekleyen: ${e.addedBy} | ${e.date}</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                         <span class="font-black text-red-500 text-sm">-₺${Math.floor(e.amount).toLocaleString()}</span>
+                         <button onclick="deleteExpense(${idx})" class="text-gray-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                </div>`).join('');
+        }
+        
+        function deleteExpense(idx) {
+            state.expenses.splice(idx, 1);
+            saveState();
+            updateDashboardUI();
+            renderHistoryList();
+        }
+
         function openCalcModal() { 
              const totalInc = state.incomes.reduce((s, i) => s + (i.val||0), 0);
              const totalFix = state.bills.reduce((s, b) => s + (b.val||0), 0);
