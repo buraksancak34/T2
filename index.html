@@ -85,7 +85,7 @@
     <div id="wizardScreen" class="max-w-xl w-full glass-card p-8 rounded-[2.5rem] shadow-2xl hidden space-y-6 my-auto relative animate-fade-in">
         <div class="flex justify-between items-center mb-4">
             <div id="wizardProgress" class="flex gap-1 flex-1 mr-4"></div>
-            <span class="text-xs font-bold text-gray-300" id="stepCount">1/7</span>
+            <span class="text-xs font-bold text-gray-300" id="stepCount">1/8</span>
         </div>
         
         <div id="wizardContent" class="min-h-[420px] flex flex-col relative">
@@ -259,7 +259,8 @@
                 if (user) {
                     currentUser = user;
                     // Giriş başarılı, veriyi çek
-                    document.getElementById('dashWelcome').innerText = `Hoşgeldin, ${user.email.split('@')[0]}`;
+                    const name = user.displayName || user.email.split('@')[0];
+                    document.getElementById('dashWelcome').innerText = `Hoşgeldin, ${name}`;
                     updateConnectionStatus(true);
                     loadFromCloud(); 
                 } else {
@@ -361,9 +362,11 @@
         
         // SİHİRBAZ SONUNDA KAYIT İÇİN ÖZEL FONKSİYON
         function registerFromWizard() {
+            const name = document.getElementById('wizRegName').value;
             const email = document.getElementById('wizRegEmail').value;
             const pass = document.getElementById('wizRegPass').value;
             
+            if(!name) { alert("Lütfen bir kullanıcı adı belirleyiniz."); return; }
             if(!email || !pass) { alert("Kaydetmek için e-posta ve şifre belirlemelisiniz."); return; }
             if(!isFirebaseReady) return alert("Firebase hatası.");
 
@@ -377,9 +380,13 @@
                     const user = userCredential.user;
                     currentUser = user; // Manuel set et
                     
+                    // Kullanıcı adını Firebase profiline işle
+                    user.updateProfile({ displayName: name });
+
                     // Sihirbazdaki state'i kaydet (En önemli kısım)
                     const stateToSave = JSON.parse(JSON.stringify(state));
                     stateToSave.registrationDate = state.registrationDate.toISOString();
+                    stateToSave.username = name; // Veritabanına da ekle
                     
                     // Önce veriyi yaz
                     return db.collection("users").doc(user.uid).set(stateToSave);
@@ -388,7 +395,7 @@
                     // Veri yazıldıktan sonra yönlendir
                     isRegistering = false; // Kilidi kaldır
                     updateConnectionStatus(true);
-                    document.getElementById('dashWelcome').innerText = `Hoşgeldin, ${email.split('@')[0]}`;
+                    document.getElementById('dashWelcome').innerText = `Hoşgeldin, ${name}`;
                     showDashboard();
                 })
                 .catch((error) => {
@@ -424,6 +431,11 @@
                     state = data;
                     // Eski kullanıcılarda otherDebts yoksa ekle
                     if(!state.otherDebts) state.otherDebts = [];
+                    
+                    // Kullanıcı adını güncelle
+                    const name = data.username || currentUser.displayName || currentUser.email.split('@')[0];
+                    document.getElementById('dashWelcome').innerText = `Hoşgeldin, ${name}`;
+                    
                     showDashboard();
                 } else {
                     // Doküman yoksa oluştur (burası genelde manuel tetiklenmemeli ama güvenlik olsun)
@@ -520,8 +532,8 @@
                 alert("Lütfen geçerli bir maaş günü giriniz (1-31)."); return; 
             }
             
-            // Eğer son adımdaysa (Planlama ve Kayıt)
-            if (state.step === 7) {
+            // Eğer son adımdaysa (Kayıt)
+            if (state.step === 8) {
                 if(document.getElementById('wizRegEmail')) {
                     // Kayıt fonksiyonunu çağır
                     registerFromWizard();
@@ -545,9 +557,9 @@
             const prog = document.getElementById('wizardProgress');
             const nextBtn = document.getElementById('wizNextBtn');
             
-            // TOPLAM 7 ADIM OLDU
-            stepEl.innerText = `${state.step}/7`;
-            prog.innerHTML = Array(7).fill(0).map((_,i) => `<div class="h-1.5 flex-1 rounded-full ${i+1<=state.step?'bg-blue-600':'bg-gray-200'} transition-all"></div>`).join('');
+            // TOPLAM 8 ADIM OLDU
+            stepEl.innerText = `${state.step}/8`;
+            prog.innerHTML = Array(8).fill(0).map((_,i) => `<div class="h-1.5 flex-1 rounded-full ${i+1<=state.step?'bg-blue-600':'bg-gray-200'} transition-all"></div>`).join('');
 
             // Steps 1-3 (Aynı)
             if(state.step === 1) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-green-600">Gelirler (Yeşil)</h3><div id="wiz_inc_list" class="custom-scrollbar overflow-y-auto max-h-[300px]"></div><button onclick="addItem('incomes', 'wiz_inc_list', 'green')" class="w-full py-3 border-2 border-dashed border-green-200 rounded-2xl text-green-500 font-bold mt-4">+ Gelir Ekle</button><div class="pt-4 mt-6 border-t"><p class="text-[10px] font-bold text-gray-400 uppercase mb-2">Gelir Hesabı Günü / Maaş Günü</p><input type="number" id="wiz_salary_day_val" oninput="state.salaryDay=this.value" value="${state.salaryDay || 15}" class="w-20 p-3 bg-gray-50 rounded-xl font-black text-center text-xl outline-none focus:ring-2 focus:ring-green-200" placeholder="15"></div>`;
@@ -560,12 +572,12 @@
             // STEP 5: (YENİ) Diğer Borçlar
             if(state.step === 5) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-red-500">Diğer Borçlar</h3><p class="text-xs text-gray-400 mb-4">Elden alınan borçlar, vergi borçları vb.</p><div id="wiz_other_debt_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div><button onclick="addItem('otherDebts', 'wiz_other_debt_list', 'red')" class="w-full py-3 border-2 border-dashed border-red-200 rounded-2xl text-red-500 font-bold mt-4">+ Borç Ekle</button>`;
 
-            // STEP 6: Varlıklar (Eskiden 5 idi)
+            // STEP 6: Varlıklar
             if(state.step === 6) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-green-600">Varlıklar</h3><div id="wiz_asset_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div><button onclick="addItem('assets', 'wiz_asset_list', 'green')" class="w-full py-3 border-2 border-dashed border-green-200 rounded-2xl text-green-500 font-bold mt-4">+ Varlık Ekle</button>`;
             
-            // STEP 7: PLANLAMA & KAYIT (Eskiden 6 idi)
+            // STEP 7: PLANLAMA (Sadece Planlama)
             if(state.step === 7) { 
-                let html = `
+                content.innerHTML = `
                     <h3 class="text-2xl font-black mb-2">Birikim Planı</h3>
                     <p class="text-sm text-gray-500 mb-6 text-center">Net Kalan: <button onclick="openCalcModal()" class="text-blue-600 font-black underline underline-offset-4">₺<span id="remainingCalcText">0</span></button></p>
                     <div class="space-y-6">
@@ -579,28 +591,46 @@
                             <div class="flex-1 text-center"><p class="text-[9px] font-bold text-gray-400 block mb-1">HARCAMA</p><div id="allocSpendingVal" class="font-black text-lg text-blue-700">₺0</div></div>
                         </div>
                     </div>`;
-
-                // Eğer kullanıcı zaten giriş yapmamışsa, kayıt formu göster
-                if(!currentUser) {
-                    html += `
-                    <div class="mt-6 pt-6 border-t border-gray-100 space-y-3 bg-blue-50 p-4 rounded-3xl">
-                        <h4 class="font-black text-gray-800 text-sm text-center">Planını Kaydet & Üye Ol</h4>
-                        <input type="email" id="wizRegEmail" class="w-full p-3 bg-white rounded-xl text-sm font-bold border border-blue-100" placeholder="E-posta Adresi">
-                        <input type="password" id="wizRegPass" class="w-full p-3 bg-white rounded-xl text-sm font-bold border border-blue-100" placeholder="Şifre Belirle">
-                    </div>`;
-                    nextBtn.innerText = "Kaydı Tamamla";
-                    nextBtn.classList.add('bg-green-600', 'hover:bg-green-700');
-                    nextBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                } else {
-                    nextBtn.innerText = "Planı Güncelle";
-                }
+                updateAllocationUI();
                 
-                content.innerHTML = html;
-                updateAllocationUI(); 
-            } else {
                 nextBtn.innerText = "Devam Et";
-                nextBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                nextBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                nextBtn.className = "flex-[2] bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all hover:bg-blue-700";
+            } 
+            
+            // STEP 8: KAYIT (Yeni Adım)
+            if(state.step === 8) {
+                if(!currentUser) {
+                    content.innerHTML = `
+                    <div class="text-center mb-6">
+                        <div class="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600">
+                            <i class="fas fa-check text-2xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-black text-gray-900">Planın Hazır!</h3>
+                        <p class="text-sm text-gray-500">Kaybetmemek için hemen ücretsiz üye ol.</p>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Kullanıcı Adı</label>
+                            <input type="text" id="wizRegName" class="w-full p-4 bg-gray-50 rounded-2xl font-bold text-gray-700 border border-gray-100 focus:bg-white focus:border-green-200 outline-none transition-all" placeholder="Örn: Ahmet">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">E-posta</label>
+                            <input type="email" id="wizRegEmail" class="w-full p-4 bg-gray-50 rounded-2xl font-bold text-gray-700 border border-gray-100 focus:bg-white focus:border-green-200 outline-none transition-all" placeholder="ornek@mail.com">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Şifre</label>
+                            <input type="password" id="wizRegPass" class="w-full p-4 bg-gray-50 rounded-2xl font-bold text-gray-700 border border-gray-100 focus:bg-white focus:border-green-200 outline-none transition-all" placeholder="******">
+                        </div>
+                    </div>`;
+                    
+                    nextBtn.innerText = "Kaydı Tamamla";
+                    nextBtn.className = "flex-[2] bg-green-600 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all hover:bg-green-700";
+                } else {
+                    // Düzenleme moduysa
+                    content.innerHTML = `<div class="text-center py-10"><h3 class="text-2xl font-black text-gray-800">Düzenleme Tamamlandı</h3><p class="text-gray-500">Değişiklikleri kaydetmek için butona bas.</p></div>`;
+                    nextBtn.innerText = "Planı Güncelle";
+                    nextBtn.className = "flex-[2] bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all hover:bg-blue-700";
+                }
             }
 
             renderWizardLists();
