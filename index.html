@@ -71,6 +71,11 @@
                 <span>Üye Ol ve Katıl</span>
             </button>
             
+            <!-- Şifremi Unuttum Linki (Sadece Login modunda görünür) -->
+            <p id="forgotPassText" class="text-center text-[10px] font-bold text-blue-400 cursor-pointer hover:text-blue-600 pt-1" onclick="forgotPassword()">
+                Şifremi Unuttum?
+            </p>
+
             <p id="backToLoginText" class="text-center text-xs font-bold text-gray-400 cursor-pointer hover:text-blue-500 hidden pt-2" onclick="showLoginMode()">
                 <i class="fas fa-arrow-left mr-1"></i> Giriş ekranına dön
             </p>
@@ -185,7 +190,7 @@
         <div class="glass-card p-10 rounded-[3rem] shadow-xl bg-white border border-gray-100">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="font-black text-xl text-gray-800 uppercase tracking-widest text-[11px]">Son İşlemler</h3>
-                <button onclick="clearHistory()" id="btnClearHist" class="text-[9px] text-red-400 font-bold hover:text-red-600">Tümünü Sil</button>
+                <!-- Tümünü Sil butonu kaldırıldı -->
             </div>
             <div id="historyList" class="space-y-3 pb-4 max-h-60 overflow-y-auto custom-scrollbar pr-1"></div>
         </div>
@@ -347,6 +352,7 @@
             document.getElementById('emailInput').placeholder = "E-posta veya Kullanıcı Adı";
             document.getElementById('actionButtons').classList.remove('hidden');
             document.getElementById('backToLoginText').classList.add('hidden');
+            document.getElementById('forgotPassText').classList.remove('hidden');
         }
 
         function showRegisterMode() {
@@ -358,6 +364,7 @@
             document.getElementById('emailInput').placeholder = "E-posta Adresi";
             document.getElementById('actionButtons').classList.add('hidden');
             document.getElementById('backToLoginText').classList.remove('hidden');
+            document.getElementById('forgotPassText').classList.add('hidden');
         }
 
         async function firebaseLogin() {
@@ -373,8 +380,10 @@
             try {
                 let email = emailInp;
                 if (!email.includes('@')) {
-                    const snapshot = await db.collection('users').where('username', '==', email).limit(1).get();
-                    if (snapshot.empty) throw new Error("Kullanıcı bulunamadı.");
+                    // Kullanıcı adını küçük harfe çevirerek ara
+                    const usernameQuery = email.toLowerCase();
+                    const snapshot = await db.collection('users').where('username', '==', usernameQuery).limit(1).get();
+                    if (snapshot.empty) throw new Error("Kullanıcı bulunamadı veya veritabanı erişimi engellendi.");
                     email = snapshot.docs[0].data().email;
                 }
                 await auth.signInWithEmailAndPassword(email, pass);
@@ -386,7 +395,7 @@
 
         function firebaseRegister() {
             if(!isFirebaseReady) return;
-            const username = document.getElementById('regUsernameInput').value.trim();
+            const username = document.getElementById('regUsernameInput').value.trim().toLowerCase(); // Küçük harfe çevir
             const email = document.getElementById('emailInput').value.trim();
             const pass = document.getElementById('passwordInput').value;
             
@@ -403,7 +412,7 @@
                     
                     const initState = JSON.parse(JSON.stringify(defaultState));
                     initState.email = email;
-                    initState.username = username;
+                    initState.username = username; // Küçük harfli kaydet
                     
                     db.collection("users").doc(cred.user.uid).set(initState)
                         .then(() => { 
@@ -413,6 +422,30 @@
                         });
                 })
                 .catch((e) => { isRegistering = false; alert(e.message); btn.innerHTML = "Üye Ol ve Katıl"; });
+        }
+
+        function forgotPassword() {
+            const email = document.getElementById('emailInput').value.trim();
+            if (!email) {
+                return alert("Lütfen şifre sıfırlama bağlantısı için e-posta adresinizi giriniz.");
+            }
+            // Check if it looks like an email
+            if (!email.includes('@')) {
+                return alert("Şifre sıfırlama sadece E-posta adresi ile yapılabilir. Lütfen geçerli bir e-posta giriniz.");
+            }
+
+            if(confirm(`${email} adresine şifre sıfırlama bağlantısı gönderilsin mi?`)) {
+                auth.sendPasswordResetEmail(email)
+                    .then(() => {
+                        alert("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi. Lütfen gelen kutunuzu (ve spam klasörünü) kontrol ediniz.");
+                    })
+                    .catch((error) => {
+                        let msg = error.message;
+                        if(error.code === 'auth/user-not-found') msg = "Bu e-posta adresi ile kayıtlı kullanıcı bulunamadı.";
+                        if(error.code === 'auth/invalid-email') msg = "Geçersiz e-posta adresi.";
+                        alert("Hata: " + msg);
+                    });
+            }
         }
 
         function handleLogout() {
@@ -437,15 +470,15 @@
         }
 
         async function addFamilyMember() {
-            const input = document.getElementById('famInput').value.trim();
+            const input = document.getElementById('famInput').value.trim().toLowerCase(); // Aramada küçük harf kullan
             const role = document.getElementById('famRole').value;
             if(!input) return;
 
             // Kullanıcıyı bul (username veya email)
-            let targetUser = null;
             let snapshot = await db.collection('users').where('username', '==', input).limit(1).get();
             if(snapshot.empty) {
-                snapshot = await db.collection('users').where('email', '==', input).limit(1).get();
+                // Eğer username ile bulunamazsa email ile dene (inputu olduğu gibi kullan çünkü email case sensitive olabilir ama genelde firebase lower yapar)
+                snapshot = await db.collection('users').where('email', '==', document.getElementById('famInput').value.trim()).limit(1).get();
             }
             
             if(snapshot.empty) return alert("Kullanıcı bulunamadı. Lütfen önce kayıt olmasını isteyin.");
@@ -479,7 +512,7 @@
             saveToCloud(); // Plan verisini kaydet
             renderFamilyList();
             document.getElementById('famInput').value = '';
-            alert(`${targetData.username} plana eklendi!`);
+            alert(`${targetData.username || 'Kullanıcı'} plana eklendi!`);
         }
 
         async function updateMemberRole(idx, newRole) {
@@ -716,7 +749,7 @@
                     document.getElementById('wizNextBtn').innerText = "Planı Güncelle";
                 }
             } else if (state.step === 1) {
-                 content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-green-600">Gelirler</h3><div id="wiz_inc_list" class="custom-scrollbar overflow-y-auto max-h-[300px]"></div><button onclick="addItem('incomes', 'wiz_inc_list')" class="w-full py-3 border-2 border-dashed border-green-200 rounded-2xl text-green-500 font-bold mt-4">+ Gelir Ekle</button><div class="pt-4 mt-6 border-t"><p class="text-[10px] font-bold text-gray-400 uppercase mb-2">Maaş Günü</p><input type="number" id="wiz_salary_day_val" oninput="state.salaryDay=this.value" value="${state.salaryDay || 15}" class="w-20 p-3 bg-gray-50 rounded-xl font-black text-center text-xl" placeholder="15"></div>`;
+                 content.innerHTML = `<div class="bg-blue-50 border border-blue-100 p-3 rounded-xl mb-4 text-xs text-blue-800 font-bold flex items-center gap-2"><i class="fas fa-info-circle text-lg"></i> Programdan tam verim almak için lütfen verileri eksiksiz giriniz.</div><h3 class="text-2xl font-black mb-6 text-green-600">Gelirler</h3><div id="wiz_inc_list" class="custom-scrollbar overflow-y-auto max-h-[300px]"></div><button onclick="addItem('incomes', 'wiz_inc_list')" class="w-full py-3 border-2 border-dashed border-green-200 rounded-2xl text-green-500 font-bold mt-4">+ Gelir Ekle</button><div class="pt-4 mt-6 border-t"><p class="text-[10px] font-bold text-gray-400 uppercase mb-2">Maaş Günü</p><input type="number" id="wiz_salary_day_val" oninput="state.salaryDay=this.value" value="${state.salaryDay || 15}" class="w-20 p-3 bg-gray-50 rounded-xl font-black text-center text-xl" placeholder="15"></div>`;
             } else if(state.step === 7) {
                 content.innerHTML = `<h3 class="text-2xl font-black mb-2">Plan</h3><p class="text-center mb-6">Net Kalan: ₺${Math.floor(state.remainingAfterFixed||0)}</p><div class="p-4 bg-white border border-gray-200 rounded-[2rem] shadow-sm text-center mb-6"><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Hedef Günlük</label><input type="number" id="idealDailyLimitInput" oninput="updateFromDailyLimitInput(this.value)" class="w-32 text-center text-3xl font-black text-blue-600 border-b-2 outline-none pb-2" placeholder="0"></div><input type="range" id="allocationSlider" min="0" max="100" oninput="handleSliderChange(this.value)" class="w-full h-3 bg-gray-200 rounded-lg cursor-pointer">`;
                 updateAllocationUI();
@@ -749,8 +782,8 @@
         function showAnalysisScreen() { hideAll(); document.getElementById('analysisScreen').classList.remove('hidden'); renderAnalysis(); }
         function showDashboard() { hideAll(); document.getElementById('dashboardScreen').classList.remove('hidden'); updateDashboardUI(); }
         function registerFromWizard() {
-            const name = document.getElementById('wizRegName').value;
-            const email = document.getElementById('wizRegEmail').value;
+            const name = document.getElementById('wizRegName').value.trim().toLowerCase();
+            const email = document.getElementById('wizRegEmail').value.trim();
             const pass = document.getElementById('wizRegPass').value;
             if(!name || !email || !pass) return alert("Doldurunuz.");
             
