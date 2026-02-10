@@ -85,7 +85,7 @@
     <div id="wizardScreen" class="max-w-xl w-full glass-card p-8 rounded-[2.5rem] shadow-2xl hidden space-y-6 my-auto relative animate-fade-in">
         <div class="flex justify-between items-center mb-4">
             <div id="wizardProgress" class="flex gap-1 flex-1 mr-4"></div>
-            <span class="text-xs font-bold text-gray-300" id="stepCount">1/6</span>
+            <span class="text-xs font-bold text-gray-300" id="stepCount">1/7</span>
         </div>
         
         <div id="wizardContent" class="min-h-[420px] flex flex-col relative">
@@ -242,6 +242,7 @@
 
         let db, auth, currentUser = null;
         let isFirebaseReady = false;
+        let isRegistering = false; // Kayıt olma kilidi (veri kaybını önlemek için)
 
         // Firebase Başlatma Kontrolü
         try {
@@ -252,6 +253,9 @@
             
             // Auth Durumu Dinleyicisi
             auth.onAuthStateChanged(user => {
+                // Eğer kayıt işlemi sürüyorsa, auth state değişimini yoksay (veri kaybını önle)
+                if(isRegistering) return;
+
                 if (user) {
                     currentUser = user;
                     // Giriş başarılı, veriyi çek
@@ -334,17 +338,22 @@
             const originalText = btn.innerHTML;
             btn.innerHTML = '<div class="loader"></div>';
 
+            isRegistering = true; // Kilit aç
+            
             auth.createUserWithEmailAndPassword(creds.email, creds.pass)
                 .then((userCredential) => {
                     const user = userCredential.user;
+                    currentUser = user;
                     // Boş state ile başlat, çünkü bir plana dahil olacak
                     db.collection("users").doc(user.uid).set(defaultState)
                         .then(() => {
+                            isRegistering = false; // Kilit kapat
                             showDashboard();
                             alert("Üyelik oluşturuldu! Şimdi ailenizden sizi eklemelerini isteyebilirsiniz.");
                         });
                 })
                 .catch((error) => {
+                    isRegistering = false;
                     alert("Kayıt Hatası: " + error.message);
                 })
                 .finally(() => btn.innerHTML = originalText);
@@ -361,28 +370,36 @@
             const btn = document.getElementById('wizNextBtn');
             btn.innerHTML = '<div class="loader"></div>';
 
+            isRegistering = true; // KRİTİK: Auth listener'ı durdur
+
             auth.createUserWithEmailAndPassword(email, pass)
                 .then((userCredential) => {
                     const user = userCredential.user;
-                    // Sihirbazdaki state'i kaydet
+                    currentUser = user; // Manuel set et
+                    
+                    // Sihirbazdaki state'i kaydet (En önemli kısım)
                     const stateToSave = JSON.parse(JSON.stringify(state));
                     stateToSave.registrationDate = state.registrationDate.toISOString();
                     
-                    db.collection("users").doc(user.uid).set(stateToSave)
-                        .then(() => {
-                            showDashboard();
-                        });
+                    // Önce veriyi yaz
+                    return db.collection("users").doc(user.uid).set(stateToSave);
+                })
+                .then(() => {
+                    // Veri yazıldıktan sonra yönlendir
+                    isRegistering = false; // Kilidi kaldır
+                    updateConnectionStatus(true);
+                    document.getElementById('dashWelcome').innerText = `Hoşgeldin, ${email.split('@')[0]}`;
+                    showDashboard();
                 })
                 .catch((error) => {
+                    isRegistering = false;
                     if(error.code === 'auth/email-already-in-use') {
-                        // Eğer mail zaten varsa, giriş yapmayı deneyip üzerine yazalım mı? 
-                        // Güvenlik için şimdilik sadece uyarı verelim
                         alert("Bu e-posta zaten kullanımda. Lütfen giriş yapın veya başka bir e-posta kullanın.");
                     } else {
                         alert("Kayıt Hatası: " + error.message);
                     }
-                })
-                .finally(() => btn.innerHTML = "Kaydı Tamamla");
+                    btn.innerHTML = "Kaydı Tamamla";
+                });
         }
 
         function handleLogout() {
@@ -405,8 +422,11 @@
                     const data = doc.data();
                     if(data.registrationDate) data.registrationDate = new Date(data.registrationDate.seconds ? data.registrationDate.seconds * 1000 : data.registrationDate);
                     state = data;
+                    // Eski kullanıcılarda otherDebts yoksa ekle
+                    if(!state.otherDebts) state.otherDebts = [];
                     showDashboard();
                 } else {
+                    // Doküman yoksa oluştur (burası genelde manuel tetiklenmemeli ama güvenlik olsun)
                     saveToCloud();
                     showDashboard();
                 }
@@ -454,14 +474,17 @@
                 { name: 'Kira', val: null }, { name: 'Elektrik', val: null }, { name: 'Su', val: null }, 
                 { name: 'İnternet', val: null }, { name: 'Telefon', val: null }, { name: 'Dijital', val: null }
             ], 
-            loans: [], debts: [], assets: [],
+            loans: [], 
+            debts: [], // Kredi Kartları
+            otherDebts: [], // Yeni eklenen Diğer Borçlar
+            assets: [],
             manualDailyLimit: null, expenses: []
         };
 
         let state = JSON.parse(JSON.stringify(defaultState));
 
         function saveState() {
-            if(currentUser) saveToCloud();
+            if(currentUser && !isRegistering) saveToCloud();
         }
 
         // --- NAVIGATION ---
@@ -497,8 +520,8 @@
                 alert("Lütfen geçerli bir maaş günü giriniz (1-31)."); return; 
             }
             
-            // Eğer son adımdaysa (Kayıt Ekranı)
-            if (state.step === 6) {
+            // Eğer son adımdaysa (Planlama ve Kayıt)
+            if (state.step === 7) {
                 if(document.getElementById('wizRegEmail')) {
                     // Kayıt fonksiyonunu çağır
                     registerFromWizard();
@@ -522,18 +545,26 @@
             const prog = document.getElementById('wizardProgress');
             const nextBtn = document.getElementById('wizNextBtn');
             
-            stepEl.innerText = `${state.step}/6`;
-            prog.innerHTML = Array(6).fill(0).map((_,i) => `<div class="h-1.5 flex-1 rounded-full ${i+1<=state.step?'bg-blue-600':'bg-gray-200'} transition-all"></div>`).join('');
+            // TOPLAM 7 ADIM OLDU
+            stepEl.innerText = `${state.step}/7`;
+            prog.innerHTML = Array(7).fill(0).map((_,i) => `<div class="h-1.5 flex-1 rounded-full ${i+1<=state.step?'bg-blue-600':'bg-gray-200'} transition-all"></div>`).join('');
 
-            // Steps 1-5 (Same as before)
+            // Steps 1-3 (Aynı)
             if(state.step === 1) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-green-600">Gelirler (Yeşil)</h3><div id="wiz_inc_list" class="custom-scrollbar overflow-y-auto max-h-[300px]"></div><button onclick="addItem('incomes', 'wiz_inc_list', 'green')" class="w-full py-3 border-2 border-dashed border-green-200 rounded-2xl text-green-500 font-bold mt-4">+ Gelir Ekle</button><div class="pt-4 mt-6 border-t"><p class="text-[10px] font-bold text-gray-400 uppercase mb-2">Gelir Hesabı Günü / Maaş Günü</p><input type="number" id="wiz_salary_day_val" oninput="state.salaryDay=this.value" value="${state.salaryDay || 15}" class="w-20 p-3 bg-gray-50 rounded-xl font-black text-center text-xl outline-none focus:ring-2 focus:ring-green-200" placeholder="15"></div>`;
             if(state.step === 2) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-red-600">Sabit Giderler</h3><div id="wiz_bill_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div><button onclick="addItem('bills', 'wiz_bill_list', 'red')" class="w-full py-3 border-2 border-dashed border-red-200 rounded-2xl text-red-500 font-bold mt-4">+ Gider Ekle</button>`;
             if(state.step === 3) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-red-600">Banka Kredileri</h3><div id="wiz_loan_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div><button onclick="addItem('loans', 'wiz_loan_list')" class="w-full py-3 border-2 border-dashed border-red-200 rounded-2xl text-red-500 font-bold mt-4">+ Kredi Ekle</button>`;
-            if(state.step === 4) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-purple-600">Borçlar & Kartlar</h3><div id="wiz_debt_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div><button onclick="addItem('debts', 'wiz_debt_list')" class="w-full py-3 border-2 border-dashed border-purple-200 rounded-2xl text-purple-500 font-bold mt-4">+ Borç/Kart Ekle</button>`;
-            if(state.step === 5) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-green-600">Varlıklar</h3><div id="wiz_asset_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div><button onclick="addItem('assets', 'wiz_asset_list', 'green')" class="w-full py-3 border-2 border-dashed border-green-200 rounded-2xl text-green-500 font-bold mt-4">+ Varlık Ekle</button>`;
             
-            // STEP 6: PLANLAMA & KAYIT
-            if(state.step === 6) { 
+            // STEP 4: Sadece Kredi Kartları
+            if(state.step === 4) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-purple-600">Kredi Kartları</h3><p class="text-xs text-gray-400 mb-4">Kart limitini ve güncel borcunu girerek kullanılabilir bakiyeyi hesapla.</p><div id="wiz_debt_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div><button onclick="addItem('debts', 'wiz_debt_list')" class="w-full py-3 border-2 border-dashed border-purple-200 rounded-2xl text-purple-500 font-bold mt-4">+ Kredi Kartı Ekle</button>`;
+            
+            // STEP 5: (YENİ) Diğer Borçlar
+            if(state.step === 5) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-red-500">Diğer Borçlar</h3><p class="text-xs text-gray-400 mb-4">Elden alınan borçlar, vergi borçları vb.</p><div id="wiz_other_debt_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div><button onclick="addItem('otherDebts', 'wiz_other_debt_list', 'red')" class="w-full py-3 border-2 border-dashed border-red-200 rounded-2xl text-red-500 font-bold mt-4">+ Borç Ekle</button>`;
+
+            // STEP 6: Varlıklar (Eskiden 5 idi)
+            if(state.step === 6) content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-green-600">Varlıklar</h3><div id="wiz_asset_list" class="custom-scrollbar overflow-y-auto max-h-[350px]"></div><button onclick="addItem('assets', 'wiz_asset_list', 'green')" class="w-full py-3 border-2 border-dashed border-green-200 rounded-2xl text-green-500 font-bold mt-4">+ Varlık Ekle</button>`;
+            
+            // STEP 7: PLANLAMA & KAYIT (Eskiden 6 idi)
+            if(state.step === 7) { 
                 let html = `
                     <h3 class="text-2xl font-black mb-2">Birikim Planı</h3>
                     <p class="text-sm text-gray-500 mb-6 text-center">Net Kalan: <button onclick="openCalcModal()" class="text-blue-600 font-black underline underline-offset-4">₺<span id="remainingCalcText">0</span></button></p>
@@ -585,10 +616,13 @@
                         <button onclick="removeItem('${type}', ${idx})" class="text-gray-300 hover:text-red-500 px-2"><i class="fas fa-trash"></i></button>
                     </div>`).join('');
             };
-            if(state.step === 1) listEl(state.incomes, 'wiz_inc_list', 'incomes', 'green');
-            if(state.step === 2) listEl(state.bills, 'wiz_bill_list', 'bills', 'red');
-            if(state.step === 5) listEl(state.assets, 'wiz_asset_list', 'assets', 'green');
             
+            // Step 1: Gelir
+            if(state.step === 1) listEl(state.incomes, 'wiz_inc_list', 'incomes', 'green');
+            // Step 2: Fatura
+            if(state.step === 2) listEl(state.bills, 'wiz_bill_list', 'bills', 'red');
+            
+            // Step 3: Krediler (Özel Yapı)
             if(state.step === 3) {
                  const lEl = document.getElementById('wiz_loan_list'); 
                  if(lEl) lEl.innerHTML = state.loans.map((l, i) => `
@@ -606,6 +640,8 @@
                         </div>
                     </div>`).join('');
             }
+             
+            // Step 4: Kredi Kartları
              if(state.step === 4) {
                 const dEl = document.getElementById('wiz_debt_list'); 
                 if(dEl) dEl.innerHTML = state.debts.map((d, i) => `
@@ -615,11 +651,18 @@
                         ${d.calcMode ? `<div class="grid grid-cols-3 gap-2"><div><label class="text-[8px] font-bold text-gray-400">LİMİT</label><input type="number" id="wiz_card_lim_${i}" value="${d.limit || ''}" oninput="calcCard(${i}, 'limit', this.value)" class="w-full p-2.5 bg-gray-50 rounded-xl font-black text-xs outline-none" placeholder="0"></div><div><label class="text-[8px] font-bold text-gray-400">KULLANILABİLİR</label><input type="number" id="wiz_card_avl_${i}" value="${d.avail || ''}" oninput="calcCard(${i}, 'avail', this.value)" class="w-full p-2.5 bg-gray-50 rounded-xl font-black text-xs border border-blue-50" placeholder="0"></div><div><label class="text-[8px] font-bold text-gray-400">BORÇ</label><div id="wiz_card_res_${i}" class="w-full p-2.5 bg-purple-50 text-purple-700 font-black text-xs rounded-xl">${d.val || 0}</div></div></div>` : `<div class="flex items-center gap-2 justify-end"><span class="text-gray-400 font-bold">₺</span><input type="number" value="${d.val || ''}" onchange="state.debts[${i}].val=parseFloat(this.value)||0" class="w-32 p-2.5 rounded-xl text-right font-black outline-none bg-gray-50" placeholder="0"></div>`}
                     </div>`).join('');
             }
+
+            // Step 5: Diğer Borçlar (YENİ)
+            if(state.step === 5) listEl(state.otherDebts, 'wiz_other_debt_list', 'otherDebts', 'red');
+
+            // Step 6: Varlıklar
+            if(state.step === 6) listEl(state.assets, 'wiz_asset_list', 'assets', 'green');
         }
         
         function addItem(key, targetId, color) {
             const newItem = key==='loans' ? {name:'Yeni Kredi', totalDebt:0, totalMonths:12, monthly:0, excludeFromBudget:false, excludeFromDebt:false} : 
-                            key==='debts' ? {name:'Yeni Borç', val:0, calcMode:false, limit:0, avail:0} : {name:'', val:null};
+                            key==='debts' ? {name:'Yeni Kart', val:0, calcMode:true, limit:0, avail:0} : 
+                            key==='otherDebts' ? {name:'Yeni Borç', val:0} : {name:'', val:null};
             state[key].push(newItem);
             renderWizardLists();
         }
@@ -754,7 +797,9 @@
             const assetsVal = state.assets.reduce((s,a)=>s+(a.val||0),0);
             const loansVal = state.loans.filter(l=>!l.excludeFromDebt).reduce((s,l)=>s+(l.totalDebt||0),0);
             const cardsVal = state.debts.reduce((s,d)=>s+(d.val||0),0);
-            const totalDebt = loansVal + cardsVal;
+            const otherDebtVal = state.otherDebts ? state.otherDebts.reduce((s,d)=>s+(d.val||0),0) : 0;
+            
+            const totalDebt = loansVal + cardsVal + otherDebtVal;
             const net = assetsVal - totalDebt;
             const income = state.incomes.reduce((s,i)=>s+(i.val||0),0);
 
@@ -788,8 +833,13 @@
                 debtHTML += createItem(l.name, l.totalDebt || 0);
             });
             state.debts.forEach(d => {
-                debtHTML += createItem(d.name, d.val || 0);
+                debtHTML += createItem(d.name + ' (Kart)', d.val || 0);
             });
+            if(state.otherDebts) {
+                state.otherDebts.forEach(d => {
+                    debtHTML += createItem(d.name, d.val || 0);
+                });
+            }
 
             if(debtHTML === '') debtHTML = '<div class="text-gray-300 text-[10px] text-center italic py-2">Borç kaydı bulunmuyor</div>';
             debtContainer.innerHTML = debtHTML;
