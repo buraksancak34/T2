@@ -32,6 +32,10 @@
 
         .health-detail { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
         .health-detail.open { max-height: 500px; transition: max-height 0.3s ease-in; }
+        
+        /* Sözlerin geçiş efekti için */
+        .fade-text { animation: textFade 0.5s ease-in-out; }
+        @keyframes textFade { 0% { opacity: 0; } 100% { opacity: 1; } }
     </style>
 </head>
 <body class="min-h-screen p-4 flex flex-col items-center justify-center bg-slate-50">
@@ -71,6 +75,10 @@
                 <span>Üye Ol ve Katıl</span>
             </button>
             
+            <p id="forgotPassText" class="text-center text-[11px] font-bold text-blue-400 cursor-pointer hover:text-blue-600 pt-2" onclick="forgotPassword()">
+                Şifremi Unuttum?
+            </p>
+
             <p id="backToLoginText" class="text-center text-xs font-bold text-gray-400 cursor-pointer hover:text-blue-500 hidden pt-2" onclick="showLoginMode()">
                 <i class="fas fa-arrow-left mr-1"></i> Giriş ekranına dön
             </p>
@@ -146,6 +154,11 @@
                             <span class="text-[9px] text-slate-300 font-bold uppercase block">Hedef Birikim</span>
                             <span id="sumSavings" class="text-lg font-black text-green-400">₺0</span>
                         </div>
+                        <!-- PLANI DÜZENLE BUTONU BURAYA TAŞINDI -->
+                        <button onclick="startWizard(true)" id="btnEditPlan" class="bg-white/10 px-4 py-2 rounded-xl backdrop-blur-md border border-white/5 hover:bg-white/20 transition-all flex flex-col items-center justify-center min-w-[80px]">
+                            <i class="fas fa-pen text-sm mb-1 text-slate-300"></i>
+                            <span class="text-[9px] text-slate-300 font-bold uppercase block">Düzenle</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -163,7 +176,13 @@
                         <span id="sumGiderTotal" class="text-lg font-black text-red-600">₺0</span>
                     </div>
                 </div>
-                <button onclick="startWizard(true)" id="btnEditPlan" class="w-full py-3 bg-gray-50 text-gray-600 font-bold rounded-xl text-xs hover:bg-gray-100 transition-colors">Planı Düzenle</button>
+                
+                <!-- Finansal Tavsiyeler (30 Saniyede Bir Değişen) -->
+                <div class="mt-4 pt-4 border-t border-gray-100 flex-1 flex items-center justify-center">
+                    <p id="financialAdviceText" class="text-center text-xs font-semibold text-gray-500 italic leading-relaxed fade-text">
+                        Yükleniyor...
+                    </p>
+                </div>
             </div>
         </div>
 
@@ -281,6 +300,90 @@
             measurementId: "G-VE0EVVBM0V"
         };
 
+        // --- FİNANSAL SÖZLER HAVUZU ---
+        const financialTips = [
+            "Finansal sağlık, gelir ve giderler arasında sürdürülebilir bir denge kurabilme becerisidir.",
+            "Finansal sağlık, sadece para biriktirmek değil, parayı bilinçli yönetmektir.",
+            "Finansal sağlık, harcamaların kontrol altında olması anlamına gelir.",
+            "Finansal sağlık, geleceğe dair ekonomik güven hissi oluşturur.",
+            "Finansal sağlık, borçların yönetilebilir seviyede olmasıdır.",
+            "Finansal sağlık, ani harcamalara karşı hazırlıklı olmaktır.",
+            "Finansal sağlık, tasarruf alışkanlığının sürekliliğidir.",
+            "Finansal sağlık, gelir kaynaklarının farkında olmaktır.",
+            "Finansal sağlık, harcama alışkanlıklarını analiz edebilmektir.",
+            "Finansal sağlık, finansal stresin düşük olmasıdır.",
+            "Finansal sağlık, uzun vadeli plan yapabilme yeteneğidir.",
+            "Finansal sağlık, bütçe oluşturma disiplinidir.",
+            "Finansal sağlık, finansal kararların bilinçli alınmasıdır.",
+            "Finansal sağlık, gereksiz harcamaları ayırt edebilmektir.",
+            "Finansal sağlık, finansal hedeflere sahip olmaktır.",
+            "Finansal sağlık, gelir artışı kadar gider kontrolünü de önemsemektir.",
+            "Finansal sağlık, finansal farkındalık düzeyidir.",
+            "Finansal sağlık, ekonomik risklere karşı dayanıklılıktır.",
+            "Finansal sağlık, bugün ile yarın arasında denge kurmaktır.",
+            "Finansal sağlık, finansal özgürlüğe giden yolun temelidir.",
+            "Gelir ve gider dengesini bilmek finansal kontrolün ilk adımıdır.",
+            "Gelirinden fazla harcamak uzun vadede finansal kırılganlık yaratır.",
+            "Düzenli gelir-gider takibi bilinçsiz harcamaları azaltır.",
+            "Gelir-gider dengesi bütçe planlamasının temelidir.",
+            "Harcamaları yazmak farkındalık oluşturur.",
+            "Küçük ama sık harcamalar bütçeyi sessizce tüketir.",
+            "Gelir-gider analizi tasarruf alanlarını ortaya çıkarır.",
+            "Finansal disiplin günlük takip ile başlar.",
+            "Gelir-gider kontrolü borçlanma ihtiyacını azaltır.",
+            "Harcamaları görmek davranış değişikliğini kolaylaştırır.",
+            "Gelir-gider dengesi finansal stresin azalmasına yardımcı olur.",
+            "Aylık dengeyi bilmek yıllık plan yapmayı kolaylaştırır.",
+            "Denge sağlanmadığında tasarruf imkânsızlaşır.",
+            "Gelir-gider takibi finansal hedeflere ulaşmayı hızlandırır.",
+            "Düzensiz harcama gelecekte belirsizlik yaratır.",
+            "Gelir-gider farkı yatırım potansiyelini belirler.",
+            "Finansal denge kriz dönemlerinde koruma sağlar.",
+            "Günlük kontrol uzun vadeli istikrar oluşturur.",
+            "Gelir-gider dengesi finansal özgüveni artırır.",
+            "Kontrol edilen para, yönlendirilebilir paradır.",
+            "Tasarruf geleceğe yapılmış bilinçli bir yatırımdır.",
+            "Tasarruf beklenmeyen durumlara karşı güvenlik sağlar.",
+            "Tasarruf finansal bağımsızlığın temelidir.",
+            "Tasarruf küçük miktarlarla başlar.",
+            "Düzenli tasarruf alışkanlık gerektirir.",
+            "Tasarruf gelecekteki fırsatları mümkün kılar.",
+            "Tasarruf borç ihtiyacını azaltır.",
+            "Tasarruf finansal stresi düşürür.",
+            "Tasarruf uzun vadeli hedefleri erişilebilir kılar.",
+            "Tasarruf disiplinli harcama davranışı kazandırır.",
+            "Tasarruf kriz anlarında dayanıklılık sağlar.",
+            "Tasarruf yatırım yapabilmenin ön koşuludur.",
+            "Tasarruf özgür seçim yapma gücü verir.",
+            "Tasarruf bilinçli tüketimin göstergesidir.",
+            "Tasarruf küçük fedakârlıkların büyük sonucudur.",
+            "Tasarruf zamanla büyüyen bir finansal güvenliktir.",
+            "Tasarruf finansal istikrar oluşturur.",
+            "Tasarruf sabır gerektirir.",
+            "Tasarruf finansal hedeflere ulaşma süresini kısaltır.",
+            "Tasarruf gelecekteki belirsizlikleri azaltır.",
+            "Finansal farkındalık harcamadan önce düşünmeyi sağlar.",
+            "Bilinçli harcama uzun vadeli rahatlık getirir.",
+            "Anlık tatmin uzun vadeli sorun yaratabilir.",
+            "Planlı hareket eden kişi finansal kontrolü elinde tutar.",
+            "Harcamaların amacı sorgulanmalıdır.",
+            "Finansal kararlar duygusal değil bilinçli verilmelidir.",
+            "Para yönetimi bir alışkanlık meselesidir.",
+            "Günlük küçük kararlar finansal geleceği belirler.",
+            "Finansal disiplin özgüven yaratır.",
+            "Harcamaların yazılması davranışı değiştirir.",
+            "Finansal hedefler motivasyonu artırır.",
+            "Bilinçli tüketim sürdürülebilir yaşamı destekler.",
+            "Finansal planlama belirsizliği azaltır.",
+            "Harcama kontrolü özgürlük sağlar.",
+            "Finansal düzen zihinsel düzeni destekler.",
+            "Düzenli takip başarı olasılığını artırır.",
+            "Finansal sağlığı güçlü olan birey risklere karşı dayanıklıdır.",
+            "Bütçe yapmak kısıtlama değil yönlendirmedir.",
+            "Finansal disiplin bir yaşam becerisidir.",
+            "Finansal sağlığı korumak günlük küçük adımlarla mümkündür."
+        ];
+
         let db, auth, currentUser = null;
         let currentPlanId = null; // Aktif planın ID'si (Kendi veya Aile)
         let currentUserRole = 'owner'; // owner, full, limited
@@ -288,6 +391,7 @@
         let isRegistering = false; 
         let assetsChartInstance = null;
         let expensesChartInstance = null;
+        let adviceInterval = null;
 
         try {
             firebase.initializeApp(firebaseConfig);
@@ -302,11 +406,27 @@
                     const name = user.displayName || user.email.split('@')[0];
                     document.getElementById('dashWelcome').innerText = `Hoşgeldin, ${name}`;
                     initUserPlan(); 
+                    startAdviceRotator();
                 } else {
                     currentUser = null;
+                    clearInterval(adviceInterval);
                 }
             });
         } catch(e) { console.error(e); }
+
+        function startAdviceRotator() {
+            const el = document.getElementById('financialAdviceText');
+            if(!el) return;
+            const update = () => {
+                el.classList.remove('fade-text');
+                void el.offsetWidth; // Trigger reflow
+                const randomTip = financialTips[Math.floor(Math.random() * financialTips.length)];
+                el.innerText = randomTip;
+                el.classList.add('fade-text');
+            };
+            update();
+            adviceInterval = setInterval(update, 30000);
+        }
 
         // --- AUTH & PLAN LOGIC ---
         async function initUserPlan() {
@@ -812,11 +932,17 @@
                         <div class="flex justify-between gap-4">
                             <div class="flex-1 text-center p-3 bg-green-50 rounded-2xl">
                                 <p class="text-[9px] font-bold text-green-400 block mb-1">AYLIK BİRİKİM</p>
-                                <input type="text" id="manualSavingsInput" disabled class="w-full bg-transparent text-center font-black text-lg text-green-700">
+                                <div class="relative">
+                                    <span class="absolute left-2 top-1.5 text-green-700 font-bold">₺</span>
+                                    <input type="number" id="manualSavingsInput" oninput="updateFromSavingsInput(this.value)" class="w-full bg-transparent text-center font-black text-lg text-green-700 outline-none pl-4" placeholder="0">
+                                </div>
                             </div>
                             <div class="flex-1 text-center p-3 bg-blue-50 rounded-2xl">
                                 <p class="text-[9px] font-bold text-blue-400 block mb-1">AYLIK HARCAMA</p>
-                                <div id="allocSpendingVal" class="font-black text-lg text-blue-700">₺0</div>
+                                <div class="relative">
+                                    <span class="absolute left-2 top-1.5 text-blue-700 font-bold">₺</span>
+                                    <input type="number" id="allocSpendingInput" oninput="updateFromSpendingInput(this.value)" class="w-full bg-transparent text-center font-black text-lg text-blue-700 outline-none pl-4" placeholder="0">
+                                </div>
                             </div>
                         </div>
                     </div>`;
@@ -929,8 +1055,8 @@
             const spend = daily * 30; 
             const save = state.remainingAfterFixed - spend; 
             
-            document.getElementById('manualSavingsInput').value = `₺${Math.floor(save)}`; 
-            document.getElementById('allocSpendingVal').innerText = `₺${Math.floor(spend)}`; 
+            document.getElementById('manualSavingsInput').value = Math.floor(save); 
+            document.getElementById('allocSpendingInput').value = Math.floor(spend); 
             
             // Slider'ı güncelle (ters işlem)
             if(state.remainingAfterFixed > 0) {
@@ -940,6 +1066,38 @@
 
             state.calculatedMonthlyPool = spend; 
             state.calculatedMonthlySavings = save; 
+        }
+
+        function updateFromSavingsInput(v) {
+            const save = parseFloat(v) || 0;
+            const spend = state.remainingAfterFixed - save;
+            const daily = spend / 30;
+            
+            document.getElementById('idealDailyLimitInput').value = Math.floor(daily);
+            document.getElementById('allocSpendingInput').value = Math.floor(spend);
+            
+            if(state.remainingAfterFixed > 0) {
+                 document.getElementById('allocationSlider').value = (save / state.remainingAfterFixed) * 100;
+            }
+            state.calculatedMonthlyPool = spend;
+            state.calculatedMonthlySavings = save;
+            state.manualDailyLimit = daily;
+        }
+
+        function updateFromSpendingInput(v) {
+            const spend = parseFloat(v) || 0;
+            const save = state.remainingAfterFixed - spend;
+            const daily = spend / 30;
+
+            document.getElementById('idealDailyLimitInput').value = Math.floor(daily);
+            document.getElementById('manualSavingsInput').value = Math.floor(save);
+             
+            if(state.remainingAfterFixed > 0) {
+                 document.getElementById('allocationSlider').value = (save / state.remainingAfterFixed) * 100;
+            }
+            state.calculatedMonthlyPool = spend;
+            state.calculatedMonthlySavings = save;
+            state.manualDailyLimit = daily;
         }
         
         function openEditModal(type, index) { const item = state[type][index]; document.getElementById('editItemName').value = item.name; document.getElementById('editItemVal').value = item.val || item.totalDebt || 0; document.getElementById('editItemType').value = type; document.getElementById('editItemIndex').value = index; document.getElementById('editItemModal').classList.remove('hidden'); document.getElementById('overlay').classList.add('active'); }
