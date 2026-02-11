@@ -316,30 +316,37 @@
 
         // --- AUTH & PLAN LOGIC ---
         async function initUserPlan() {
-            const userDoc = await db.collection("users").doc(currentUser.uid).get();
-            if(!userDoc.exists) {
-                saveToCloud(); // Kendi ID'sine kaydeder
+            if (!currentUser) return;
+            try {
+                // Önce ID'yi varsayılan olarak ayarla
                 currentPlanId = currentUser.uid;
                 currentUserRole = 'owner';
-            } else {
-                const userData = userDoc.data();
-                if (userData.connectedPlanId) {
-                    currentPlanId = userData.connectedPlanId;
-                    const planDoc = await db.collection("users").doc(currentPlanId).get();
-                    if(planDoc.exists) {
-                        const planData = planDoc.data();
-                        const member = planData.familyMembers ? planData.familyMembers.find(m => m.uid === currentUser.uid) : null;
-                        currentUserRole = member ? member.role : 'limited';
-                    } else {
-                        currentPlanId = currentUser.uid;
-                        currentUserRole = 'owner';
-                    }
+
+                const userDoc = await db.collection("users").doc(currentUser.uid).get();
+                if(!userDoc.exists) {
+                    // Kayıt yoksa oluştur (ID zaten set edildi)
+                    saveToCloud();
                 } else {
-                    currentPlanId = currentUser.uid;
-                    currentUserRole = 'owner';
+                    const userData = userDoc.data();
+                    if (userData.connectedPlanId) {
+                        currentPlanId = userData.connectedPlanId;
+                        // Bağlı planı kontrol et
+                        const planDoc = await db.collection("users").doc(currentPlanId).get();
+                        if(planDoc.exists) {
+                            const planData = planDoc.data();
+                            const member = planData.familyMembers ? planData.familyMembers.find(m => m.uid === currentUser.uid) : null;
+                            currentUserRole = member ? member.role : 'limited';
+                        } else {
+                            // Plan silinmişse fallback
+                            currentPlanId = currentUser.uid;
+                            currentUserRole = 'owner';
+                        }
+                    }
                 }
+                loadFromCloud();
+            } catch (error) {
+                console.error("Plan yükleme hatası:", error);
             }
-            loadFromCloud();
         }
 
         // --- AUTH UI ---
@@ -383,12 +390,12 @@
                     // Kullanıcı adını küçük harfe çevirerek ara
                     const usernameQuery = email.toLowerCase();
                     const snapshot = await db.collection('users').where('username', '==', usernameQuery).limit(1).get();
-                    if (snapshot.empty) throw new Error("Kullanıcı bulunamadı veya veritabanı erişimi engellendi.");
+                    if (snapshot.empty) throw new Error("Bu kullanıcı adı bulunamadı. Lütfen e-posta ile giriş yapın veya veritabanı izinlerinizi kontrol edin.");
                     email = snapshot.docs[0].data().email;
                 }
                 await auth.signInWithEmailAndPassword(email, pass);
             } catch (error) {
-                alert("Hata: " + error.message);
+                alert("Giriş Hatası: " + error.message);
                 btn.innerHTML = originalText;
             }
         }
@@ -414,6 +421,10 @@
                     initState.email = email;
                     initState.username = username; // Küçük harfli kaydet
                     
+                    // ID'leri hemen ayarla
+                    currentPlanId = cred.user.uid;
+                    currentUserRole = 'owner';
+
                     db.collection("users").doc(cred.user.uid).set(initState)
                         .then(() => { 
                             isRegistering = false; 
@@ -570,7 +581,6 @@
 
         function saveToCloud() {
             if(!currentUser || !currentPlanId) return;
-            // Sınırlı yetki kontrolünü kaldırdık, harcama ekleyebilsinler.
             
             const stateToSave = JSON.parse(JSON.stringify(state));
             stateToSave.registrationDate = state.registrationDate.toISOString();
@@ -794,8 +804,15 @@
                 const s = JSON.parse(JSON.stringify(state));
                 s.registrationDate = state.registrationDate.toISOString();
                 s.username = name; s.email = email;
+                
+                // --- KRİTİK DÜZELTME: ID'leri önce ayarla ---
+                currentPlanId = cred.user.uid;
+                currentUserRole = 'owner';
+                
                 db.collection("users").doc(cred.user.uid).set(s).then(()=>{
-                    isRegistering=false; document.getElementById('dashWelcome').innerText=`Hoşgeldin, ${name}`; showDashboard();
+                    isRegistering=false; 
+                    document.getElementById('dashWelcome').innerText=`Hoşgeldin, ${name}`; 
+                    showDashboard();
                 });
             }).catch(e=>{ isRegistering=false; alert(e.message); });
         }
