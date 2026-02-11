@@ -333,7 +333,7 @@
         const defaultState = {
             step: 1, salaryDay: 15,
             registrationDate: new Date().toISOString(),
-            incomes: [], 
+            incomes: [{ name: 'Maaş', val: null }], 
             bills: [
                 { name: 'Kira', val: null }, { name: 'Aidat', val: null }, { name: 'Elektrik', val: null },
                 { name: 'Su', val: null }, { name: 'Doğalgaz', val: null }, { name: 'İnternet', val: null },
@@ -873,7 +873,7 @@
             if(!isEditMode) { 
                 state = JSON.parse(JSON.stringify(defaultState)); 
                 state.registrationDate = new Date().toISOString(); 
-                state.incomes = [{ name: 'Maaş', val: null }];
+                // state.incomes = [{ name: 'Maaş', val: null }]; // Remove this line as it's now in defaultState
                 // Ensure defaults are set for new wizard
                 state.bills = [
                     { name: 'Kira', val: null }, { name: 'Aidat', val: null }, { name: 'Elektrik', val: null },
