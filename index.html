@@ -71,11 +71,6 @@
                 <span>Üye Ol ve Katıl</span>
             </button>
             
-            <!-- Şifremi Unuttum Linki (Sadece Login modunda görünür) -->
-            <p id="forgotPassText" class="text-center text-[10px] font-bold text-blue-400 cursor-pointer hover:text-blue-600 pt-1" onclick="forgotPassword()">
-                Şifremi Unuttum?
-            </p>
-
             <p id="backToLoginText" class="text-center text-xs font-bold text-gray-400 cursor-pointer hover:text-blue-500 hidden pt-2" onclick="showLoginMode()">
                 <i class="fas fa-arrow-left mr-1"></i> Giriş ekranına dön
             </p>
@@ -352,7 +347,6 @@
             document.getElementById('emailInput').placeholder = "E-posta veya Kullanıcı Adı";
             document.getElementById('actionButtons').classList.remove('hidden');
             document.getElementById('backToLoginText').classList.add('hidden');
-            document.getElementById('forgotPassText').classList.remove('hidden');
         }
 
         function showRegisterMode() {
@@ -364,7 +358,6 @@
             document.getElementById('emailInput').placeholder = "E-posta Adresi";
             document.getElementById('actionButtons').classList.add('hidden');
             document.getElementById('backToLoginText').classList.remove('hidden');
-            document.getElementById('forgotPassText').classList.add('hidden');
         }
 
         async function firebaseLogin() {
@@ -422,30 +415,6 @@
                         });
                 })
                 .catch((e) => { isRegistering = false; alert(e.message); btn.innerHTML = "Üye Ol ve Katıl"; });
-        }
-
-        function forgotPassword() {
-            const email = document.getElementById('emailInput').value.trim();
-            if (!email) {
-                return alert("Lütfen şifre sıfırlama bağlantısı için e-posta adresinizi giriniz.");
-            }
-            // Check if it looks like an email
-            if (!email.includes('@')) {
-                return alert("Şifre sıfırlama sadece E-posta adresi ile yapılabilir. Lütfen geçerli bir e-posta giriniz.");
-            }
-
-            if(confirm(`${email} adresine şifre sıfırlama bağlantısı gönderilsin mi?`)) {
-                auth.sendPasswordResetEmail(email)
-                    .then(() => {
-                        alert("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi. Lütfen gelen kutunuzu (ve spam klasörünü) kontrol ediniz.");
-                    })
-                    .catch((error) => {
-                        let msg = error.message;
-                        if(error.code === 'auth/user-not-found') msg = "Bu e-posta adresi ile kayıtlı kullanıcı bulunamadı.";
-                        if(error.code === 'auth/invalid-email') msg = "Geçersiz e-posta adresi.";
-                        alert("Hata: " + msg);
-                    });
-            }
         }
 
         function handleLogout() {
@@ -847,5 +816,3 @@
     </script>
 </body>
 </html>
-
-
