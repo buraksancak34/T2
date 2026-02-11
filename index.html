@@ -33,7 +33,6 @@
         .health-detail { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
         .health-detail.open { max-height: 500px; transition: max-height 0.3s ease-in; }
         
-        /* Sözlerin geçiş efekti için */
         .fade-text { animation: textFade 0.5s ease-in-out; }
         @keyframes textFade { 0% { opacity: 0; } 100% { opacity: 1; } }
     </style>
@@ -309,20 +308,89 @@
             measurementId: "G-VE0EVVBM0V"
         };
 
-        // --- FİNANSAL SÖZLER HAVUZU (KISALTILDI - YER TUTMAMASI İÇİN) ---
+        // --- FİNANSAL SÖZLER HAVUZU ---
         const financialTips = [
             "Finansal sağlık, gelir ve giderler arasında sürdürülebilir bir denge kurabilme becerisidir.",
             "Finansal sağlık, sadece para biriktirmek değil, parayı bilinçli yönetmektir.",
+            "Finansal sağlık, harcamaların kontrol altında olması anlamına gelir.",
+            "Finansal sağlık, geleceğe dair ekonomik güven hissi oluşturur.",
+            "Finansal sağlık, borçların yönetilebilir seviyede olmasıdır.",
+            "Finansal sağlık, ani harcamalara karşı hazırlıklı olmaktır.",
+            "Finansal sağlık, tasarruf alışkanlığının sürekliliğidir.",
+            "Finansal sağlık, gelir kaynaklarının farkında olmaktır.",
+            "Finansal sağlık, harcama alışkanlıklarını analiz edebilmektir.",
+            "Finansal sağlık, finansal stresin düşük olmasıdır.",
+            "Finansal sağlık, uzun vadeli plan yapabilme yeteneğidir.",
+            "Finansal sağlık, bütçe oluşturma disiplinidir.",
+            "Finansal sağlık, finansal kararların bilinçli alınmasıdır.",
+            "Finansal sağlık, gereksiz harcamaları ayırt edebilmektir.",
+            "Finansal sağlık, finansal hedeflere sahip olmaktır.",
+            "Finansal sağlık, gelir artışı kadar gider kontrolünü de önemsemektir.",
+            "Finansal sağlık, finansal farkındalık düzeyidir.",
+            "Finansal sağlık, ekonomik risklere karşı dayanıklılıktır.",
+            "Finansal sağlık, bugün ile yarın arasında denge kurmaktır.",
+            "Finansal sağlık, finansal özgürlüğe giden yolun temelidir.",
+            "Gelir ve gider dengesini bilmek finansal kontrolün ilk adımıdır.",
             "Gelirinden fazla harcamak uzun vadede finansal kırılganlık yaratır.",
             "Düzenli gelir-gider takibi bilinçsiz harcamaları azaltır.",
+            "Gelir-gider dengesi bütçe planlamasının temelidir.",
+            "Harcamaları yazmak farkındalık oluşturur.",
             "Küçük ama sık harcamalar bütçeyi sessizce tüketir.",
+            "Gelir-gider analizi tasarruf alanlarını ortaya çıkarır.",
             "Finansal disiplin günlük takip ile başlar.",
+            "Gelir-gider kontrolü borçlanma ihtiyacını azaltır.",
+            "Harcamaları görmek davranış değişikliğini kolaylaştırır.",
+            "Gelir-gider dengesi finansal stresin azalmasına yardımcı olur.",
+            "Aylık dengeyi bilmek yıllık plan yapmayı kolaylaştırır.",
+            "Denge sağlanmadığında tasarruf imkânsızlaşır.",
+            "Gelir-gider takibi finansal hedeflere ulaşmayı hızlandırır.",
+            "Düzensiz harcama gelecekte belirsizlik yaratır.",
+            "Gelir-gider farkı yatırım potansiyelini belirler.",
+            "Finansal denge kriz dönemlerinde koruma sağlar.",
+            "Günlük kontrol uzun vadeli istikrar oluşturur.",
+            "Gelir-gider dengesi finansal özgüveni artırır.",
+            "Kontrol edilen para, yönlendirilebilir paradır.",
             "Tasarruf geleceğe yapılmış bilinçli bir yatırımdır.",
             "Tasarruf beklenmeyen durumlara karşı güvenlik sağlar.",
+            "Tasarruf finansal bağımsızlığın temelidir.",
+            "Tasarruf küçük miktarlarla başlar.",
+            "Düzenli tasarruf alışkanlık gerektirir.",
+            "Tasarruf gelecekteki fırsatları mümkün kılar.",
+            "Tasarruf borç ihtiyacını azaltır.",
+            "Tasarruf finansal stresi düşürür.",
+            "Tasarruf uzun vadeli hedefleri erişilebilir kılar.",
+            "Tasarruf disiplinli harcama davranışı kazandırır.",
+            "Tasarruf kriz anlarında dayanıklılık sağlar.",
+            "Tasarruf yatırım yapabilmenin ön koşuludur.",
+            "Tasarruf özgür seçim yapma gücü verir.",
+            "Tasarruf bilinçli tüketimin göstergesidir.",
+            "Tasarruf küçük fedakârlıkların büyük sonucudur.",
+            "Tasarruf zamanla büyüyen bir finansal güvenliktir.",
+            "Tasarruf finansal istikrar oluşturur.",
+            "Tasarruf sabır gerektirir.",
+            "Tasarruf finansal hedeflere ulaşma süresini kısaltır.",
+            "Tasarruf gelecekteki belirsizlikleri azaltır.",
+            "Finansal farkındalık harcamadan önce düşünmeyi sağlar.",
+            "Bilinçli harcama uzun vadeli rahatlık getirir.",
+            "Anlık tatmin uzun vadeli sorun yaratabilir.",
+            "Planlı hareket eden kişi finansal kontrolü elinde tutar.",
+            "Harcamaların amacı sorgulanmalıdır.",
+            "Finansal kararlar duygusal değil bilinçli verilmelidir.",
             "Para yönetimi bir alışkanlık meselesidir.",
-            "Bütçe yapmak kısıtlama değil yönlendirmedir."
+            "Günlük küçük kararlar finansal geleceği belirler.",
+            "Finansal disiplin özgüven yaratır.",
+            "Harcamaların yazılması davranışı değiştirir.",
+            "Finansal hedefler motivasyonu artırır.",
+            "Bilinçli tüketim sürdürülebilir yaşamı destekler.",
+            "Finansal planlama belirsizliği azaltır.",
+            "Harcama kontrolü özgürlük sağlar.",
+            "Finansal düzen zihinsel düzeni destekler.",
+            "Düzenli takip başarı olasılığını artırır.",
+            "Finansal sağlığı güçlü olan birey risklere karşı dayanıklıdır.",
+            "Bütçe yapmak kısıtlama değil yönlendirmedir.",
+            "Finansal disiplin bir yaşam becerisidir.",
+            "Finansal sağlığı korumak günlük küçük adımlarla mümkündür."
         ];
-        // Not: Gerçek uygulamada 80 cümlenin tamamı buraya eklenebilir.
 
         let db, auth, currentUser = null;
         let currentPlanId = null; 
@@ -359,7 +427,7 @@
             if(!el) return;
             const update = () => {
                 el.classList.remove('fade-text');
-                void el.offsetWidth;
+                void el.offsetWidth; // Trigger reflow
                 const randomTip = financialTips[Math.floor(Math.random() * financialTips.length)];
                 el.innerText = randomTip;
                 el.classList.add('fade-text');
@@ -372,6 +440,7 @@
         async function initUserPlan() {
             if (!currentUser) return;
             try {
+                // Önce ID'yi varsayılan olarak ayarla
                 currentPlanId = currentUser.uid;
                 currentUserRole = 'owner';
 
@@ -498,7 +567,12 @@
 
         function forgotPassword() {
             const email = document.getElementById('emailInput').value.trim();
-            if (!email || !email.includes('@')) return alert("Şifre sıfırlama için lütfen e-posta adresinizi giriniz.");
+            if (!email) {
+                return alert("Lütfen şifre sıfırlama bağlantısı için e-posta adresinizi giriniz.");
+            }
+            if (!email.includes('@')) {
+                return alert("Şifre sıfırlama sadece E-posta adresi ile yapılabilir. Lütfen geçerli bir e-posta giriniz.");
+            }
 
             if(confirm(`${email} adresine şifre sıfırlama bağlantısı gönderilsin mi?`)) {
                 auth.sendPasswordResetEmail(email)
@@ -515,7 +589,6 @@
             }
         }
 
-        // --- FAMILY ---
         function showFamilyModal() {
             if(currentUserRole !== 'owner' && currentUserRole !== 'full') return alert("Bu işlem için yetkiniz yok.");
             renderFamilyList();
@@ -599,7 +672,6 @@
                 </div>`).join('');
         }
 
-        // --- CLOUD ---
         function loadFromCloud() {
             if(!currentUser || !currentPlanId) return;
             db.collection("users").doc(currentPlanId).get().then((doc) => {
@@ -607,9 +679,11 @@
                     const data = doc.data();
                     if(data.registrationDate) data.registrationDate = new Date(data.registrationDate.seconds ? data.registrationDate.seconds * 1000 : data.registrationDate);
                     state = data;
+                    // Ensure arrays exist
                     if(!state.otherDebts) state.otherDebts = [];
                     if(!state.monthlyHistory) state.monthlyHistory = [];
                     if(!state.familyMembers) state.familyMembers = [];
+                    
                     showDashboard();
                 }
             });
@@ -766,14 +840,35 @@
         function startWizard(isEditMode) {
             hideAll(); document.getElementById('wizardScreen').classList.remove('hidden');
             if(!isEditMode) { 
+                // Set default values only if creating new plan
                 state = JSON.parse(JSON.stringify(defaultState)); 
                 state.registrationDate = new Date(); 
                 state.incomes = [{ name: 'Maaş', val: null }];
+                // Ensure defaults are set for new wizard
+                state.bills = [
+                    { name: 'Kira', val: null }, { name: 'Aidat', val: null }, { name: 'Elektrik', val: null },
+                    { name: 'Su', val: null }, { name: 'Doğalgaz', val: null }, { name: 'İnternet', val: null },
+                    { name: 'Telefon Faturaları', val: null }, { name: 'Dijital abonelikler', val: null }
+                ];
+                state.assets = [
+                    { name: 'Bankadaki Para', val: null }, { name: 'Cepteki Para', val: null }, { name: 'Birikim Hesabı', val: null }
+                ];
             }
             state.step = 1; renderWizard();
         }
         function wizardNext() { if (state.step === 8) { if(document.getElementById('wizRegEmail')) registerFromWizard(); else { saveState(); showDashboard(); } return; } state.step++; renderWizard(); }
-        function wizardBack() { if (state.step > 1) { state.step--; renderWizard(); } else { showLoginScreen(); } }
+        function wizardBack() { 
+            if (state.step > 1) { 
+                state.step--; 
+                renderWizard(); 
+            } else { 
+                if(currentUser) {
+                    showDashboard();
+                } else {
+                    showLoginScreen(); 
+                }
+            } 
+        }
         
         function renderWizard() {
             const content = document.getElementById('wizardContent');
@@ -822,13 +917,19 @@
                 const keys = ["", "incomes", "bills", "loans", "debts", "otherDebts", "assets"];
                 const key = keys[state.step];
                 content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-${colors[state.step]}-600">${titles[state.step]}</h3><div id="wiz_${key}_list" class="custom-scrollbar overflow-y-auto max-h-[300px]"></div><button onclick="addItem('${key}', 'wiz_${key}_list')" class="w-full py-3 border-2 border-dashed border-${colors[state.step]}-200 rounded-2xl text-${colors[state.step]}-500 font-bold mt-4">+ Ekle</button>`;
+                
+                // Add Maaş Günü input only on first step
+                 if (state.step === 1) {
+                     content.innerHTML += `<div class="pt-4 mt-6 border-t"><p class="text-[10px] font-bold text-gray-400 uppercase mb-2">Maaş Günü</p><input type="number" id="wiz_salary_day_val" oninput="state.salaryDay=this.value" value="${state.salaryDay || 15}" class="w-20 p-3 bg-gray-50 rounded-xl font-black text-center text-xl" placeholder="15"></div>`;
+                 }
             }
             renderWizardLists();
         }
         
         function renderWizardLists() {
              const listEl = (data, id, type) => { const el = document.getElementById(id); if(!el) return; el.innerHTML = data.map((item, idx) => `<div class="flex gap-2 mb-2 items-center"><input type="text" value="${item.name||''}" onchange="state.${type}[${idx}].name=this.value" class="flex-1 p-3 bg-white border border-gray-100 rounded-xl text-sm outline-none" placeholder="İsim"> <input type="number" value="${item.val||''}" onchange="state.${type}[${idx}].val=parseFloat(this.value)||0" class="w-24 p-3 bg-gray-50 border rounded-xl text-right text-sm" placeholder="0"><button onclick="removeItem('${type}', ${idx})" class="text-gray-300 hover:text-red-500 px-2"><i class="fas fa-trash"></i></button></div>`).join(''); };
-             if(state.step===1) listEl(state.incomes, 'wiz_inc_list', 'incomes');
+             // --- ID DÜZELTMELERİ BURADA YAPILDI ---
+             if(state.step===1) listEl(state.incomes, 'wiz_incomes_list', 'incomes');
              if(state.step===2) listEl(state.bills, 'wiz_bills_list', 'bills');
              if(state.step===3) { const el = document.getElementById('wiz_loans_list'); if(el) el.innerHTML = state.loans.map((l, i) => `<div class="p-4 bg-white border rounded-2xl mb-3 space-y-3 relative"><button onclick="removeItem('loans', ${i})" class="absolute top-2 right-2 text-gray-300 hover:text-red-500"><i class="fas fa-times"></i></button><input type="text" value="${l.name}" onchange="state.loans[${i}].name=this.value" class="w-full border-b pb-1 font-black text-sm outline-none" placeholder="Kredi Adı"><div class="grid grid-cols-3 gap-2"><input type="number" value="${l.monthly||''}" oninput="updateLoanData(${i}, 'monthly', this.value)" class="p-2 bg-gray-50 rounded-lg text-xs" placeholder="Aylık"><input type="number" value="${l.totalMonths||''}" oninput="updateLoanData(${i}, 'totalMonths', this.value)" class="p-2 bg-gray-50 rounded-lg text-xs" placeholder="Vade"><input type="number" id="wiz_loan_t_${i}" value="${l.totalDebt||''}" oninput="updateLoanData(${i}, 'totalDebt', this.value)" class="p-2 bg-gray-50 rounded-lg text-xs" placeholder="Toplam"></div><div class="flex flex-col gap-1 pt-1 border-t border-gray-50 mt-2"><div class="flex items-center gap-2"><input type="checkbox" id="wiz_ex_${i}" ${l.excludeFromBudget ? 'checked' : ''} onchange="state.loans[${i}].excludeFromBudget=this.checked" class="w-3.5 h-3.5 rounded text-blue-600 focus:ring-blue-500"><label for="wiz_ex_${i}" class="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Aylık gidere dahil etme</label></div><div class="flex items-center gap-2"><input type="checkbox" id="wiz_ex_debt_${i}" ${l.excludeFromDebt ? 'checked' : ''} onchange="state.loans[${i}].excludeFromDebt=this.checked" class="w-3.5 h-3.5 rounded text-blue-600 focus:ring-blue-500"><label for="wiz_ex_debt_${i}" class="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Genel borca dahil etme</label></div></div></div>`).join(''); }
              if(state.step===4) { const el = document.getElementById('wiz_debts_list'); if(el) el.innerHTML = state.debts.map((d, i) => `<div class="p-4 bg-white border rounded-2xl mb-3 space-y-3 text-left relative"><button onclick="removeItem('debts', ${i})" class="absolute top-2 right-2 text-gray-300 hover:text-red-500"><i class="fas fa-times"></i></button><div class="flex justify-between items-center pr-6"><input type="text" value="${d.name}" onchange="state.debts[${i}].name=this.value" class="font-black text-sm outline-none flex-1" placeholder="Kart Adı"><button onclick="toggleCardMode(${i})" class="text-[9px] font-black text-blue-500 bg-blue-50 px-2 py-1 rounded-lg">Mod: ${d.calcMode?'Limit':'Manuel'}</button></div>${d.calcMode ? `<div class="grid grid-cols-3 gap-2"><input type="number" value="${d.limit||''}" oninput="calcCard(${i}, 'limit', this.value)" class="p-2 bg-gray-50 rounded-xl text-xs" placeholder="Limit"><input type="number" value="${d.avail||''}" oninput="calcCard(${i}, 'avail', this.value)" class="p-2 bg-gray-50 rounded-xl text-xs" placeholder="Kullanılabilir"><div id="wiz_card_res_${i}" class="p-2 bg-purple-50 text-purple-700 font-black text-xs rounded-xl">${d.val||0}</div></div>` : `<input type="number" value="${d.val||''}" onchange="state.debts[${i}].val=parseFloat(this.value)||0" class="w-full p-2 bg-gray-50 rounded-xl text-right text-sm" placeholder="Borç">`}</div>`).join(''); }
@@ -854,6 +955,7 @@
             state.calculatedMonthlyPool = spend; 
             state.calculatedMonthlySavings = save; 
         }
+
         function updateFromSavingsInput(v) {
             const save = parseFloat(v) || 0;
             const spend = state.remainingAfterFixed - save;
@@ -863,6 +965,7 @@
             if(state.remainingAfterFixed > 0) document.getElementById('allocationSlider').value = (save / state.remainingAfterFixed) * 100;
             state.calculatedMonthlyPool = spend; state.calculatedMonthlySavings = save; state.manualDailyLimit = daily;
         }
+
         function updateFromSpendingInput(v) {
             const spend = parseFloat(v) || 0;
             const save = state.remainingAfterFixed - spend;
@@ -872,15 +975,25 @@
             if(state.remainingAfterFixed > 0) document.getElementById('allocationSlider').value = (save / state.remainingAfterFixed) * 100;
             state.calculatedMonthlyPool = spend; state.calculatedMonthlySavings = save; state.manualDailyLimit = daily;
         }
+        
+        function addItem(key, id) { 
+            const item = {name:'',val:0}; 
+            if(key==='loans') Object.assign(item, {name:'Kredi',totalDebt:0,totalMonths:12,monthly:0}); 
+            else if(key==='debts') Object.assign(item, {name:'Kart',val:0,calcMode:false}); // Manual mode default
+            state[key].push(item); 
+            renderWizardLists(); 
+            
+            // Auto Scroll
+            setTimeout(() => {
+                const container = document.getElementById(id);
+                if(container && container.lastElementChild) {
+                    container.lastElementChild.scrollIntoView({ behavior: 'smooth' });
+                    const input = container.lastElementChild.querySelector('input');
+                    if(input) input.focus();
+                }
+            }, 100);
+        }
         // ... (Kalan helper fonksiyonlar, modal vb.) ...
-        function editExpense(idx) { const exp = state.expenses[idx]; document.getElementById('expAmt').value = exp.amount; document.getElementById('expDesc').value = exp.desc; document.getElementById('editExpIndex').value = idx; const btn = document.getElementById('addExpBtn'); btn.innerHTML = '<i class="fas fa-check"></i>'; btn.classList.replace('bg-blue-600', 'bg-green-600'); document.getElementById('expAmt').focus(); }
-        function deleteExpense(idx) { if(confirm('Silinecek?')) { state.expenses.splice(idx, 1); saveToCloud(); updateDashboardUI(); } }
-        function clearHistory() { if(confirm('Hepsi silinecek?')) { state.expenses = []; saveToCloud(); updateDashboardUI(); } }
-        function hideAll() { ['loginScreen', 'wizardScreen', 'dashboardScreen', 'analysisScreen'].forEach(id => document.getElementById(id).classList.add('hidden')); closeAllPopups(); }
-        function closeAllPopups() { document.getElementById('overlay').classList.remove('active'); ['calcModal', 'editItemModal', 'familyModal'].forEach(id => document.getElementById(id).classList.add('hidden')); }
-        function showAnalysisScreen() { hideAll(); document.getElementById('analysisScreen').classList.remove('hidden'); renderAnalysis(); }
-        function showDashboard() { hideAll(); document.getElementById('dashboardScreen').classList.remove('hidden'); updateDashboardUI(); }
-        function addItem(key, id) { const item = {name:'',val:0}; if(key==='loans') Object.assign(item, {name:'Kredi',totalDebt:0,totalMonths:12,monthly:0}); else if(key==='debts') Object.assign(item, {name:'Kart',val:0,calcMode:false}); state[key].push(item); renderWizardLists(); }
         function removeItem(key, i) { state[key].splice(i, 1); renderWizardLists(); }
         function updateLoanData(i, f, v) { state.loans[i][f] = parseFloat(v)||0; const l = state.loans[i]; if(f==='monthly' && l.totalMonths>0) l.totalDebt = l.monthly*l.totalMonths; else if(f==='totalMonths' && l.monthly>0) l.totalDebt = l.monthly*l.totalMonths; else if(f==='totalDebt' && l.totalMonths>0) l.monthly = l.totalDebt/l.totalMonths; document.getElementById(`wiz_loan_t_${i}`).value = Math.ceil(l.totalDebt); }
         function calcCard(i, f, v) { state.debts[i][f] = parseFloat(v)||0; state.debts[i].val = Math.max(0, (state.debts[i].limit||0)-(state.debts[i].avail||0)); document.getElementById(`wiz_card_res_${i}`).innerText = state.debts[i].val; }
