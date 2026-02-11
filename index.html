@@ -190,7 +190,6 @@
         <div class="glass-card p-10 rounded-[3rem] shadow-xl bg-white border border-gray-100">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="font-black text-xl text-gray-800 uppercase tracking-widest text-[11px]">Son İşlemler</h3>
-                <!-- Tümünü Sil butonu kaldırıldı -->
             </div>
             <div id="historyList" class="space-y-3 pb-4 max-h-60 overflow-y-auto custom-scrollbar pr-1"></div>
         </div>
@@ -390,12 +389,17 @@
                     // Kullanıcı adını küçük harfe çevirerek ara
                     const usernameQuery = email.toLowerCase();
                     const snapshot = await db.collection('users').where('username', '==', usernameQuery).limit(1).get();
-                    if (snapshot.empty) throw new Error("Bu kullanıcı adı bulunamadı. Lütfen e-posta ile giriş yapın veya veritabanı izinlerinizi kontrol edin.");
+                    if (snapshot.empty) throw new Error("Bu kullanıcı adı ile kayıt bulunamadı. (Veritabanı güvenliği nedeniyle lütfen E-posta ile deneyiniz)");
                     email = snapshot.docs[0].data().email;
                 }
                 await auth.signInWithEmailAndPassword(email, pass);
             } catch (error) {
-                alert("Giriş Hatası: " + error.message);
+                // Eğer izin hatası ise kullanıcıyı yönlendir
+                let msg = error.message;
+                if(error.code === 'permission-denied' || msg.includes('Missing or insufficient permissions')) {
+                    msg = "Güvenlik nedeniyle lütfen E-posta adresinizle giriş yapın.";
+                }
+                alert("Giriş Hatası: " + msg);
                 btn.innerHTML = originalText;
             }
         }
@@ -488,7 +492,6 @@
             // Kullanıcıyı bul (username veya email)
             let snapshot = await db.collection('users').where('username', '==', input).limit(1).get();
             if(snapshot.empty) {
-                // Eğer username ile bulunamazsa email ile dene (inputu olduğu gibi kullan çünkü email case sensitive olabilir ama genelde firebase lower yapar)
                 snapshot = await db.collection('users').where('email', '==', document.getElementById('famInput').value.trim()).limit(1).get();
             }
             
