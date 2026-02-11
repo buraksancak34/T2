@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <!-- FIREBASE SDKs -->
+    <!-- FIREBASE SDKs (Compat version for simplicity as used in original code) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -239,7 +239,7 @@
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="glass-card p-6 rounded-[2.5rem] bg-white border border-gray-100 shadow-lg"><h3 class="font-black text-lg text-gray-800 mb-4 text-center">Varlık vs Borç</h3><div class="h-64"><canvas id="assetsChart"></canvas></div></div>
-            <div class="glass-card p-6 rounded-[2.5rem] bg-white border border-gray-100 shadow-lg"><h3 class="font-black text-lg text-gray-800 mb-4 text-center">Harcamalar</h3><div class="h-64"><canvas id="expensesChart"></canvas></div></div>
+            <div class="glass-card p-6 rounded-[2.5rem] bg-white border border-gray-100 shadow-lg"><h3 class="font-black text-lg text-gray-800 mb-4 text-center">Harcama Dağılımı</h3><div class="h-64"><canvas id="expensesChart"></canvas></div></div>
         </div>
         <div class="glass-card p-8 rounded-[2.5rem] bg-white border border-gray-100 shadow-lg">
             <h3 class="font-black text-xl text-gray-800 mb-4 border-b pb-2">Geçmiş Kayıt Ekle</h3>
@@ -312,84 +312,12 @@
         const financialTips = [
             "Finansal sağlık, gelir ve giderler arasında sürdürülebilir bir denge kurabilme becerisidir.",
             "Finansal sağlık, sadece para biriktirmek değil, parayı bilinçli yönetmektir.",
-            "Finansal sağlık, harcamaların kontrol altında olması anlamına gelir.",
-            "Finansal sağlık, geleceğe dair ekonomik güven hissi oluşturur.",
-            "Finansal sağlık, borçların yönetilebilir seviyede olmasıdır.",
-            "Finansal sağlık, ani harcamalara karşı hazırlıklı olmaktır.",
-            "Finansal sağlık, tasarruf alışkanlığının sürekliliğidir.",
-            "Finansal sağlık, gelir kaynaklarının farkında olmaktır.",
-            "Finansal sağlık, harcama alışkanlıklarını analiz edebilmektir.",
-            "Finansal sağlık, finansal stresin düşük olmasıdır.",
-            "Finansal sağlık, uzun vadeli plan yapabilme yeteneğidir.",
-            "Finansal sağlık, bütçe oluşturma disiplinidir.",
-            "Finansal sağlık, finansal kararların bilinçli alınmasıdır.",
-            "Finansal sağlık, gereksiz harcamaları ayırt edebilmektir.",
-            "Finansal sağlık, finansal hedeflere sahip olmaktır.",
-            "Finansal sağlık, gelir artışı kadar gider kontrolünü de önemsemektir.",
-            "Finansal sağlık, finansal farkındalık düzeyidir.",
-            "Finansal sağlık, ekonomik risklere karşı dayanıklılıktır.",
-            "Finansal sağlık, bugün ile yarın arasında denge kurmaktır.",
-            "Finansal sağlık, finansal özgürlüğe giden yolun temelidir.",
-            "Gelir ve gider dengesini bilmek finansal kontrolün ilk adımıdır.",
-            "Gelirinden fazla harcamak uzun vadede finansal kırılganlık yaratır.",
-            "Düzenli gelir-gider takibi bilinçsiz harcamaları azaltır.",
-            "Gelir-gider dengesi bütçe planlamasının temelidir.",
             "Harcamaları yazmak farkındalık oluşturur.",
             "Küçük ama sık harcamalar bütçeyi sessizce tüketir.",
-            "Gelir-gider analizi tasarruf alanlarını ortaya çıkarır.",
-            "Finansal disiplin günlük takip ile başlar.",
-            "Gelir-gider kontrolü borçlanma ihtiyacını azaltır.",
-            "Harcamaları görmek davranış değişikliğini kolaylaştırır.",
-            "Gelir-gider dengesi finansal stresin azalmasına yardımcı olur.",
-            "Aylık dengeyi bilmek yıllık plan yapmayı kolaylaştırır.",
-            "Denge sağlanmadığında tasarruf imkânsızlaşır.",
-            "Gelir-gider takibi finansal hedeflere ulaşmayı hızlandırır.",
             "Düzensiz harcama gelecekte belirsizlik yaratır.",
-            "Gelir-gider farkı yatırım potansiyelini belirler.",
-            "Finansal denge kriz dönemlerinde koruma sağlar.",
-            "Günlük kontrol uzun vadeli istikrar oluşturur.",
-            "Gelir-gider dengesi finansal özgüveni artırır.",
-            "Kontrol edilen para, yönlendirilebilir paradır.",
             "Tasarruf geleceğe yapılmış bilinçli bir yatırımdır.",
-            "Tasarruf beklenmeyen durumlara karşı güvenlik sağlar.",
-            "Tasarruf finansal bağımsızlığın temelidir.",
-            "Tasarruf küçük miktarlarla başlar.",
-            "Düzenli tasarruf alışkanlık gerektirir.",
-            "Tasarruf gelecekteki fırsatları mümkün kılar.",
-            "Tasarruf borç ihtiyacını azaltır.",
-            "Tasarruf finansal stresi düşürür.",
-            "Tasarruf uzun vadeli hedefleri erişilebilir kılar.",
-            "Tasarruf disiplinli harcama davranışı kazandırır.",
-            "Tasarruf kriz anlarında dayanıklılık sağlar.",
-            "Tasarruf yatırım yapabilmenin ön koşuludur.",
-            "Tasarruf özgür seçim yapma gücü verir.",
-            "Tasarruf bilinçli tüketimin göstergesidir.",
-            "Tasarruf küçük fedakârlıkların büyük sonucudur.",
-            "Tasarruf zamanla büyüyen bir finansal güvenliktir.",
-            "Tasarruf finansal istikrar oluşturur.",
-            "Tasarruf sabır gerektirir.",
-            "Tasarruf finansal hedeflere ulaşma süresini kısaltır.",
-            "Tasarruf gelecekteki belirsizlikleri azaltır.",
-            "Finansal farkındalık harcamadan önce düşünmeyi sağlar.",
-            "Bilinçli harcama uzun vadeli rahatlık getirir.",
-            "Anlık tatmin uzun vadeli sorun yaratabilir.",
             "Planlı hareket eden kişi finansal kontrolü elinde tutar.",
-            "Harcamaların amacı sorgulanmalıdır.",
-            "Finansal kararlar duygusal değil bilinçli verilmelidir.",
-            "Para yönetimi bir alışkanlık meselesidir.",
-            "Günlük küçük kararlar finansal geleceği belirler.",
-            "Finansal disiplin özgüven yaratır.",
-            "Harcamaların yazılması davranışı değiştirir.",
-            "Finansal hedefler motivasyonu artırır.",
-            "Bilinçli tüketim sürdürülebilir yaşamı destekler.",
-            "Finansal planlama belirsizliği azaltır.",
-            "Harcama kontrolü özgürlük sağlar.",
-            "Finansal düzen zihinsel düzeni destekler.",
-            "Düzenli takip başarı olasılığını artırır.",
-            "Finansal sağlığı güçlü olan birey risklere karşı dayanıklıdır.",
-            "Bütçe yapmak kısıtlama değil yönlendirmedir.",
-            "Finansal disiplin bir yaşam becerisidir.",
-            "Finansal sağlığı korumak günlük küçük adımlarla mümkündür."
+            "Bütçe yapmak kısıtlama değil yönlendirmedir."
         ];
 
         let db, auth, currentUser = null;
@@ -400,6 +328,24 @@
         let assetsChartInstance = null;
         let expensesChartInstance = null;
         let adviceInterval = null;
+
+        // Varsayılan State
+        const defaultState = {
+            step: 1, salaryDay: 15,
+            registrationDate: new Date().toISOString(),
+            incomes: [], 
+            bills: [
+                { name: 'Kira', val: null }, { name: 'Aidat', val: null }, { name: 'Elektrik', val: null },
+                { name: 'Su', val: null }, { name: 'Doğalgaz', val: null }, { name: 'İnternet', val: null },
+                { name: 'Telefon', val: null }, { name: 'Abonelikler', val: null }
+            ], 
+            loans: [], debts: [], otherDebts: [], 
+            assets: [
+                { name: 'Bankadaki Para', val: null }, { name: 'Cepteki Para', val: null }
+            ],
+            manualDailyLimit: null, expenses: [], monthlyHistory: [], familyMembers: [], inviteCode: null
+        };
+        let state = JSON.parse(JSON.stringify(defaultState));
 
         try {
             firebase.initializeApp(firebaseConfig);
@@ -418,9 +364,35 @@
                 } else {
                     currentUser = null;
                     clearInterval(adviceInterval);
+                    showLoginScreen();
                 }
             });
-        } catch(e) { console.error(e); }
+        } catch(e) { console.error("Firebase Init Error:", e); }
+
+        // --- NAVIGATION FUNCTIONS ---
+        function hideAll() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('wizardScreen').classList.add('hidden');
+            document.getElementById('dashboardScreen').classList.add('hidden');
+            document.getElementById('analysisScreen').classList.add('hidden');
+        }
+
+        function showLoginScreen() {
+            hideAll();
+            document.getElementById('loginScreen').classList.remove('hidden');
+        }
+
+        function showDashboard() {
+            hideAll();
+            document.getElementById('dashboardScreen').classList.remove('hidden');
+            updateDashboardUI();
+        }
+
+        function showAnalysisScreen() {
+            hideAll();
+            document.getElementById('analysisScreen').classList.remove('hidden');
+            renderCharts();
+        }
 
         function startAdviceRotator() {
             const el = document.getElementById('financialAdviceText');
@@ -440,26 +412,22 @@
         async function initUserPlan() {
             if (!currentUser) return;
             try {
-                // Önce ID'yi varsayılan olarak ayarla
                 currentPlanId = currentUser.uid;
                 currentUserRole = 'owner';
 
                 const userDoc = await db.collection("users").doc(currentUser.uid).get();
                 if(!userDoc.exists) {
-                    // Kayıt yoksa oluştur (ID zaten set edildi)
-                    saveToCloud();
+                    saveToCloud(); // Create default if not exists
                 } else {
                     const userData = userDoc.data();
                     if (userData.connectedPlanId) {
                         currentPlanId = userData.connectedPlanId;
-                        // Bağlı planı kontrol et
                         const planDoc = await db.collection("users").doc(currentPlanId).get();
                         if(planDoc.exists) {
                             const planData = planDoc.data();
                             const member = planData.familyMembers ? planData.familyMembers.find(m => m.uid === currentUser.uid) : null;
                             currentUserRole = member ? member.role : 'limited';
                         } else {
-                            // Plan silinmişse fallback
                             currentPlanId = currentUser.uid;
                             currentUserRole = 'owner';
                         }
@@ -476,7 +444,7 @@
             document.getElementById('loginTitle').innerText = "Giriş Yap";
             document.getElementById('loginBtn').classList.remove('hidden');
             document.getElementById('registerBtn').classList.add('hidden');
-            document.getElementById('registerFields').classList.add('hidden'); // Register fields gizle
+            document.getElementById('registerFields').classList.add('hidden');
             document.getElementById('emailInput').placeholder = "E-posta veya Kullanıcı Adı";
             document.getElementById('actionButtons').classList.remove('hidden');
             document.getElementById('backToLoginText').classList.add('hidden');
@@ -487,7 +455,7 @@
             document.getElementById('loginTitle').innerText = "Ailene Katıl";
             document.getElementById('loginBtn').classList.add('hidden');
             document.getElementById('registerBtn').classList.remove('hidden');
-            document.getElementById('registerFields').classList.remove('hidden'); // Kullanıcı adı görünür
+            document.getElementById('registerFields').classList.remove('hidden');
             document.getElementById('emailInput').placeholder = "E-posta Adresi";
             document.getElementById('actionButtons').classList.add('hidden');
             document.getElementById('backToLoginText').classList.remove('hidden');
@@ -507,7 +475,6 @@
             try {
                 let email = emailInp;
                 if (!email.includes('@')) {
-                    // Kullanıcı adını küçük harfe çevirerek ara
                     const usernameQuery = email.toLowerCase();
                     const snapshot = await db.collection('users').where('username', '==', usernameQuery).limit(1).get();
                     if (snapshot.empty) throw new Error("Bu kullanıcı adı ile kayıt bulunamadı.");
@@ -538,9 +505,11 @@
                 currentUser = cred.user;
                 await cred.user.updateProfile({ displayName: username });
 
-                const initState = JSON.parse(JSON.stringify(defaultState));
+                const initState = JSON.parse(JSON.stringify(state)); // Use current state (wizard data might be here)
                 initState.email = email;
                 initState.username = username;
+                // Fix date to string
+                if(initState.registrationDate instanceof Date) initState.registrationDate = initState.registrationDate.toISOString();
 
                 if (inviteCode) {
                     const snapshot = await db.collection('users').where('inviteCode', '==', inviteCode).get();
@@ -552,7 +521,7 @@
                         let members = ownerData.familyMembers || [];
                         members.push(newMember);
                         await db.collection('users').doc(ownerDoc.id).update({ familyMembers: members });
-                        alert("Davet kodu onaylandı! Plana tam yetkili olarak eklendiniz.");
+                        alert("Davet kodu onaylandı! Plana eklendiniz.");
                     } else {
                          alert("Geçersiz davet kodu, kendi planınız oluşturuldu.");
                     }
@@ -569,28 +538,36 @@
             }
         }
 
+        // --- WIZARD REGISTER BRIDGE ---
+        function registerFromWizard() {
+            const username = document.getElementById('wizRegName').value.trim();
+            const email = document.getElementById('wizRegEmail').value.trim();
+            const pass = document.getElementById('wizRegPass').value;
+            
+            if(!username || !email || !pass) return alert("Lütfen tüm alanları doldurun.");
+
+            // Set values to auth form inputs
+            document.getElementById('regUsernameInput').value = username;
+            document.getElementById('emailInput').value = email;
+            document.getElementById('passwordInput').value = pass;
+            document.getElementById('regInviteCode').value = ""; // Clear invite code for wizard flow
+
+            // Trigger registration
+            firebaseRegister();
+        }
+
         function forgotPassword() {
             const email = document.getElementById('emailInput').value.trim();
-            if (!email) {
-                return alert("Lütfen şifre sıfırlama bağlantısı için e-posta adresinizi giriniz.");
-            }
-            if (!email.includes('@')) {
-                return alert("Şifre sıfırlama sadece E-posta adresi ile yapılabilir. Lütfen geçerli bir e-posta giriniz.");
-            }
-
-            if(confirm(`${email} adresine şifre sıfırlama bağlantısı gönderilsin mi?`)) {
-                auth.sendPasswordResetEmail(email)
-                    .then(() => alert("Şifre sıfırlama bağlantısı gönderildi."))
-                    .catch((error) => alert("Hata: " + error.message));
-            }
+            if (!email) return alert("Lütfen şifre sıfırlama bağlantısı için e-posta adresinizi giriniz.");
+            if (!email.includes('@')) return alert("Lütfen geçerli bir e-posta giriniz.");
+            auth.sendPasswordResetEmail(email)
+                .then(() => alert("Şifre sıfırlama bağlantısı gönderildi."))
+                .catch((error) => alert("Hata: " + error.message));
         }
 
         function handleLogout() {
-            if(auth.currentUser) {
-                auth.signOut().then(() => window.location.reload()).catch(() => window.location.reload());
-            } else {
-                window.location.reload();
-            }
+            if(auth.currentUser) auth.signOut().then(() => window.location.reload());
+            else window.location.reload();
         }
 
         function showFamilyModal() {
@@ -615,9 +592,7 @@
             if(!input) return;
 
             let snapshot = await db.collection('users').where('username', '==', input).limit(1).get();
-            if(snapshot.empty) {
-                snapshot = await db.collection('users').where('email', '==', document.getElementById('famInput').value.trim()).limit(1).get();
-            }
+            if(snapshot.empty) snapshot = await db.collection('users').where('email', '==', input).limit(1).get();
             
             if(snapshot.empty) return alert("Kullanıcı bulunamadı.");
             
@@ -630,31 +605,13 @@
             
             if(!state.familyMembers) state.familyMembers = [];
             const existingIdx = state.familyMembers.findIndex(m => m.uid === targetUid);
-            if(existingIdx > -1) {
-                state.familyMembers[existingIdx].role = role;
-            } else {
-                state.familyMembers.push({ uid: targetUid, name: targetDoc.data().username || targetDoc.data().email, role: role });
-            }
+            if(existingIdx > -1) state.familyMembers[existingIdx].role = role;
+            else state.familyMembers.push({ uid: targetUid, name: targetDoc.data().username || targetDoc.data().email, role: role });
             
             saveToCloud();
             renderFamilyList();
             document.getElementById('famInput').value = '';
             alert(`Kullanıcı eklendi!`);
-        }
-
-        async function updateMemberRole(idx, newRole) {
-            state.familyMembers[idx].role = newRole;
-            saveToCloud();
-        }
-
-        async function removeFamilyMember(idx) {
-            const member = state.familyMembers[idx];
-            if(confirm(`${member.name} plandan çıkarılacak?`)) {
-                await db.collection('users').doc(member.uid).update({ connectedPlanId: null });
-                state.familyMembers.splice(idx, 1);
-                saveToCloud();
-                renderFamilyList();
-            }
         }
 
         function renderFamilyList() {
@@ -667,13 +624,20 @@
                 <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl text-sm">
                     <p class="font-bold text-gray-800">${m.name}</p>
                     <div class="flex items-center gap-2">
-                        <select onchange="updateMemberRole(${i}, this.value)" class="text-[10px] font-bold uppercase bg-transparent outline-none cursor-pointer text-blue-500">
-                            <option value="full" ${m.role === 'full' ? 'selected' : ''}>Tam Yetki</option>
-                            <option value="limited" ${m.role === 'limited' ? 'selected' : ''}>Sınırlı</option>
-                        </select>
+                        <span class="text-xs text-blue-500 font-bold">${m.role === 'full' ? 'Tam Yetki' : 'Sınırlı'}</span>
                         <button onclick="removeFamilyMember(${i})" class="text-red-400 hover:text-red-600 ml-2"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>`).join('');
+        }
+        
+        async function removeFamilyMember(idx) {
+             const member = state.familyMembers[idx];
+             if(confirm(`${member.name} plandan çıkarılacak?`)) {
+                 await db.collection('users').doc(member.uid).update({ connectedPlanId: null });
+                 state.familyMembers.splice(idx, 1);
+                 saveToCloud();
+                 renderFamilyList();
+             }
         }
 
         function loadFromCloud() {
@@ -681,13 +645,11 @@
             db.collection("users").doc(currentPlanId).get().then((doc) => {
                 if (doc.exists) {
                     const data = doc.data();
-                    if(data.registrationDate) data.registrationDate = new Date(data.registrationDate.seconds ? data.registrationDate.seconds * 1000 : data.registrationDate);
                     state = data;
                     // Ensure arrays exist
                     if(!state.otherDebts) state.otherDebts = [];
                     if(!state.monthlyHistory) state.monthlyHistory = [];
                     if(!state.familyMembers) state.familyMembers = [];
-                    
                     showDashboard();
                 }
             });
@@ -696,7 +658,6 @@
         function saveToCloud() {
             if(!currentUser || !currentPlanId) return Promise.resolve();
             const stateToSave = JSON.parse(JSON.stringify(state));
-            stateToSave.registrationDate = state.registrationDate.toISOString();
             
             return db.collection("users").doc(currentPlanId).set(stateToSave, { merge: true })
                 .then(() => {
@@ -705,24 +666,6 @@
                     setTimeout(() => ind.style.opacity = '0', 2000);
                 });
         }
-
-        // --- STATE & DEFAULTS ---
-        const defaultState = {
-            step: 1, salaryDay: 15,
-            registrationDate: new Date(),
-            incomes: [], 
-            bills: [
-                { name: 'Kira', val: null }, { name: 'Aidat', val: null }, { name: 'Elektrik', val: null },
-                { name: 'Su', val: null }, { name: 'Doğalgaz', val: null }, { name: 'İnternet', val: null },
-                { name: 'Telefon Faturaları', val: null }, { name: 'Dijital abonelikler', val: null }
-            ], 
-            loans: [], debts: [], otherDebts: [], 
-            assets: [
-                { name: 'Bankadaki Para', val: null }, { name: 'Cepteki Para', val: null }, { name: 'Birikim Hesabı', val: null }
-            ],
-            manualDailyLimit: null, expenses: [], monthlyHistory: [], familyMembers: [], inviteCode: null
-        };
-        let state = JSON.parse(JSON.stringify(defaultState));
 
         function saveState() {
             if(currentUser && !isRegistering) saveToCloud();
@@ -750,9 +693,14 @@
             applyPermissions();
             const now = new Date();
             const todayStr = now.toLocaleDateString('tr-TR');
-            let startCalc = state.registrationDate ? new Date(state.registrationDate) : new Date();
+            
+            // Fix Date parsing
+            let startCalc = new Date(state.registrationDate);
             if(isNaN(startCalc.getTime())) startCalc = new Date();
-            const daysPassed = Math.max(1, Math.ceil((now - startCalc) / (1000 * 60 * 60 * 24)));
+            
+            // Calculate days passed correctly
+            const diffTime = Math.abs(now - startCalc);
+            const daysPassed = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1; 
             
             const spentToday = state.expenses.filter(e => e.date === todayStr).reduce((s,e)=>s+e.amount,0);
             const totalSpent = state.expenses.reduce((s,e)=>s+e.amount,0);
@@ -764,7 +712,8 @@
             
             let targetDate = new Date(now.getFullYear(), now.getMonth(), state.salaryDay||15);
             if (now.getDate() >= (state.salaryDay||15)) targetDate.setMonth(targetDate.getMonth()+1);
-            document.getElementById('displayRemainingDays').innerText = `${Math.ceil((targetDate - now)/(1000*60*60*24))} Gün`;
+            const daysToSalary = Math.ceil((targetDate - now)/(1000*60*60*24));
+            document.getElementById('displayRemainingDays').innerText = `${daysToSalary} Gün`;
 
             // Health
             const assets = state.assets.reduce((s,a)=>s+(a.val||0),0);
@@ -822,6 +771,25 @@
             saveToCloud(); 
             updateDashboardUI();
         }
+        
+        function editExpense(idx) {
+            const exp = state.expenses[idx];
+            document.getElementById('expAmt').value = exp.amount;
+            document.getElementById('expDesc').value = exp.desc;
+            document.getElementById('editExpIndex').value = idx;
+            document.getElementById('addExpBtn').innerHTML = '<i class="fas fa-check text-xl"></i>';
+            document.getElementById('addExpBtn').classList.replace('bg-blue-600', 'bg-green-600');
+            // Scroll to top
+            document.querySelector('.glass-card').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function deleteExpense(idx) {
+            if(confirm("Bu harcamayı silmek istediğine emin misin?")) {
+                state.expenses.splice(idx, 1);
+                saveToCloud();
+                updateDashboardUI();
+            }
+        }
 
         function renderHistoryList() {
             const list = document.getElementById('historyList');
@@ -835,42 +803,104 @@
                 return `
                 <div class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-xl mb-2 hover:bg-gray-50 transition-colors group">
                     <div><p class="font-bold text-gray-800 text-xs">${e.desc}</p><p class="text-[10px] text-gray-400">${e.date} • ${e.addedBy}</p></div>
-                    <div class="flex items-center gap-3"><span class="font-black text-red-500 text-sm">-₺${Math.floor(e.amount).toLocaleString()}</span>${canEdit ? `<div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="editExpense(${idx})" class="text-blue-300 hover:text-blue-500"><i class="fas fa-pen"></i></button><button onclick="deleteExpense(${idx})" class="text-gray-200 hover:text-red-500"><i class="fas fa-trash-alt"></i></button></div>` : ''}</div>
+                    <div class="flex items-center gap-3"><span class="font-black text-red-500 text-sm">-₺${Math.floor(e.amount).toLocaleString()}</span>
+                    ${canEdit ? `<div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="editExpense(${idx})" class="text-blue-300 hover:text-blue-500"><i class="fas fa-pen"></i></button><button onclick="deleteExpense(${idx})" class="text-gray-200 hover:text-red-500"><i class="fas fa-trash-alt"></i></button></div>` : ''}
+                    </div>
                 </div>`;
             }).join('');
         }
 
+        // --- CHARTS ---
+        function renderCharts() {
+            const ctx1 = document.getElementById('assetsChart').getContext('2d');
+            const ctx2 = document.getElementById('expensesChart').getContext('2d');
+            
+            if(assetsChartInstance) assetsChartInstance.destroy();
+            if(expensesChartInstance) expensesChartInstance.destroy();
+            
+            const assets = state.assets.reduce((s,a)=>s+(a.val||0),0);
+            const debts = state.loans.reduce((s,l)=>s+(l.totalDebt||0),0) + state.debts.reduce((s,d)=>s+(d.val||0),0) + state.otherDebts.reduce((s,d)=>s+(d.val||0),0);
+            
+            // Harcama Kategorileri (Basit gruplama)
+            const expenseMap = {};
+            state.expenses.forEach(e => {
+                const key = e.desc || 'Diğer';
+                expenseMap[key] = (expenseMap[key] || 0) + e.amount;
+            });
+
+            assetsChartInstance = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Varlıklar', 'Borçlar'],
+                    datasets: [{
+                        data: [assets, debts],
+                        backgroundColor: ['#22c55e', '#ef4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+            });
+            
+            expensesChartInstance = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(expenseMap).slice(0, 5),
+                    datasets: [{
+                        label: 'Harcama',
+                        data: Object.values(expenseMap).slice(0, 5),
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 5
+                    }]
+                },
+                options: { scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+            });
+        }
+        
+        function addHistoryRecord() {
+            const date = document.getElementById('histDate').value;
+            const assets = parseFloat(document.getElementById('histAssets').value);
+            const debts = parseFloat(document.getElementById('histDebts').value);
+            if(!date) return alert("Tarih seçin");
+            state.monthlyHistory.push({date, assets: assets||0, debts: debts||0});
+            saveToCloud();
+            alert("Kayıt Eklendi");
+        }
+
         // --- WIZARD ---
         function startWizard(isEditMode) {
-            hideAll(); document.getElementById('wizardScreen').classList.remove('hidden');
+            hideAll(); 
+            document.getElementById('wizardScreen').classList.remove('hidden');
             if(!isEditMode) { 
-                // Set default values only if creating new plan
                 state = JSON.parse(JSON.stringify(defaultState)); 
-                state.registrationDate = new Date(); 
+                state.registrationDate = new Date().toISOString(); 
                 state.incomes = [{ name: 'Maaş', val: null }];
                 // Ensure defaults are set for new wizard
                 state.bills = [
                     { name: 'Kira', val: null }, { name: 'Aidat', val: null }, { name: 'Elektrik', val: null },
                     { name: 'Su', val: null }, { name: 'Doğalgaz', val: null }, { name: 'İnternet', val: null },
-                    { name: 'Telefon Faturaları', val: null }, { name: 'Dijital abonelikler', val: null }
+                    { name: 'Telefon', val: null }, { name: 'Abonelikler', val: null }
                 ];
                 state.assets = [
-                    { name: 'Bankadaki Para', val: null }, { name: 'Cepteki Para', val: null }, { name: 'Birikim Hesabı', val: null }
+                    { name: 'Bankadaki Para', val: null }, { name: 'Cepteki Para', val: null }
                 ];
             }
             state.step = 1; renderWizard();
         }
-        function wizardNext() { if (state.step === 8) { if(document.getElementById('wizRegEmail')) registerFromWizard(); else { saveState(); showDashboard(); } return; } state.step++; renderWizard(); }
+        function wizardNext() { 
+            if (state.step === 8) { 
+                if(document.getElementById('wizRegEmail')) registerFromWizard(); 
+                else { saveState(); showDashboard(); } 
+                return; 
+            } 
+            state.step++; renderWizard(); 
+        }
         function wizardBack() { 
             if (state.step > 1) { 
                 state.step--; 
                 renderWizard(); 
             } else { 
-                if(currentUser) {
-                    showDashboard();
-                } else {
-                    showLoginScreen(); 
-                }
+                if(currentUser) showDashboard();
+                else showLoginScreen(); 
             } 
         }
         
@@ -888,7 +918,6 @@
                     document.getElementById('wizNextBtn').innerText = "Planı Güncelle";
                 }
             } else if(state.step === 7) {
-                // PLANLAMA EKRANI (DÜZELTİLDİ)
                 const totalInc = state.incomes.reduce((s, i) => s + (i.val||0), 0);
                 const totalFix = state.bills.reduce((s, b) => s + (b.val||0), 0);
                 const loanPayments = state.loans.filter(l => !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
@@ -915,14 +944,12 @@
                 document.getElementById('wizNextBtn').innerText = "Devam Et";
             }
             else {
-                // Diğer Adımlar (Liste)
                 const titles = ["", "Gelirler", "Sabit Giderler", "Banka Kredileri", "Kredi Kartları", "Diğer Borçlar", "Varlıklar"];
                 const colors = ["", "green", "red", "red", "purple", "red", "green"];
                 const keys = ["", "incomes", "bills", "loans", "debts", "otherDebts", "assets"];
                 const key = keys[state.step];
                 content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-${colors[state.step]}-600">${titles[state.step]}</h3><div id="wiz_${key}_list" class="custom-scrollbar overflow-y-auto max-h-[300px]"></div><button onclick="addItem('${key}', 'wiz_${key}_list')" class="w-full py-3 border-2 border-dashed border-${colors[state.step]}-200 rounded-2xl text-${colors[state.step]}-500 font-bold mt-4">+ Ekle</button>`;
                 
-                // Add Maaş Günü input only on first step
                  if (state.step === 1) {
                      content.innerHTML += `<div class="pt-4 mt-6 border-t"><p class="text-[10px] font-bold text-gray-400 uppercase mb-2">Maaş Günü</p><input type="number" id="wiz_salary_day_val" oninput="state.salaryDay=this.value" value="${state.salaryDay || 15}" class="w-20 p-3 bg-gray-50 rounded-xl font-black text-center text-xl" placeholder="15"></div>`;
                  }
@@ -932,7 +959,6 @@
         
         function renderWizardLists() {
              const listEl = (data, id, type) => { const el = document.getElementById(id); if(!el) return; el.innerHTML = data.map((item, idx) => `<div class="flex gap-2 mb-2 items-center"><input type="text" value="${item.name||''}" onchange="state.${type}[${idx}].name=this.value" class="flex-1 p-3 bg-white border border-gray-100 rounded-xl text-sm outline-none" placeholder="İsim"> <input type="number" value="${item.val||''}" onchange="state.${type}[${idx}].val=parseFloat(this.value)||0" class="w-24 p-3 bg-gray-50 border rounded-xl text-right text-sm" placeholder="0"><button onclick="removeItem('${type}', ${idx})" class="text-gray-300 hover:text-red-500 px-2"><i class="fas fa-trash"></i></button></div>`).join(''); };
-             // --- ID DÜZELTMELERİ BURADA YAPILDI ---
              if(state.step===1) listEl(state.incomes, 'wiz_inc_list', 'incomes');
              if(state.step===2) listEl(state.bills, 'wiz_bills_list', 'bills');
              if(state.step===3) { const el = document.getElementById('wiz_loans_list'); if(el) el.innerHTML = state.loans.map((l, i) => `<div class="p-4 bg-white border rounded-2xl mb-3 space-y-3 relative"><button onclick="removeItem('loans', ${i})" class="absolute top-2 right-2 text-gray-300 hover:text-red-500"><i class="fas fa-times"></i></button><input type="text" value="${l.name}" onchange="state.loans[${i}].name=this.value" class="w-full border-b pb-1 font-black text-sm outline-none" placeholder="Kredi Adı"><div class="grid grid-cols-3 gap-2"><input type="number" value="${l.monthly||''}" oninput="updateLoanData(${i}, 'monthly', this.value)" class="p-2 bg-gray-50 rounded-lg text-xs" placeholder="Aylık"><input type="number" value="${l.totalMonths||''}" oninput="updateLoanData(${i}, 'totalMonths', this.value)" class="p-2 bg-gray-50 rounded-lg text-xs" placeholder="Vade"><input type="number" id="wiz_loan_t_${i}" value="${l.totalDebt||''}" oninput="updateLoanData(${i}, 'totalDebt', this.value)" class="p-2 bg-gray-50 rounded-lg text-xs" placeholder="Toplam"></div><div class="flex flex-col gap-1 pt-1 border-t border-gray-50 mt-2"><div class="flex items-center gap-2"><input type="checkbox" id="wiz_ex_${i}" ${l.excludeFromBudget ? 'checked' : ''} onchange="state.loans[${i}].excludeFromBudget=this.checked" class="w-3.5 h-3.5 rounded text-blue-600 focus:ring-blue-500"><label for="wiz_ex_${i}" class="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Aylık gidere dahil etme</label></div><div class="flex items-center gap-2"><input type="checkbox" id="wiz_ex_debt_${i}" ${l.excludeFromDebt ? 'checked' : ''} onchange="state.loans[${i}].excludeFromDebt=this.checked" class="w-3.5 h-3.5 rounded text-blue-600 focus:ring-blue-500"><label for="wiz_ex_debt_${i}" class="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Genel borca dahil etme</label></div></div></div>`).join(''); }
@@ -983,11 +1009,10 @@
         function addItem(key, id) { 
             const item = {name:'',val:0}; 
             if(key==='loans') Object.assign(item, {name:'Kredi',totalDebt:0,totalMonths:12,monthly:0}); 
-            else if(key==='debts') Object.assign(item, {name:'Kart',val:0,calcMode:false}); // Manual mode default
+            else if(key==='debts') Object.assign(item, {name:'Kart',val:0,calcMode:false}); 
             state[key].push(item); 
             renderWizardLists(); 
             
-            // Auto Scroll
             setTimeout(() => {
                 const container = document.getElementById(id);
                 if(container && container.lastElementChild) {
@@ -997,7 +1022,7 @@
                 }
             }, 100);
         }
-        // ... (Kalan helper fonksiyonlar, modal vb.) ...
+
         function removeItem(key, i) { state[key].splice(i, 1); renderWizardLists(); }
         function updateLoanData(i, f, v) { state.loans[i][f] = parseFloat(v)||0; const l = state.loans[i]; if(f==='monthly' && l.totalMonths>0) l.totalDebt = l.monthly*l.totalMonths; else if(f==='totalMonths' && l.monthly>0) l.totalDebt = l.monthly*l.totalMonths; else if(f==='totalDebt' && l.totalMonths>0) l.monthly = l.totalDebt/l.totalMonths; document.getElementById(`wiz_loan_t_${i}`).value = Math.ceil(l.totalDebt); }
         function calcCard(i, f, v) { state.debts[i][f] = parseFloat(v)||0; state.debts[i].val = Math.max(0, (state.debts[i].limit||0)-(state.debts[i].avail||0)); document.getElementById(`wiz_card_res_${i}`).innerText = state.debts[i].val; }
@@ -1006,10 +1031,32 @@
         function saveEditedItem() { const type = document.getElementById('editItemType').value; const idx = parseInt(document.getElementById('editItemIndex').value); const name = document.getElementById('editItemName').value; const val = parseFloat(document.getElementById('editItemVal').value); if(state[type][idx]) { state[type][idx].name = name; if(type === 'loans') state[type][idx].totalDebt = val; else state[type][idx].val = val; saveToCloud(); updateDashboardUI(); closeEditModal(); } }
         function closeEditModal() { document.getElementById('editItemModal').classList.add('hidden'); document.getElementById('overlay').classList.remove('active'); }
         function deleteHealthItem(type, idx) { if(confirm('Sil?')) { state[type].splice(idx, 1); saveToCloud(); updateDashboardUI(); } }
-        function renderDetailedHealthLists() { const createRow = (name, amount, type, idx, extraClass='') => `<div class="flex justify-between items-center p-3 rounded-xl text-xs font-bold text-gray-600 bg-gray-50 border border-gray-100 shadow-sm group ${extraClass}"><span>${name}</span><div class="flex items-center gap-3"><span class="font-black text-gray-800">₺${Math.floor(amount).toLocaleString()}</span><div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="openEditModal('${type}', ${idx})" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pen"></i></button>${idx !== 'total' ? `<button onclick="deleteHealthItem('${type}', ${idx})" class="text-red-300 hover:text-red-500"><i class="fas fa-trash"></i></button>` : ''}</div></div></div>`; let debtHTML = ''; state.loans.forEach((l, i) => debtHTML += createRow(l.name, l.totalDebt, 'loans', i)); state.otherDebts.forEach((d, i) => debtHTML += createRow(d.name, d.val, 'otherDebts', i)); const totalCardDebt = state.debts.reduce((s,d)=>s+(d.val||0),0); if(totalCardDebt > 0 || state.debts.length > 0) { debtHTML += `<div class="border border-purple-100 rounded-xl overflow-hidden bg-purple-50/30"><div onclick="document.getElementById('cardDetails').classList.toggle('open');" class="flex justify-between items-center p-3 cursor-pointer"><div class="flex items-center gap-2"><i class="fas fa-chevron-down text-purple-400"></i> <span class="text-xs font-bold text-purple-800">Toplam Kredi Kartı</span></div><span class="font-black text-purple-900 text-sm">₺${totalCardDebt.toLocaleString()}</span></div><div id="cardDetails" class="health-detail space-y-1 px-2 pb-2">${state.debts.map((d, i) => createRow(d.name, d.val, 'debts', i, 'bg-white')).join('')}<button onclick="addNewHealthItem('debts')" class="w-full py-2 text-[10px] font-bold text-purple-400 hover:text-purple-600">+ Kart Ekle</button></div></div>`; } debtHTML += `<button onclick="addNewHealthItem('otherDebts')" class="w-full py-2 text-[10px] font-bold text-gray-400 hover:text-gray-600 border border-dashed rounded-lg">+ Borç/Kredi Ekle</button>`; document.getElementById('detailedDebtsList').innerHTML = debtHTML || '<span class="text-gray-300 text-xs">Borç yok</span>'; let assetHTML = state.assets.map((a, i) => createRow(a.name, a.val, 'assets', i)).join(''); assetHTML += `<button onclick="addNewHealthItem('assets')" class="w-full py-2 text-[10px] font-bold text-gray-400 hover:text-gray-600 border border-dashed rounded-lg">+ Varlık Ekle</button>`; document.getElementById('detailedAssetsList').innerHTML = assetHTML; }
+        
+        function renderDetailedHealthLists() { 
+            const createRow = (name, amount, type, idx, extraClass='') => `<div class="flex justify-between items-center p-3 rounded-xl text-xs font-bold text-gray-600 bg-gray-50 border border-gray-100 shadow-sm group ${extraClass}"><span>${name}</span><div class="flex items-center gap-3"><span class="font-black text-gray-800">₺${Math.floor(amount).toLocaleString()}</span><div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="openEditModal('${type}', ${idx})" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pen"></i></button>${idx !== 'total' ? `<button onclick="deleteHealthItem('${type}', ${idx})" class="text-red-300 hover:text-red-500"><i class="fas fa-trash"></i></button>` : ''}</div></div></div>`; 
+            let debtHTML = ''; 
+            state.loans.forEach((l, i) => debtHTML += createRow(l.name, l.totalDebt, 'loans', i)); 
+            state.otherDebts.forEach((d, i) => debtHTML += createRow(d.name, d.val, 'otherDebts', i)); 
+            const totalCardDebt = state.debts.reduce((s,d)=>s+(d.val||0),0); 
+            if(totalCardDebt > 0 || state.debts.length > 0) { 
+                debtHTML += `<div class="border border-purple-100 rounded-xl overflow-hidden bg-purple-50/30"><div onclick="document.getElementById('cardDetails').classList.toggle('open');" class="flex justify-between items-center p-3 cursor-pointer"><div class="flex items-center gap-2"><i class="fas fa-chevron-down text-purple-400"></i> <span class="text-xs font-bold text-purple-800">Toplam Kredi Kartı</span></div><span class="font-black text-purple-900 text-sm">₺${totalCardDebt.toLocaleString()}</span></div><div id="cardDetails" class="health-detail space-y-1 px-2 pb-2">${state.debts.map((d, i) => createRow(d.name, d.val, 'debts', i, 'bg-white')).join('')}<button onclick="addNewHealthItem('debts')" class="w-full py-2 text-[10px] font-bold text-purple-400 hover:text-purple-600">+ Kart Ekle</button></div></div>`; 
+            } 
+            debtHTML += `<button onclick="addNewHealthItem('otherDebts')" class="w-full py-2 text-[10px] font-bold text-gray-400 hover:text-gray-600 border border-dashed rounded-lg">+ Borç/Kredi Ekle</button>`; 
+            document.getElementById('detailedDebtsList').innerHTML = debtHTML || '<span class="text-gray-300 text-xs">Borç yok</span>'; 
+            let assetHTML = state.assets.map((a, i) => createRow(a.name, a.val, 'assets', i)).join(''); 
+            assetHTML += `<button onclick="addNewHealthItem('assets')" class="w-full py-2 text-[10px] font-bold text-gray-400 hover:text-gray-600 border border-dashed rounded-lg">+ Varlık Ekle</button>`; 
+            document.getElementById('detailedAssetsList').innerHTML = assetHTML; 
+        }
+        
         function addNewHealthItem(type) { const name = prompt("Yeni Kalem Adı:"); if(name) { const val = parseFloat(prompt("Tutar:")) || 0; const newItem = type==='loans' ? {name, totalDebt:val, monthly:0, totalMonths:1} : {name, val:val}; state[type].push(newItem); saveToCloud(); updateDashboardUI(); } }
         function openCalcModal() { const totalInc = state.incomes.reduce((s, i) => s + (i.val||0), 0); const totalFix = state.bills.reduce((s, b) => s + (b.val||0), 0); const loanPayments = state.loans.filter(l => !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0); document.getElementById('calcModalContent').innerHTML = `<div class="flex justify-between font-bold text-green-600 bg-green-50 p-2 rounded-lg"><span>Gelirler:</span><span>+ ₺${totalInc.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div><div class="flex justify-between text-red-500 text-xs px-2"><span>Sabit Giderler:</span><span>- ₺${totalFix.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div><div class="flex justify-between text-red-500 text-xs px-2"><span>Dahil Edilen Krediler:</span><span>- ₺${loanPayments.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div><div class="border-t pt-4 font-black text-blue-600 text-2xl mt-2">KALAN NET: ₺${(state.remainingAfterFixed||0).toLocaleString(undefined, {maximumFractionDigits:0})}</div><p class="text-[10px] text-gray-400 mt-2">Bu tutar üzerinden birikim ve harcama limitiniz belirlenir.</p>`; document.getElementById('calcModal').classList.remove('hidden'); document.getElementById('overlay').classList.add('active'); }
         function closeCalcModal() { document.getElementById('calcModal').classList.add('hidden'); document.getElementById('overlay').classList.remove('active'); }
+        function closeAllPopups() {
+            document.getElementById('overlay').classList.remove('active');
+            document.querySelectorAll('.fixed.z-50').forEach(el => {
+                if(el.id !== 'saveIndicator') el.classList.add('hidden');
+            });
+        }
     </script>
 </body>
 </html>
