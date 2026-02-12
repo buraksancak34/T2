@@ -269,11 +269,12 @@
                     <div id="detailedAssetsList" class="space-y-3 min-h-[50px]"></div>
 
                     <div class="mt-4">
-                        <button id="btnShowdashAssetForm" onclick="toggleInlineAdd('dashAsset')" class="w-full py-2 text-[10px] font-bold text-gray-400 hover:text-gray-600 border border-dashed border-gray-300 rounded-lg transition-colors">+ Yeni Varlık Ekle</button>
+                        <button id="btnShowdashAssetForm" onclick="toggleInlineAdd('dashAsset')" class="w-full py-2 text-[10px] font-bold text-gray-400 hover:text-gray-600 border border-dashed border-gray-300 rounded-lg transition-colors">+ Yeni Varlık/BES Ekle</button>
                         <div id="inlineAdddashAssetContainer" class="hidden mt-2 p-4 border border-green-100 bg-green-50/50 rounded-xl space-y-3 shadow-inner">
                             <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Varlık Türü</label>
                             <select id="dashAssetType" onchange="handleInlineTypeChange('dashAsset')" class="w-full p-2.5 bg-white rounded-lg text-xs font-bold border border-gray-200 outline-none focus:ring-2 focus:ring-blue-100">
                                 <option value="Diğer">Diğer (Standart TL)</option>
+                                <option value="BES">Bireysel Emeklilik (BES)</option>
                                 <option value="Altın">Altın</option>
                                 <option value="Döviz">Döviz</option>
                                 <option value="Gümüş">Gümüş</option>
@@ -365,6 +366,17 @@
         <h4 class="font-black text-xl text-gray-800 mb-4">Düzenle</h4>
         <input type="text" id="editItemName" class="w-full p-3 mb-3 bg-gray-50 rounded-xl font-bold text-sm">
         <input type="number" id="editItemVal" class="w-full p-3 mb-6 bg-gray-50 rounded-xl font-bold text-sm" placeholder="Toplam Tutar">
+        <!-- Kredi Düzenleme Ek Alanları -->
+        <div id="editLoanFields" class="hidden mb-4 space-y-2">
+            <div>
+                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Kalan Taksit Sayısı</label>
+                <input type="number" id="editLoanMonths" class="w-full p-3 bg-gray-50 rounded-xl font-bold text-sm">
+            </div>
+            <div>
+                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Sonraki Taksit Tarihi (Gün)</label>
+                <input type="number" id="editLoanPayDay" min="1" max="31" class="w-full p-3 bg-gray-50 rounded-xl font-bold text-sm">
+            </div>
+        </div>
         <input type="hidden" id="editItemType"><input type="hidden" id="editItemIndex">
         <div class="flex gap-2">
             <button onclick="closeEditModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl">İptal</button>
@@ -418,7 +430,7 @@
         window.currentHistoryDateIndex = 0; 
 
         const defaultState = {
-            step: 0, salaryDay: 15,
+            step: 1, salaryDay: 15,
             registrationDate: new Date().toISOString(),
             incomes: [{ name: 'Maaş', val: null }], 
             bills: [
@@ -981,6 +993,13 @@
             } else if (type === 'Diğer') {
                 html = `<input type="text" id="${prefix}_name" placeholder="Kalem Adı" class="${cmnCls} mb-2">
                         <input type="number" id="${prefix}_total" placeholder="Tutar (TL)" class="${cmnCls}">`;
+            } else if (type === 'BES') {
+                 html = `<div class="mb-2 p-2 bg-yellow-50 rounded border border-yellow-100">
+                            <label class="text-[9px] font-bold text-yellow-600 uppercase block mb-1">Toplam Birikmiş Tutar</label>
+                            <input type="number" id="${prefix}_total" placeholder="0" class="${cmnCls} mb-2">
+                            <label class="text-[9px] font-bold text-yellow-600 uppercase block mb-1">Aylık Ödeme (Sabit Gider)</label>
+                            <input type="number" id="${prefix}_monthly" placeholder="0" class="${cmnCls}">
+                         </div>`;
             } else {
                 const options = subTypes[type].map(s => `<option value="${s}">${s}</option>`).join('');
                 html = `<select id="${prefix}_sub" class="${cmnCls} mb-2" onchange="fetchInlineRate('${prefix}', '${type}')">${options}</select>
@@ -1092,6 +1111,11 @@
             } else if (type === 'Diğer') {
                 finalVal = parseFloat(document.getElementById(`${prefix}_total`).value) || 0;
                 itemObj = { name: finalName || 'Diğer Kalem', val: finalVal };
+            } else if (type === 'BES') {
+                finalVal = parseFloat(document.getElementById(`${prefix}_total`).value) || 0;
+                const monthly = parseFloat(document.getElementById(`${prefix}_monthly`).value) || 0;
+                itemObj = { name: 'Bireysel Emeklilik (Toplam)', val: finalVal };
+                if(monthly > 0) state.bills.push({ name: 'Bireysel Emeklilik (Aylık)', val: monthly });
             } else {
                 const sub = document.getElementById(`${prefix}_sub`).value;
                 const amount = parseFloat(document.getElementById(`${prefix}_amount`).value) || 0;
@@ -1103,9 +1127,11 @@
                 itemObj = { name: finalName, val: finalVal };
             }
 
-            if(targetArray !== 'loans') state[targetArray].push(itemObj);
-            
+            if(type !== 'BES') state[targetArray].push(itemObj);
+            else state.assets.push(itemObj);
+
             saveToCloud();
+            
             cancelInlineAdd(prefix);
             if (prefix.startsWith('dash')) updateDashboardUI();
             else renderWizardLists();
@@ -1341,6 +1367,16 @@
             const item = state[type][index]; 
             document.getElementById('editItemName').value = item.name; 
             document.getElementById('editItemVal').value = item.val || item.totalDebt || 0; 
+            
+            // Kredi özel alanları göster
+            if(type === 'loans') {
+                document.getElementById('editLoanFields').classList.remove('hidden');
+                document.getElementById('editLoanMonths').value = item.totalMonths || 12;
+                document.getElementById('editLoanPayDay').value = item.paymentDay || (state.salaryDay || 15);
+            } else {
+                document.getElementById('editLoanFields').classList.add('hidden');
+            }
+
             document.getElementById('editItemType').value = type; 
             document.getElementById('editItemIndex').value = index; 
             document.getElementById('editItemModal').classList.remove('hidden'); 
@@ -1353,8 +1389,16 @@
             const val = parseFloat(document.getElementById('editItemVal').value); 
             if(state[type][idx]) { 
                 state[type][idx].name = name; 
-                if(type === 'loans') state[type][idx].totalDebt = val; 
-                else { state[type][idx].val = val; if (type === 'debts' && state[type][idx].calcMode) state[type][idx].calcMode = false; }
+                if(type === 'loans') {
+                     state[type][idx].totalDebt = val;
+                     state[type][idx].totalMonths = parseInt(document.getElementById('editLoanMonths').value) || 1;
+                     state[type][idx].paymentDay = parseInt(document.getElementById('editLoanPayDay').value) || 15;
+                     // Aylık tutarı yeniden hesapla
+                     state[type][idx].monthly = val / state[type][idx].totalMonths;
+                } else { 
+                    state[type][idx].val = val; 
+                    if (type === 'debts' && state[type][idx].calcMode) state[type][idx].calcMode = false; 
+                }
                 saveToCloud(); updateDashboardUI(); closeEditModal(); 
             } 
         }
@@ -1403,55 +1447,23 @@
             if(!isEditMode) { 
                 state = JSON.parse(JSON.stringify(defaultState)); 
                 state.registrationDate = new Date().toISOString(); 
-                state.step = 0; // BES sorusu ile başla
+                state.step = 1; 
             } else {
                 state.step = 1; 
             }
             renderWizard();
         }
         function wizardNext() { 
-            if (state.step === 0) {
-                 const besVal = parseFloat(document.getElementById('wizBesTotal').value) || 0;
-                 const besMonthly = parseFloat(document.getElementById('wizBesMonthly').value) || 0;
-                 
-                 // Temizle ve Ekle
-                 state.assets = state.assets.filter(a => !a.name.includes('Bireysel Emeklilik'));
-                 state.bills = state.bills.filter(b => !b.name.includes('Bireysel Emeklilik'));
-                 
-                 if(besVal > 0) state.assets.push({ name: 'Bireysel Emeklilik (Toplam)', val: besVal });
-                 if(besMonthly > 0) state.bills.push({ name: 'Bireysel Emeklilik (Aylık)', val: besMonthly });
-            }
             if (state.step === 8) { if(document.getElementById('wizRegEmail')) registerFromWizard(); else { saveState(); showDashboard(); } return; } 
             state.step++; renderWizard(); 
         }
-        function wizardBack() { if (state.step > 0) { state.step--; renderWizard(); } else { if(currentUser) showDashboard(); else showLoginScreen(); } }
+        function wizardBack() { if (state.step > 1) { state.step--; renderWizard(); } else { if(currentUser) showDashboard(); else showLoginScreen(); } }
         
         function renderWizard() {
             const content = document.getElementById('wizardContent');
             document.getElementById('stepCount').innerText = `${state.step}/8`;
-            document.getElementById('wizardProgress').innerHTML = Array(9).fill(0).map((_,i) => `<div class="h-1.5 flex-1 rounded-full ${i<=state.step?'bg-blue-600':'bg-gray-200'} transition-all"></div>`).join('');
+            document.getElementById('wizardProgress').innerHTML = Array(8).fill(0).map((_,i) => `<div class="h-1.5 flex-1 rounded-full ${i+1<=state.step?'bg-blue-600':'bg-gray-200'} transition-all"></div>`).join('');
             
-            if (state.step === 0) {
-                content.innerHTML = `
-                    <div class="text-center space-y-6 pt-10">
-                        <div class="w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto text-2xl"><i class="fas fa-piggy-bank"></i></div>
-                        <h3 class="text-2xl font-black text-gray-900">Bireysel Emeklilik (BES)</h3>
-                        <p class="text-sm text-gray-500 px-4">Geleceğin için birikim yapıyor musun? Varsa buraya ekleyelim.</p>
-                        <div class="bg-gray-50 p-6 rounded-2xl space-y-4 text-left">
-                            <div>
-                                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Toplam Birikmiş Tutar</label>
-                                <input type="number" id="wizBesTotal" class="w-full p-3 bg-white border border-gray-200 rounded-xl font-black text-lg outline-none" placeholder="0">
-                            </div>
-                            <div>
-                                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Aylık Ödeme Tutarı</label>
-                                <input type="number" id="wizBesMonthly" class="w-full p-3 bg-white border border-gray-200 rounded-xl font-black text-lg outline-none" placeholder="0">
-                            </div>
-                        </div>
-                    </div>`;
-                 document.getElementById('wizNextBtn').innerText = "Devam Et";
-                 return;
-            }
-
             if(state.step === 8) {
                 if(!currentUser) {
                     content.innerHTML = `<div class="text-center mb-6"><h3 class="text-2xl font-black">Planın Hazır!</h3></div><div class="space-y-4"><input type="text" id="wizRegName" class="w-full p-4 bg-gray-50 rounded-2xl border" placeholder="Kullanıcı Adı"><input type="email" id="wizRegEmail" class="w-full p-4 bg-gray-50 rounded-2xl border" placeholder="E-posta"><input type="password" id="wizRegPass" class="w-full p-4 bg-gray-50 rounded-2xl border" placeholder="Şifre"></div>`;
@@ -1492,8 +1504,8 @@
                     </div>`;
                 setTimeout(() => applyAllocationFromLimit(state.manualDailyLimit), 50); document.getElementById('wizNextBtn').innerText = "Devam Et";
             } else {
-                const titles = ["BES", "Gelirler", "Sabit Giderler", "Banka Kredileri", "Kredi Kartları", "Diğer Borçlar", "Varlıklar"];
-                const colors = ["yellow", "green", "red", "red", "purple", "red", "green"]; const keys = ["", "incomes", "bills", "loans", "debts", "otherDebts", "assets"]; const key = keys[state.step];
+                const titles = ["", "Gelirler", "Sabit Giderler", "Banka Kredileri", "Kredi Kartları", "Diğer Borçlar", "Varlıklar"];
+                const colors = ["", "green", "red", "red", "purple", "red", "green"]; const keys = ["", "incomes", "bills", "loans", "debts", "otherDebts", "assets"]; const key = keys[state.step];
                 content.innerHTML = `<h3 class="text-2xl font-black mb-6 text-${colors[state.step]}-600">${titles[state.step]}</h3><div id="wiz_${key}_list" class="custom-scrollbar overflow-y-auto max-h-[300px] mb-4"></div>`;
                 
                 if (state.step === 3) {
