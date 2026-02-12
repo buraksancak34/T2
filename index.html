@@ -23,6 +23,8 @@
         .overlay.active { opacity: 1; pointer-events: auto; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .opacity-50 { opacity: 0.5; }
+        .grayscale { filter: grayscale(100%); }
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
@@ -366,6 +368,7 @@
         <h4 class="font-black text-xl text-gray-800 mb-4">Düzenle</h4>
         <input type="text" id="editItemName" class="w-full p-3 mb-3 bg-gray-50 rounded-xl font-bold text-sm">
         <input type="number" id="editItemVal" class="w-full p-3 mb-6 bg-gray-50 rounded-xl font-bold text-sm" placeholder="Toplam Tutar">
+        
         <!-- Kredi Düzenleme Ek Alanları -->
         <div id="editLoanFields" class="hidden mb-4 space-y-2">
             <div>
@@ -377,6 +380,13 @@
                 <input type="number" id="editLoanPayDay" min="1" max="31" class="w-full p-3 bg-gray-50 rounded-xl font-bold text-sm">
             </div>
         </div>
+        
+        <!-- Hesaba Katılma Durumu -->
+        <div class="flex items-center gap-2 mb-6 justify-center">
+            <input type="checkbox" id="editIncludeCalc" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+            <label for="editIncludeCalc" class="text-xs font-bold text-gray-600 select-none">Hesaplamaya Dahil Et</label>
+        </div>
+
         <input type="hidden" id="editItemType"><input type="hidden" id="editItemIndex">
         <div class="flex gap-2">
             <button onclick="closeEditModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl">İptal</button>
@@ -890,21 +900,31 @@
             if (now.getDate() >= (state.salaryDay||15)) targetDate.setMonth(targetDate.getMonth()+1);
             document.getElementById('displayRemainingDays').innerText = `${Math.ceil((targetDate - now)/(1000*60*60*24))} Gün`;
 
-            const assets = state.assets.reduce((s,a)=>s+(a.val||0),0);
+            // Varlık/Borç Hesaplama (Exclude flag kontrolü)
+            const assets = state.assets.filter(a => !a.excludeFromAsset).reduce((s,a)=>s+(a.val||0),0);
             const loans = state.loans.filter(l=>!l.excludeFromDebt).reduce((s,l)=>s+(l.totalDebt||0),0);
-            const cards = state.debts.reduce((s,d)=>s+(d.val||0),0);
-            const others = state.otherDebts.reduce((s,d)=>s+(d.val||0),0);
+            const cards = state.debts.filter(d => !d.excludeFromDebt).reduce((s,d)=>s+(d.val||0),0);
+            const others = state.otherDebts.filter(d => !d.excludeFromDebt).reduce((s,d)=>s+(d.val||0),0);
             const totalDebt = loans + cards + others;
             const net = assets - totalDebt;
             
-            const normalBills = state.bills.reduce((s, b) => s + (b.val||0), 0);
-            const loansAsBills = state.loans.filter(l => l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
-            const totalFix = normalBills + loansAsBills;
-            const normalLoanPayments = state.loans.filter(l => !l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
-            const monthlyFixed = totalFix + normalLoanPayments; 
+            // Aylık Sabit Gider Hesabı (Faturalar + Dahil Edilen Krediler)
+            const normalBills = state.bills.filter(b => !b.excludeFromDebt).reduce((s, b) => s + (b.val||0), 0);
+            // Kredilerin aylık ödemesi her durumda bütçeden düşmeli, o yüzden burada exclude bakmıyoruz (sadece budget flag'ine bakılır normalde ama talep üzerine hepsini düşüyoruz)
+            // Ancak "Genel Borca Dahil Etme" tikli olanlar zaten yukarıda borçtan düştü, burada aylık akışta hepsi düşülmeli.
+            // Büyük rakam mantığına göre:
+            const loansMonthlyTotal = state.loans.reduce((s,l)=>s+(l.monthly||0),0); 
+            const monthlyFixed = normalBills + loansMonthlyTotal; 
             
+            // Gelir - Gider Hesabı (Büyük Rakam Mantığı)
             const totalInc = state.incomes.reduce((s, i) => s + (i.val||0), 0);
-            const netIncome = totalInc - monthlyFixed; 
+            // Büyük rakam = Gelir - (Faturalar + Genel Borç Dışı Krediler)
+            // Kullanıcı talebi: "Normal krediler düşülmeden önceki rakam".
+            // Genel Borca Dahil OLMAYAN krediler (excludeFromDebt=true) -> Fatura gibi davranır, düşülür.
+            const loansAsBills = state.loans.filter(l => l.excludeFromDebt).reduce((s, l) => s + (l.monthly || 0), 0);
+            const grossNet = totalInc - (normalBills + loansAsBills);
+            const netIncome = totalInc - monthlyFixed; // Her şey düştükten sonra
+
             const dailyLimit = state.manualDailyLimit || 0;
             const monthlySpend = dailyLimit * 30;
             const calcSavings = state.calculatedMonthlySavings !== undefined ? state.calculatedMonthlySavings : Math.max(0, netIncome - monthlySpend);
@@ -995,7 +1015,7 @@
                         <input type="number" id="${prefix}_total" placeholder="Tutar (TL)" class="${cmnCls}">`;
             } else if (type === 'BES') {
                  html = `<div class="mb-2 p-2 bg-yellow-50 rounded border border-yellow-100">
-                            <label class="text-[9px] font-bold text-yellow-600 uppercase block mb-1">Toplam Birikmiş Tutar</label>
+                            <label class="text-[9px] font-bold text-yellow-600 uppercase block mb-1">Toplam Birikmiş Tutar (Varlık)</label>
                             <input type="number" id="${prefix}_total" placeholder="0" class="${cmnCls} mb-2">
                             <label class="text-[9px] font-bold text-yellow-600 uppercase block mb-1">Aylık Ödeme (Sabit Gider)</label>
                             <input type="number" id="${prefix}_monthly" placeholder="0" class="${cmnCls}">
@@ -1082,8 +1102,13 @@
             let finalVal = 0;
             let finalName = document.getElementById(`${prefix}_name`) ? document.getElementById(`${prefix}_name`).value.trim() : '';
 
+            // Hangi diziye eklenecek?
+            // dashDebt -> Loans (Kredi) or Debts (CC) or OtherDebts
+            // dashAsset -> Assets
+
             let targetArray = 'otherDebts';
             if (prefix.includes('Asset') || prefix.includes('asset')) targetArray = 'assets';
+            
             if (type === 'Kredi') targetArray = 'loans';
             if (type === 'Kredi Kartı') targetArray = 'debts';
 
@@ -1096,7 +1121,7 @@
                 const payDay = document.getElementById(`${prefix}_paymentDay`) ? parseInt(document.getElementById(`${prefix}_paymentDay`).value) : (state.salaryDay||15);
                 finalVal = parseFloat(document.getElementById(`${prefix}_total`).value) || (monthly * months);
                 itemObj = { name: finalName, totalDebt: finalVal, monthly: monthly, totalMonths: months, paymentDay: payDay, excludeFromBudget: false, excludeFromDebt: false };
-                state.loans.push(itemObj);
+                // Kredi için targetArray 'loans' olacak
             } else if (type === 'Kredi Kartı') {
                 const mode = document.getElementById(`${prefix}_cc_mode`).value;
                 if (mode === 'limit') {
@@ -1108,14 +1133,16 @@
                     finalVal = parseFloat(document.getElementById(`${prefix}_total`).value) || 0;
                     itemObj = { name: finalName || 'Kredi Kartı', val: finalVal, calcMode: false };
                 }
+                 // Kredi Kartı için targetArray 'debts' olacak
             } else if (type === 'Diğer') {
                 finalVal = parseFloat(document.getElementById(`${prefix}_total`).value) || 0;
                 itemObj = { name: finalName || 'Diğer Kalem', val: finalVal };
             } else if (type === 'BES') {
                 finalVal = parseFloat(document.getElementById(`${prefix}_total`).value) || 0;
                 const monthly = parseFloat(document.getElementById(`${prefix}_monthly`).value) || 0;
-                itemObj = { name: 'Bireysel Emeklilik (Toplam)', val: finalVal };
+                itemObj = { name: 'Bireysel Emeklilik (Toplam)', val: finalVal, excludeFromAsset: true }; // Varsayılan olarak hesaba katılmasın (silik)
                 if(monthly > 0) state.bills.push({ name: 'Bireysel Emeklilik (Aylık)', val: monthly });
+                targetArray = 'assets'; 
             } else {
                 const sub = document.getElementById(`${prefix}_sub`).value;
                 const amount = parseFloat(document.getElementById(`${prefix}_amount`).value) || 0;
@@ -1127,8 +1154,11 @@
                 itemObj = { name: finalName, val: finalVal };
             }
 
-            if(type !== 'BES') state[targetArray].push(itemObj);
-            else state.assets.push(itemObj);
+            // Düzeltme: Eğer type BES ise itemObj assets'e pushlanır, diğerleri targetArray'e.
+            // Ama BES durumunda targetArray zaten assets yapıldı.
+            // Tekrar eden eklemeyi engellemek için:
+            
+            state[targetArray].push(itemObj);
 
             saveToCloud();
             
@@ -1255,10 +1285,13 @@
         function renderDetailedHealthLists() { 
             const createRow = (name, amount, type, idx, extraClass='', onclickAttr='') => `<div ${onclickAttr} class="flex justify-between items-center p-3 rounded-xl text-xs font-bold text-gray-600 bg-gray-50 border border-gray-100 shadow-sm group ${extraClass}"><span>${name}</span><div class="flex items-center gap-3"><span class="font-black text-gray-800">₺${Math.floor(amount).toLocaleString()}</span><div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="event.stopPropagation(); openEditModal('${type}', ${idx})" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pen"></i></button>${idx !== 'total' ? `<button onclick="event.stopPropagation(); deleteHealthItem('${type}', ${idx})" class="text-red-300 hover:text-red-500"><i class="fas fa-trash"></i></button>` : ''}</div></div></div>`; 
             
-            // SABİT GİDERLER (BILLS) - Sadece > 0 olanları göster
-            const activeBills = state.bills.filter(b => b.val > 0);
+            // SABİT GİDERLER (BILLS)
+            const activeBills = state.bills.filter(b => !b.excludeFromDebt); // Burada excludeFromDebt'i geçici olarak 'Hesaba Katma' flag'i gibi kullanıyoruz veya yeni bir flag
+            // Yeni flag: excludeFromDebt borçlar için, excludeFromAsset varlıklar için. Faturalar için de excludeFromDebt kullanabiliriz veya yeni 'excludeFromBudget'
+            // Mevcut yapıda excludeFromDebt kullanacağım genel tutarlılık için.
             const totalBills = activeBills.reduce((s, b) => s + b.val, 0);
-            const billsHTML = activeBills.map((b) => createRow(b.name, b.val, 'bills', state.bills.indexOf(b), 'bg-white')).join('');
+            const billsHTML = state.bills.map((b, i) => createRow(b.name, b.val, 'bills', i, b.excludeFromDebt ? 'bg-gray-100 opacity-50 grayscale' : 'bg-white')).join('');
+            
             const billsAccordion = `
             <div class="border border-blue-100 rounded-2xl overflow-hidden bg-blue-50/50 shadow-sm mb-6">
                 <div onclick="document.getElementById('billsDetails').classList.toggle('open');" class="flex justify-between items-center p-4 cursor-pointer hover:bg-blue-100/50 transition-colors">
@@ -1278,17 +1311,19 @@
             </div>`;
             document.getElementById('fixedExpensesSection').innerHTML = billsAccordion;
 
-            // DİĞER BORÇLAR - Sadece > 0 olanlar
+            // DİĞER BORÇLAR
             let debtHTML = ''; 
-            state.loans.filter(l => l.totalDebt > 0).forEach((l) => {
+            state.loans.forEach((l, i) => {
                 const isExcluded = l.excludeFromDebt;
-                debtHTML += createRow(l.name + (isExcluded ? ' <span class="text-[8px] text-red-400 font-bold ml-1 bg-red-50 px-1 rounded">(Dahil Değil)</span>' : ''), l.totalDebt, 'loans', state.loans.indexOf(l), isExcluded ? 'opacity-50 grayscale cursor-pointer hover:bg-red-50' : 'cursor-pointer hover:bg-red-50', `onclick="showLoanPlan(${state.loans.indexOf(l)})"`);
+                debtHTML += createRow(l.name + (isExcluded ? ' <span class="text-[8px] text-red-400 font-bold ml-1 bg-red-50 px-1 rounded">(Dahil Değil)</span>' : ''), l.totalDebt, 'loans', i, isExcluded ? 'opacity-50 grayscale cursor-pointer hover:bg-red-50' : 'cursor-pointer hover:bg-red-50', `onclick="showLoanPlan(${i})"`);
             }); 
-            state.otherDebts.filter(d => d.val > 0).forEach((d) => debtHTML += createRow(d.name, d.val, 'otherDebts', state.otherDebts.indexOf(d))); 
+            state.otherDebts.forEach((d, i) => {
+                const isExcluded = d.excludeFromDebt;
+                debtHTML += createRow(d.name, d.val, 'otherDebts', i, isExcluded ? 'opacity-50 grayscale' : '');
+            }); 
             
-            // KREDİ KARTLARI AKORDİYONU - Sadece > 0 olanlar
-            const activeCards = state.debts.filter(d => d.val > 0);
-            activeCards.sort((a,b) => b.val - a.val); // Sort by debt amount desc
+            // KREDİ KARTLARI AKORDİYONU
+            const activeCards = state.debts.filter(d => !d.excludeFromDebt);
             const totalCardDebt = activeCards.reduce((s,d)=>s+d.val,0); 
             if(totalCardDebt > 0 || state.debts.length > 0) { 
                 debtHTML += `
@@ -1304,14 +1339,17 @@
                         </div>
                     </div>
                     <div id="cardDetails" class="health-detail space-y-2 px-4 pb-4">
-                        ${activeCards.map((d) => createRow(d.name, d.val, 'debts', state.debts.indexOf(d), 'bg-white')).join('')}
+                        ${state.debts.map((d, i) => createRow(d.name, d.val, 'debts', i, d.excludeFromDebt ? 'bg-gray-100 opacity-50 grayscale' : 'bg-white')).join('')}
                     </div>
                 </div>`; 
             } 
             document.getElementById('detailedDebtsList').innerHTML = debtHTML || '<span class="text-gray-300 text-xs">Kayıtlı borç yok</span>'; 
             
-            // VARLIKLAR - Sadece > 0 olanlar
-            let assetHTML = state.assets.filter(a => a.val > 0).map((a) => createRow(a.name, a.val, 'assets', state.assets.indexOf(a))).join(''); 
+            // VARLIKLAR
+            let assetHTML = state.assets.map((a, i) => {
+                const isExcluded = a.excludeFromAsset;
+                return createRow(a.name, a.val, 'assets', i, isExcluded ? 'opacity-50 grayscale' : '');
+            }).join(''); 
             document.getElementById('detailedAssetsList').innerHTML = assetHTML || '<span class="text-gray-300 text-xs">Kayıtlı varlık yok</span>'; 
         }
 
@@ -1324,7 +1362,6 @@
             let currentMonth = new Date();
             let startDay = loan.paymentDay || (state.salaryDay || 15);
 
-            // Eğer bu ayın ödeme günü geçtiyse bir sonraki aydan başlat
             if (currentMonth.getDate() > startDay) {
                 currentMonth.setMonth(currentMonth.getMonth() + 1);
             }
@@ -1368,6 +1405,12 @@
             document.getElementById('editItemName').value = item.name; 
             document.getElementById('editItemVal').value = item.val || item.totalDebt || 0; 
             
+            // Checkbox kontrolü
+            const cb = document.getElementById('editIncludeCalc');
+            if (type === 'assets') cb.checked = !item.excludeFromAsset;
+            else if (type === 'loans') cb.checked = !item.excludeFromDebt;
+            else cb.checked = !item.excludeFromDebt;
+
             // Kredi özel alanları göster
             if(type === 'loans') {
                 document.getElementById('editLoanFields').classList.remove('hidden');
@@ -1387,17 +1430,22 @@
             const idx = parseInt(document.getElementById('editItemIndex').value); 
             const name = document.getElementById('editItemName').value; 
             const val = parseFloat(document.getElementById('editItemVal').value); 
+            const isIncluded = document.getElementById('editIncludeCalc').checked;
+
             if(state[type][idx]) { 
                 state[type][idx].name = name; 
                 if(type === 'loans') {
                      state[type][idx].totalDebt = val;
                      state[type][idx].totalMonths = parseInt(document.getElementById('editLoanMonths').value) || 1;
                      state[type][idx].paymentDay = parseInt(document.getElementById('editLoanPayDay').value) || 15;
-                     // Aylık tutarı yeniden hesapla
                      state[type][idx].monthly = val / state[type][idx].totalMonths;
+                     state[type][idx].excludeFromDebt = !isIncluded; // Loans use excludeFromDebt
                 } else { 
                     state[type][idx].val = val; 
                     if (type === 'debts' && state[type][idx].calcMode) state[type][idx].calcMode = false; 
+                    
+                    if (type === 'assets') state[type][idx].excludeFromAsset = !isIncluded;
+                    else state[type][idx].excludeFromDebt = !isIncluded;
                 }
                 saveToCloud(); updateDashboardUI(); closeEditModal(); 
             } 
@@ -1411,8 +1459,8 @@
             if(assetsChartInstance) assetsChartInstance.destroy();
             if(expensesChartInstance) expensesChartInstance.destroy();
             
-            const assets = state.assets.reduce((s,a)=>s+(a.val||0),0);
-            const debts = state.loans.filter(l=>!l.excludeFromDebt).reduce((s,l)=>s+(l.totalDebt||0),0) + state.debts.reduce((s,d)=>s+(d.val||0),0) + state.otherDebts.reduce((s,d)=>s+(d.val||0),0);
+            const assets = state.assets.filter(a => !a.excludeFromAsset).reduce((s,a)=>s+(a.val||0),0);
+            const debts = state.loans.filter(l=>!l.excludeFromDebt).reduce((s,l)=>s+(l.totalDebt||0),0) + state.debts.filter(d=>!d.excludeFromDebt).reduce((s,d)=>s+(d.val||0),0) + state.otherDebts.filter(d=>!d.excludeFromDebt).reduce((s,d)=>s+(d.val||0),0);
             const expenseMap = {};
             state.expenses.forEach(e => { const key = e.desc || 'Diğer'; expenseMap[key] = (expenseMap[key] || 0) + e.amount; });
 
@@ -1427,11 +1475,8 @@
             };
             
             renderTable('analysisLoansList', state.loans, 'totalDebt');
-            // Kredi Kartlarını Sırala
             const sortedCards = [...state.debts].sort((a,b) => b.val - a.val);
             renderTable('analysisCardsList', sortedCards);
-            
-            // BES Detayı
             const besAssets = state.assets.filter(a => a.name.includes('Bireysel Emeklilik'));
             renderTable('analysisBesList', besAssets);
         }
@@ -1481,15 +1526,20 @@
                 const grossNet = totalInc - totalFix;
                 const netIncome = grossNet - normalLoanPayments;
                 
-                state.remainingAfterFixed = netIncome; 
-                if(!state.manualDailyLimit) state.manualDailyLimit = Math.max(0, netIncome / 30);
+                // Büyük rakam üzerinden hesaplama (Brüt Net)
+                // Kullanıcının "Kalan net gelir 113" dediği rakam grossNet.
+                // "Kredileriniz ödendikten sonra: 107" dediği rakam netIncome.
+                // İşlemleri büyük rakama (grossNet) göre yapıyoruz.
+                
+                state.remainingAfterFixed = grossNet; 
+                if(!state.manualDailyLimit) state.manualDailyLimit = Math.max(0, grossNet / 30); // Hesabı büyük rakamla başlat
                 
                 content.innerHTML = `
                     <h3 class="text-2xl font-black mb-2">Bütçe Planı</h3>
                     <div class="text-center mb-6">
-                        <p class="text-gray-400 text-xs uppercase tracking-widest">Kalan Net Gelir</p>
+                        <p class="text-gray-400 text-xs uppercase tracking-widest">Kalan Net Gelir (Büyük Rakam)</p>
                         <p class="text-3xl font-black text-blue-600">₺${Math.floor(grossNet).toLocaleString()}</p>
-                        ${normalLoanPayments > 0 ? `<p class="text-[9px] text-gray-400 mt-2 px-4 leading-tight">(Kredi ödemeleriniz borçtan düşüleceğinden bu hesabın içindedir. Kredileriniz ödendikten sonra kalan net tutarınız: <span class="font-bold text-gray-600">₺${Math.floor(netIncome).toLocaleString()}</span>)</p>` : ''}
+                        ${normalLoanPayments > 0 ? `<p class="text-[9px] text-gray-400 mt-2 px-4 leading-tight">(Kredi ödemeleriniz borçtan düşüleceğinden bu hesabın içindedir. Kredileriniz ödendikten sonra elinizde kalacak net tutar: <span class="font-bold text-gray-600">₺${Math.floor(netIncome).toLocaleString()}</span>)</p>` : ''}
                     </div>
                     <div class="space-y-6">
                         <div class="p-4 bg-white border border-gray-200 rounded-[2rem] shadow-sm text-center">
@@ -1581,7 +1631,7 @@
                     <div class="flex justify-between text-red-500 text-xs px-3 font-bold"><span>Sabit Giderler:</span><span>- ₺${totalFix.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
                     
                     <div class="border-t border-gray-100 my-2"></div>
-                    <div class="flex justify-between font-black text-gray-800 text-lg px-3"><span>Kalan Net Gelir:</span><span>₺${Math.floor(grossNet).toLocaleString()}</span></div>
+                    <div class="flex justify-between font-black text-gray-800 text-lg px-3"><span>Kalan Net Gelir (Büyük Rakam):</span><span>₺${Math.floor(grossNet).toLocaleString()}</span></div>
                     <div class="flex justify-between text-red-500 text-xs px-3 mt-2 font-bold"><span>Aylık Krediler:</span><span>- ₺${normalLoanPayments.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
                     
                     ${normalLoanPayments > 0 ? `<div class="text-[9px] text-gray-400 px-3 mt-1 italic">(Kredi ödemeleriniz borçtan düşüleceğinden bu hesabın içindedir. Kredileriniz ödendikten sonra harcanabilir net tutarınız: ₺${Math.floor(netIncome).toLocaleString()})</div>` : ''}
