@@ -219,10 +219,11 @@
                 <div id="netStatusBadge" class="text-4xl font-black text-gray-800 px-8 py-4 bg-gray-50 rounded-[2rem] transition-colors">
                     <span id="netStatusVal">₺0</span>
                 </div>
+                
+                <div class="flex items-center justify-center mt-6">
+                    <div class="text-center"><span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Aylık Sabit Gider</span><br><span id="sumGiderTotal" class="text-xl font-black text-red-600">₺0</span></div>
+                </div>
             </div>
-
-            <!-- SABİT GİDERLER AKORDİYONU -->
-            <div id="fixedExpensesSection" class="w-full mb-8"></div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <!-- BORÇLAR -->
@@ -238,12 +239,12 @@
                         <div id="inlineAdddashDebtContainer" class="hidden mt-2 p-4 border border-red-100 bg-red-50/50 rounded-xl space-y-3 shadow-inner">
                             <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Borç Türü</label>
                             <select id="dashDebtType" onchange="handleInlineTypeChange('dashDebt')" class="w-full p-2.5 bg-white rounded-lg text-xs font-bold border border-gray-200 outline-none focus:ring-2 focus:ring-blue-100">
-                                <option value="Diğer">Diğer (Standart TL)</option>
                                 <option value="Kredi">Kredi</option>
                                 <option value="Kredi Kartı">Kredi Kartı</option>
                                 <option value="Altın">Altın</option>
                                 <option value="Döviz">Döviz</option>
                                 <option value="Gümüş">Gümüş</option>
+                                <option value="Diğer">Diğer</option>
                             </select>
                             <div id="dashDebtFields" class="space-y-2"></div>
                             <div class="flex gap-2 pt-2">
@@ -281,6 +282,8 @@
                     </div>
                 </div>
             </div>
+            <!-- SABİT GİDERLER AKORDİYONU -->
+            <div id="fixedExpensesSection" class="w-full pt-4"></div>
         </div>
     </div>
 
@@ -338,6 +341,12 @@
             <button onclick="closeEditModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl">İptal</button>
             <button onclick="saveEditedItem()" class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl">Kaydet</button>
         </div>
+    </div>
+    
+    <!-- HESAPLAMA DETAY MODALI -->
+    <div id="calcModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm glass-card p-8 rounded-[2rem] z-50 shadow-2xl hidden text-center border-2 border-blue-50 animate-fade-in">
+        <div class="flex justify-between items-center mb-6"><h4 class="font-black text-xl text-gray-800 tracking-tight w-full text-left">Nasıl Hesaplandı?</h4><button onclick="closeCalcModal()" class="text-gray-300 hover:text-red-500 absolute right-6"><i class="fas fa-times"></i></button></div>
+        <div id="calcModalContent" class="space-y-4 text-sm"></div>
     </div>
 
     <script>
@@ -800,7 +809,18 @@
             const others = state.otherDebts.reduce((s,d)=>s+(d.val||0),0);
             const totalDebt = loans + cards + others;
             const net = assets - totalDebt;
+            
+            const totalFix = state.bills.reduce((s, b) => s + (b.val||0), 0);
+            const loanPayments = state.loans.filter(l=>!l.excludeFromBudget).reduce((s,l)=>s+(l.monthly||0),0);
+            const monthlyFixed = totalFix + loanPayments;
+            
+            const totalInc = state.incomes.reduce((s, i) => s + (i.val||0), 0);
+            const netIncome = totalInc - monthlyFixed;
+            const dailyLimit = state.manualDailyLimit || 0;
+            const monthlySpend = dailyLimit * 30;
+            const calcSavings = state.calculatedMonthlySavings !== undefined ? state.calculatedMonthlySavings : Math.max(0, netIncome - monthlySpend);
 
+            document.getElementById('sumSavings').innerText = `₺${Math.floor(calcSavings).toLocaleString()}`;
             document.getElementById('netStatusVal').innerText = `${net>=0?'+':'-'}₺${Math.abs(Math.floor(net)).toLocaleString()}`;
             document.getElementById('netStatusBadge').className = `text-4xl font-black px-8 py-4 rounded-[2rem] ${net>=0?'text-green-600 bg-green-50':'text-red-600 bg-red-50'}`;
 
@@ -824,7 +844,7 @@
                 container.classList.remove('hidden');
                 btn.classList.add('hidden');
                 
-                if (prefix === 'dashDebt' || prefix === 'wiz_debt') document.getElementById(`${prefix}Type`).value = 'Diğer';
+                if (prefix === 'dashDebt' || prefix === 'wiz_debt') document.getElementById(`${prefix}Type`).value = 'Kredi';
                 if (prefix === 'dashAsset' || prefix === 'wiz_asset') document.getElementById(`${prefix}Type`).value = 'Diğer';
                 if (prefix === 'wiz_loan') document.getElementById(`${prefix}Type`).value = 'Kredi';
                 if (prefix === 'wiz_card') document.getElementById(`${prefix}Type`).value = 'Kredi Kartı';
@@ -1134,13 +1154,16 @@
 
             // DİĞER BORÇLAR - Sadece > 0 olanlar
             let debtHTML = ''; 
-            state.loans.filter(l => l.totalDebt > 0).forEach((l) => debtHTML += createRow(l.name, l.totalDebt, 'loans', state.loans.indexOf(l))); 
+            state.loans.filter(l => l.totalDebt > 0).forEach((l) => {
+                const isExcluded = l.excludeFromDebt;
+                debtHTML += createRow(l.name + (isExcluded ? ' <span class="text-[8px] text-red-400 font-bold ml-1 bg-red-50 px-1 rounded">(Dahil Değil)</span>' : ''), l.totalDebt, 'loans', state.loans.indexOf(l), isExcluded ? 'opacity-50 grayscale' : '');
+            }); 
             state.otherDebts.filter(d => d.val > 0).forEach((d) => debtHTML += createRow(d.name, d.val, 'otherDebts', state.otherDebts.indexOf(d))); 
             
             // KREDİ KARTLARI AKORDİYONU - Sadece > 0 olanlar
             const activeCards = state.debts.filter(d => d.val > 0);
             const totalCardDebt = activeCards.reduce((s,d)=>s+d.val,0); 
-            if(totalCardDebt > 0) { 
+            if(totalCardDebt > 0 || state.debts.length > 0) { 
                 debtHTML += `
                 <div class="border border-purple-100 rounded-2xl overflow-hidden bg-purple-50/50 shadow-sm mt-4">
                     <div onclick="document.getElementById('cardDetails').classList.toggle('open');" class="flex justify-between items-center p-4 cursor-pointer hover:bg-purple-100/50 transition-colors">
@@ -1209,7 +1232,7 @@
             if(expensesChartInstance) expensesChartInstance.destroy();
             
             const assets = state.assets.reduce((s,a)=>s+(a.val||0),0);
-            const debts = state.loans.reduce((s,l)=>s+(l.totalDebt||0),0) + state.debts.reduce((s,d)=>s+(d.val||0),0) + state.otherDebts.reduce((s,d)=>s+(d.val||0),0);
+            const debts = state.loans.filter(l=>!l.excludeFromDebt).reduce((s,l)=>s+(l.totalDebt||0),0) + state.debts.reduce((s,d)=>s+(d.val||0),0) + state.otherDebts.reduce((s,d)=>s+(d.val||0),0);
             const expenseMap = {};
             state.expenses.forEach(e => { const key = e.desc || 'Diğer'; expenseMap[key] = (expenseMap[key] || 0) + e.amount; });
 
@@ -1247,9 +1270,31 @@
                 const totalInc = state.incomes.reduce((s, i) => s + (i.val||0), 0);
                 const totalFix = state.bills.reduce((s, b) => s + (b.val||0), 0);
                 const loanPayments = state.loans.filter(l => !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
-                const netIncome = totalInc - totalFix - loanPayments;
-                state.remainingAfterFixed = netIncome; if(!state.manualDailyLimit) state.manualDailyLimit = Math.max(0, netIncome / 30);
-                content.innerHTML = `<h3 class="text-2xl font-black mb-2">Bütçe Planı</h3><div class="text-center mb-6"><p class="text-gray-400 text-xs uppercase tracking-widest">Kalan Net Gelir</p><p class="text-3xl font-black text-blue-600">₺${Math.floor(netIncome).toLocaleString()}</p></div><div class="space-y-6"><div class="p-4 bg-white border border-gray-200 rounded-[2rem] shadow-sm text-center"><label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Günlük Harcama Hedefi</label><input type="number" id="idealDailyLimitInput" oninput="updateFromDailyLimitInput(this.value)" class="w-32 text-center text-3xl font-black text-blue-600 border-b-2 outline-none pb-2" placeholder="0"></div><div class="space-y-2"><div class="flex justify-between text-xs font-bold text-gray-500"><span>Birikim %</span><span>Harcama %</span></div><input type="range" id="allocationSlider" min="0" max="100" oninput="handleSliderChange(this.value)" class="w-full h-3 bg-gray-200 rounded-lg cursor-pointer"></div><div class="flex justify-between gap-4"><div class="flex-1 text-center p-3 bg-green-50 rounded-2xl"><p class="text-[9px] font-bold text-green-400 block mb-1">AYLIK BİRİKİM</p><div class="relative"><span class="absolute left-2 top-1.5 text-green-700 font-bold">₺</span><input type="number" id="manualSavingsInput" oninput="updateFromSavingsInput(this.value)" class="w-full bg-transparent text-center font-black text-lg text-green-700 outline-none pl-4" placeholder="0"></div></div><div class="flex-1 text-center p-3 bg-blue-50 rounded-2xl"><p class="text-[9px] font-bold text-blue-400 block mb-1">AYLIK HARCAMA</p><div class="relative"><span class="absolute left-2 top-1.5 text-blue-700 font-bold">₺</span><input type="number" id="allocSpendingInput" oninput="updateFromSpendingInput(this.value)" class="w-full bg-transparent text-center font-black text-lg text-blue-700 outline-none pl-4" placeholder="0"></div></div></div></div>`;
+                
+                const grossNet = totalInc - totalFix;
+                const netIncome = grossNet - loanPayments;
+                
+                state.remainingAfterFixed = netIncome; 
+                if(!state.manualDailyLimit) state.manualDailyLimit = Math.max(0, netIncome / 30);
+                
+                content.innerHTML = `
+                    <h3 class="text-2xl font-black mb-2">Bütçe Planı</h3>
+                    <div class="text-center mb-6">
+                        <p class="text-gray-400 text-xs uppercase tracking-widest">Kalan Net Gelir</p>
+                        <p class="text-3xl font-black text-blue-600">₺${Math.floor(grossNet).toLocaleString()}</p>
+                        ${loanPayments > 0 ? `<p class="text-[9px] text-gray-400 mt-2 px-4 leading-tight">(Kredi ödemeleriniz borçtan düşüleceğinden bu hesabın içindedir. Kredileriniz ödendikten sonra kalan net tutarınız: <span class="font-bold text-gray-600">₺${Math.floor(netIncome).toLocaleString()}</span>)</p>` : ''}
+                    </div>
+                    <div class="space-y-6">
+                        <div class="p-4 bg-white border border-gray-200 rounded-[2rem] shadow-sm text-center">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Günlük Harcama Hedefi</label>
+                            <input type="number" id="idealDailyLimitInput" oninput="updateFromDailyLimitInput(this.value)" class="w-32 text-center text-3xl font-black text-blue-600 border-b-2 outline-none pb-2" placeholder="0">
+                        </div>
+                        <div class="space-y-2"><div class="flex justify-between text-xs font-bold text-gray-500"><span>Birikim %</span><span>Harcama %</span></div><input type="range" id="allocationSlider" min="0" max="100" oninput="handleSliderChange(this.value)" class="w-full h-3 bg-gray-200 rounded-lg cursor-pointer"></div>
+                        <div class="flex justify-between gap-4">
+                            <div class="flex-1 text-center p-3 bg-green-50 rounded-2xl"><p class="text-[9px] font-bold text-green-400 block mb-1">AYLIK BİRİKİM</p><div class="relative"><span class="absolute left-2 top-1.5 text-green-700 font-bold">₺</span><input type="number" id="manualSavingsInput" oninput="updateFromSavingsInput(this.value)" class="w-full bg-transparent text-center font-black text-lg text-green-700 outline-none pl-4" placeholder="0"></div></div>
+                            <div class="flex-1 text-center p-3 bg-blue-50 rounded-2xl"><p class="text-[9px] font-bold text-blue-400 block mb-1">AYLIK HARCAMA</p><div class="relative"><span class="absolute left-2 top-1.5 text-blue-700 font-bold">₺</span><input type="number" id="allocSpendingInput" oninput="updateFromSpendingInput(this.value)" class="w-full bg-transparent text-center font-black text-lg text-blue-700 outline-none pl-4" placeholder="0"></div></div>
+                        </div>
+                    </div>`;
                 setTimeout(() => applyAllocationFromLimit(state.manualDailyLimit), 50); document.getElementById('wizNextBtn').innerText = "Devam Et";
             } else {
                 const titles = ["", "Gelirler", "Sabit Giderler", "Banka Kredileri", "Kredi Kartları", "Diğer Borçlar", "Varlıklar"];
@@ -1313,7 +1358,10 @@
             const totalInc = state.incomes.reduce((s, i) => s + (i.val||0), 0); 
             const totalFix = state.bills.reduce((s, b) => s + (b.val||0), 0); 
             const loanPayments = state.loans.filter(l => !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0); 
-            const netIncome = totalInc - totalFix - loanPayments;
+            
+            const grossNet = totalInc - totalFix;
+            const netIncome = grossNet - loanPayments;
+            
             const daily = state.manualDailyLimit || 0;
             const monthlySpend = daily * 30;
             const savings = netIncome - monthlySpend;
@@ -1322,10 +1370,15 @@
                 <div class="space-y-3 text-left">
                     <div class="flex justify-between font-bold text-green-700 bg-green-50 p-3 rounded-xl border border-green-100"><span>Toplam Gelir:</span><span>+ ₺${totalInc.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
                     <div class="flex justify-between text-red-500 text-xs px-3 font-bold"><span>Sabit Giderler:</span><span>- ₺${totalFix.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
-                    <div class="flex justify-between text-red-500 text-xs px-3 font-bold"><span>Aylık Krediler:</span><span>- ₺${loanPayments.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                    
                     <div class="border-t border-gray-100 my-2"></div>
-                    <div class="flex justify-between font-black text-gray-800 text-lg px-3"><span>Kalan Net Gelir:</span><span>₺${Math.floor(netIncome).toLocaleString()}</span></div>
+                    <div class="flex justify-between font-black text-gray-800 text-lg px-3"><span>Kalan Net Gelir:</span><span>₺${Math.floor(grossNet).toLocaleString()}</span></div>
+                    <div class="flex justify-between text-red-500 text-xs px-3 mt-2 font-bold"><span>Aylık Krediler:</span><span>- ₺${loanPayments.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                    
+                    ${loanPayments > 0 ? `<div class="text-[9px] text-gray-400 px-3 mt-1 italic">(Kredi ödemeleri sonrası net harcanabilir tutar: ₺${Math.floor(netIncome).toLocaleString()})</div>` : ''}
+                    
                     <div class="border-t border-gray-100 my-2"></div>
+                    
                     <div class="flex justify-between text-green-600 text-sm px-3 font-bold"><span>Aylık Birikim:</span><span>₺${Math.floor(savings).toLocaleString()}</span></div>
                     <div class="flex justify-between text-blue-500 text-sm px-3 font-bold"><span>Aylık Harcama Bütçesi:</span><span>₺${Math.floor(monthlySpend).toLocaleString()}</span></div>
                     <div class="mt-4 p-4 bg-blue-50 rounded-2xl border border-blue-100 text-center">
