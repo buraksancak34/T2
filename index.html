@@ -59,6 +59,7 @@
             <div id="registerFields" class="hidden space-y-3">
                 <input type="text" id="regUsernameInput" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-sm" placeholder="Kullanıcı Adı Belirle (Zorunlu)">
                 <input type="text" id="regInviteCode" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-sm" placeholder="Davet Kodu (Varsa)">
+                <input type="number" id="regDailyLimit" class="w-full p-4 bg-blue-50 border border-blue-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-black text-blue-700 transition-all text-sm hidden placeholder-blue-400" placeholder="Günlük Harcama Hedefiniz (TL)">
             </div>
             
             <input type="text" id="emailInput" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-sm" placeholder="E-posta veya Kullanıcı Adı">
@@ -88,7 +89,12 @@
             <button onclick="startWizard(false)" class="w-full bg-green-500 text-white font-black py-4 rounded-2xl shadow-lg shadow-green-100 active:scale-95 transition-all hover:bg-green-600 flex items-center justify-center gap-2">
                 <i class="fas fa-magic"></i> <span>Plana Başla</span>
             </button>
-            <p class="text-[10px] text-center text-gray-400 px-4">Bütçeni oluşturmaya başla, en son adımda kaydedip üye ol.</p>
+            
+            <button onclick="showQuickRegisterMode()" class="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-2xl active:scale-95 transition-all hover:bg-slate-900 shadow-md flex items-center justify-center gap-3 text-xs leading-tight">
+                <i class="fas fa-bolt text-yellow-400 text-lg"></i> <span class="text-left">Veri girmek istemiyorum,<br>sadece günlük harcama hesaplayacağım</span>
+            </button>
+
+            <p class="text-[10px] text-center text-gray-400 px-4 mt-2">Bütçeni oluşturmaya başla, en son adımda kaydedip üye ol.</p>
             <button onclick="showRegisterMode()" class="w-full bg-white border-2 border-gray-100 text-gray-600 font-bold py-3 rounded-2xl active:scale-95 transition-all hover:border-indigo-200 hover:text-indigo-600 mt-2">
                 Bir Plana Dahil Ol
             </button>
@@ -209,7 +215,7 @@
 
         <div class="glass-card p-8 rounded-[3rem] shadow-xl bg-white border border-gray-100">
             <h3 class="font-black text-xl text-gray-800 uppercase tracking-widest text-[11px] mb-4">Harcama Geçmişi</h3>
-            <div id="historyList" class="pb-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2"></div>
+            <div id="historyList" class="pb-4"></div>
         </div>
 
         <div id="financialHealthSection" class="glass-card p-10 rounded-[3rem] space-y-8 bg-white border border-blue-50 shadow-xl">
@@ -221,7 +227,7 @@
                 </div>
                 
                 <div class="flex items-center justify-center mt-6">
-                    <div class="text-center"><span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Aylık Sabit Gider</span><br><span id="sumGiderTotal" class="text-xl font-black text-red-600">₺0</span></div>
+                    <div class="text-center"><span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Aylık Sabit Gider</span><br><span id="sumGiderTotalHealth" class="text-xl font-black text-red-600">₺0</span></div>
                 </div>
             </div>
             
@@ -377,6 +383,7 @@
         let expensesChartInstance = null;
         let adviceInterval = null;
         window.userInvites = [];
+        window.currentHistoryDateIndex = 0; // Harcama geçmişi günü seçimi için
 
         const defaultState = {
             step: 1, salaryDay: 15,
@@ -482,9 +489,11 @@
 
         function showLoginMode() {
             document.getElementById('loginTitle').innerText = "Giriş Yap";
+            document.getElementById('loginSubtitle').innerText = "Hesabına Eriş";
             document.getElementById('loginBtn').classList.remove('hidden');
             document.getElementById('registerBtn').classList.add('hidden');
             document.getElementById('registerFields').classList.add('hidden');
+            document.getElementById('regDailyLimit').classList.add('hidden');
             document.getElementById('emailInput').placeholder = "E-posta veya Kullanıcı Adı";
             document.getElementById('actionButtons').classList.remove('hidden');
             document.getElementById('backToLoginText').classList.add('hidden');
@@ -493,9 +502,26 @@
 
         function showRegisterMode() {
             document.getElementById('loginTitle').innerText = "Ailene Katıl";
+            document.getElementById('loginSubtitle').innerText = "Davet Kodu İle Bağlan";
             document.getElementById('loginBtn').classList.add('hidden');
             document.getElementById('registerBtn').classList.remove('hidden');
             document.getElementById('registerFields').classList.remove('hidden');
+            document.getElementById('regInviteCode').classList.remove('hidden');
+            document.getElementById('regDailyLimit').classList.add('hidden');
+            document.getElementById('emailInput').placeholder = "E-posta Adresi";
+            document.getElementById('actionButtons').classList.add('hidden');
+            document.getElementById('backToLoginText').classList.remove('hidden');
+            document.getElementById('forgotPassText').classList.add('hidden');
+        }
+
+        function showQuickRegisterMode() {
+            document.getElementById('loginTitle').innerText = "Hızlı Başlangıç";
+            document.getElementById('loginSubtitle').innerText = "Sadece Günlük Harcama Takibi";
+            document.getElementById('loginBtn').classList.add('hidden');
+            document.getElementById('registerBtn').classList.remove('hidden');
+            document.getElementById('registerFields').classList.remove('hidden');
+            document.getElementById('regInviteCode').classList.add('hidden');
+            document.getElementById('regDailyLimit').classList.remove('hidden');
             document.getElementById('emailInput').placeholder = "E-posta Adresi";
             document.getElementById('actionButtons').classList.add('hidden');
             document.getElementById('backToLoginText').classList.remove('hidden');
@@ -532,7 +558,11 @@
             const pass = document.getElementById('passwordInput').value;
             const invite = document.getElementById('regInviteCode').value.trim().toUpperCase();
             
+            const isQuickMode = !document.getElementById('regDailyLimit').classList.contains('hidden');
+            const dailyLimitVal = parseFloat(document.getElementById('regDailyLimit').value);
+
             if(!email.includes('@') || !user || !pass) return alert("Alanları doğru doldurun.");
+            if(isQuickMode && (!dailyLimitVal || dailyLimitVal <= 0)) return alert("Lütfen günlük harcama hedefinizi girin.");
             
             const btn = document.getElementById('registerBtn');
             btn.innerHTML = '<div class="loader"></div> Lütfen Bekleyin...';
@@ -546,7 +576,12 @@
                 initState.email = email; initState.username = user;
                 if(initState.registrationDate instanceof Date) initState.registrationDate = initState.registrationDate.toISOString();
 
-                if (invite) {
+                if (isQuickMode) {
+                    initState.manualDailyLimit = dailyLimitVal;
+                    initState.calculatedMonthlyPool = dailyLimitVal * 30;
+                    initState.remainingAfterFixed = dailyLimitVal * 30;
+                    initState.incomes = [{ name: 'Sanal Bütçe (Hızlı Başlangıç)', val: dailyLimitVal * 30 }];
+                } else if (invite) {
                     const snap = await db.collection('users').where('inviteCode', '==', invite).get();
                     if (!snap.empty) {
                         const owner = snap.docs[0];
@@ -810,23 +845,28 @@
             const totalDebt = loans + cards + others;
             const net = assets - totalDebt;
             
-            const totalFix = state.bills.reduce((s, b) => s + (b.val||0), 0);
-            const loanPayments = state.loans.filter(l=>!l.excludeFromBudget).reduce((s,l)=>s+(l.monthly||0),0);
-            const monthlyFixed = totalFix + loanPayments;
+            const normalBills = state.bills.reduce((s, b) => s + (b.val||0), 0);
+            const loansAsBills = state.loans.filter(l=>l.excludeFromDebt && !l.excludeFromBudget).reduce((s,l)=>s+(l.monthly||0),0);
+            const totalFix = normalBills + loansAsBills;
+            const normalLoanPayments = state.loans.filter(l=>!l.excludeFromDebt && !l.excludeFromBudget).reduce((s,l)=>s+(l.monthly||0),0);
+            const monthlyFixed = totalFix + normalLoanPayments; 
             
             const totalInc = state.incomes.reduce((s, i) => s + (i.val||0), 0);
-            const netIncome = totalInc - monthlyFixed;
+            const netIncome = totalInc - monthlyFixed; 
             const dailyLimit = state.manualDailyLimit || 0;
             const monthlySpend = dailyLimit * 30;
             const calcSavings = state.calculatedMonthlySavings !== undefined ? state.calculatedMonthlySavings : Math.max(0, netIncome - monthlySpend);
 
             document.getElementById('sumSavings').innerText = `₺${Math.floor(calcSavings).toLocaleString()}`;
+            document.getElementById('sumGiderTotalHealth').innerText = `₺${Math.floor(monthlyFixed).toLocaleString()}`;
             document.getElementById('netStatusVal').innerText = `${net>=0?'+':'-'}₺${Math.abs(Math.floor(net)).toLocaleString()}`;
             document.getElementById('netStatusBadge').className = `text-4xl font-black px-8 py-4 rounded-[2rem] ${net>=0?'text-green-600 bg-green-50':'text-red-600 bg-red-50'}`;
 
             document.getElementById('displayInviteCode').innerText = state.inviteCode || '-----';
             renderFamilyList();
             renderDetailedHealthLists();
+            
+            window.currentHistoryDateIndex = 0; 
             renderHistoryList();
         }
 
@@ -1075,14 +1115,18 @@
             }
         }
 
+        function changeHistoryDate(step) {
+            window.currentHistoryDateIndex += step;
+            renderHistoryList();
+        }
+
         function renderHistoryList() {
             const list = document.getElementById('historyList');
             if(!list) return;
-            if(state.expenses.length === 0) { list.innerHTML = '<div class="text-center text-gray-400 text-xs">Harcama yok.</div>'; return; }
+            if(state.expenses.length === 0) { list.innerHTML = '<div class="text-center text-gray-400 text-xs py-4">Harcama yok.</div>'; return; }
             
             const myName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Ben';
             
-            // Tarihe göre grupla ve sırala
             const sortedExpenses = [...state.expenses].sort((a, b) => b.ts - a.ts);
             const grouped = {};
             sortedExpenses.forEach((e) => {
@@ -1091,38 +1135,48 @@
                 grouped[e.date].push({ ...e, originalIndex: origIdx });
             });
 
-            let html = '';
-            for(const date in grouped) {
+            // Benzersiz ve sıralı tarihleri çıkar
+            const sortedDates = [...new Set(sortedExpenses.map(e => e.date))];
+
+            if (window.currentHistoryDateIndex >= sortedDates.length) window.currentHistoryDateIndex = sortedDates.length - 1;
+            if (window.currentHistoryDateIndex < 0) window.currentHistoryDateIndex = 0;
+
+            const currentDate = sortedDates[window.currentHistoryDateIndex];
+            const expensesForDate = grouped[currentDate];
+
+            const hasPrev = window.currentHistoryDateIndex > 0; // Index 0 is newest, so > 0 means there are newer dates
+            const hasNext = window.currentHistoryDateIndex < sortedDates.length - 1; // Means there are older dates
+
+            let html = `
+            <div class="mb-5">
+                <div class="flex items-center justify-between gap-4 mb-4 bg-blue-50 p-2 rounded-xl border border-blue-100">
+                    <button onclick="changeHistoryDate(1)" class="w-8 h-8 flex items-center justify-center rounded-lg bg-white text-blue-600 shadow-sm hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" ${!hasNext ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>
+                    <div class="text-blue-800 px-3 py-1 rounded-lg text-sm font-black tracking-widest text-center flex-1">${currentDate}</div>
+                    <button onclick="changeHistoryDate(-1)" class="w-8 h-8 flex items-center justify-center rounded-lg bg-white text-blue-600 shadow-sm hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" ${!hasPrev ? 'disabled' : ''}><i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div class="space-y-2">`;
+            
+            expensesForDate.forEach(e => {
+                const canEdit = currentUserRole === 'owner' || currentUserRole === 'full' || e.addedBy === myName || e.addedBy === 'Ben';
+                const initials = e.addedBy.substring(0, 2).toUpperCase();
                 html += `
-                <div class="mb-5">
-                    <div class="flex items-center gap-2 mb-3">
-                        <div class="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-[10px] font-black tracking-widest">${date}</div>
-                        <div class="h-px bg-gray-100 flex-1"></div>
-                    </div>
-                    <div class="space-y-2">`;
-                
-                grouped[date].forEach(e => {
-                    const canEdit = currentUserRole === 'owner' || currentUserRole === 'full' || e.addedBy === myName || e.addedBy === 'Ben';
-                    const initials = e.addedBy.substring(0, 2).toUpperCase();
-                    html += `
-                        <div class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-xl hover:shadow-md transition-all group">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 font-black text-xs uppercase border border-gray-200">
-                                    ${initials}
-                                </div>
-                                <div>
-                                    <p class="font-black text-gray-800 text-sm">${e.desc}</p>
-                                    <p class="text-[9px] text-gray-400 font-bold uppercase tracking-wide">Ekleyen: ${e.addedBy}</p>
-                                </div>
+                    <div class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-xl hover:shadow-md transition-all group">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 font-black text-xs uppercase border border-gray-200">
+                                ${initials}
                             </div>
-                            <div class="flex items-center gap-3">
-                                <span class="font-black text-red-500 text-base">-₺${Math.floor(e.amount).toLocaleString()}</span>
-                                ${canEdit ? `<div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="editExpense(${e.originalIndex})" class="text-blue-300 hover:text-blue-500"><i class="fas fa-pen"></i></button><button onclick="deleteExpense(${e.originalIndex})" class="text-gray-200 hover:text-red-500"><i class="fas fa-trash-alt"></i></button></div>` : ''}
+                            <div>
+                                <p class="font-black text-gray-800 text-sm">${e.desc}</p>
+                                <p class="text-[9px] text-gray-400 font-bold uppercase tracking-wide">Ekleyen: ${e.addedBy}</p>
                             </div>
-                        </div>`;
-                });
-                html += `</div></div>`;
-            }
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="font-black text-red-500 text-base">-₺${Math.floor(e.amount).toLocaleString()}</span>
+                            ${canEdit ? `<div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="editExpense(${e.originalIndex})" class="text-blue-300 hover:text-blue-500"><i class="fas fa-pen"></i></button><button onclick="deleteExpense(${e.originalIndex})" class="text-gray-200 hover:text-red-500"><i class="fas fa-trash-alt"></i></button></div>` : ''}
+                        </div>
+                    </div>`;
+            });
+            html += `</div></div>`;
             list.innerHTML = html;
         }
 
@@ -1268,11 +1322,13 @@
                 }
             } else if(state.step === 7) {
                 const totalInc = state.incomes.reduce((s, i) => s + (i.val||0), 0);
-                const totalFix = state.bills.reduce((s, b) => s + (b.val||0), 0);
-                const loanPayments = state.loans.filter(l => !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
+                const normalBills = state.bills.reduce((s, b) => s + (b.val||0), 0);
+                const loansAsBills = state.loans.filter(l => l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
+                const totalFix = normalBills + loansAsBills;
+                const normalLoanPayments = state.loans.filter(l => !l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
                 
                 const grossNet = totalInc - totalFix;
-                const netIncome = grossNet - loanPayments;
+                const netIncome = grossNet - normalLoanPayments;
                 
                 state.remainingAfterFixed = netIncome; 
                 if(!state.manualDailyLimit) state.manualDailyLimit = Math.max(0, netIncome / 30);
@@ -1282,7 +1338,7 @@
                     <div class="text-center mb-6">
                         <p class="text-gray-400 text-xs uppercase tracking-widest">Kalan Net Gelir</p>
                         <p class="text-3xl font-black text-blue-600">₺${Math.floor(grossNet).toLocaleString()}</p>
-                        ${loanPayments > 0 ? `<p class="text-[9px] text-gray-400 mt-2 px-4 leading-tight">(Kredi ödemeleriniz borçtan düşüleceğinden bu hesabın içindedir. Kredileriniz ödendikten sonra kalan net tutarınız: <span class="font-bold text-gray-600">₺${Math.floor(netIncome).toLocaleString()}</span>)</p>` : ''}
+                        ${normalLoanPayments > 0 ? `<p class="text-[9px] text-gray-400 mt-2 px-4 leading-tight">(Kredi ödemeleriniz borçtan düşüleceğinden bu hesabın içindedir. Kredileriniz ödendikten sonra kalan net tutarınız: <span class="font-bold text-gray-600">₺${Math.floor(netIncome).toLocaleString()}</span>)</p>` : ''}
                     </div>
                     <div class="space-y-6">
                         <div class="p-4 bg-white border border-gray-200 rounded-[2rem] shadow-sm text-center">
@@ -1356,11 +1412,13 @@
         
         function openCalcModal() { 
             const totalInc = state.incomes.reduce((s, i) => s + (i.val||0), 0); 
-            const totalFix = state.bills.reduce((s, b) => s + (b.val||0), 0); 
-            const loanPayments = state.loans.filter(l => !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0); 
+            const normalBills = state.bills.reduce((s, b) => s + (b.val||0), 0);
+            const loansAsBills = state.loans.filter(l => l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
+            const totalFix = normalBills + loansAsBills;
+            const normalLoanPayments = state.loans.filter(l => !l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0); 
             
             const grossNet = totalInc - totalFix;
-            const netIncome = grossNet - loanPayments;
+            const netIncome = grossNet - normalLoanPayments;
             
             const daily = state.manualDailyLimit || 0;
             const monthlySpend = daily * 30;
@@ -1373,9 +1431,9 @@
                     
                     <div class="border-t border-gray-100 my-2"></div>
                     <div class="flex justify-between font-black text-gray-800 text-lg px-3"><span>Kalan Net Gelir:</span><span>₺${Math.floor(grossNet).toLocaleString()}</span></div>
-                    <div class="flex justify-between text-red-500 text-xs px-3 mt-2 font-bold"><span>Aylık Krediler:</span><span>- ₺${loanPayments.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                    <div class="flex justify-between text-red-500 text-xs px-3 mt-2 font-bold"><span>Aylık Krediler:</span><span>- ₺${normalLoanPayments.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
                     
-                    ${loanPayments > 0 ? `<div class="text-[9px] text-gray-400 px-3 mt-1 italic">(Kredi ödemeleri sonrası net harcanabilir tutar: ₺${Math.floor(netIncome).toLocaleString()})</div>` : ''}
+                    ${normalLoanPayments > 0 ? `<div class="text-[9px] text-gray-400 px-3 mt-1 italic">(Kredi ödemeleriniz borçtan düşüleceğinden bu hesabın içindedir. Kredileriniz ödendikten sonra harcanabilir net tutarınız: ₺${Math.floor(netIncome).toLocaleString()})</div>` : ''}
                     
                     <div class="border-t border-gray-100 my-2"></div>
                     
