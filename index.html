@@ -1124,7 +1124,7 @@
             document.getElementById('detailedDebtsList').innerHTML = debtHTML || '<span class="text-gray-300 text-xs">Kayıtlı borç yok</span>'; 
             
             // Assets Sorted
-            const sortedAssets = [...state.assets].sort((a,b) => b.val - a.val);
+            const sortedAssets = [...state.assets].filter(a => a.val > 0).sort((a,b) => b.val - a.val);
             let assetHTML = sortedAssets.map((a) => {
                 const i = state.assets.indexOf(a);
                 const isExcluded = a.excludeFromAsset;
