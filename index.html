@@ -182,7 +182,7 @@
             </div>
 
             <!-- Aile Yönetimi Paneli -->
-            <div id="familyPanel" class="glass-card p-6 rounded-[3rem] flex flex-col bg-white border border-blue-50">
+            <div id="familyPanel" class="glass-card p-6 rounded-[3rem] flex flex-col bg-white border border-blue-50 relative">
                 <div class="flex justify-between items-center mb-4 border-b pb-4">
                     <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Aile Sistemi</h4>
                     <button onclick="createInviteCode()" class="text-[9px] font-bold text-blue-500 bg-blue-50 px-2 py-1 rounded-md hover:bg-blue-100 transition-colors">Kod: <span id="displayInviteCode">-----</span></button>
@@ -197,7 +197,16 @@
                         <button onclick="addFamilyMember()" class="bg-orange-500 text-white font-black px-4 rounded-lg hover:bg-orange-600 transition-all text-xs">Ekle</button>
                     </div>
                 </div>
-                <div id="familyList" class="space-y-2 flex-1 overflow-y-auto max-h-[120px] custom-scrollbar pr-1 mt-2"></div>
+                <div id="familyList" class="space-y-2 flex-1 overflow-y-auto max-h-[120px] custom-scrollbar pr-1 mt-2 mb-8"></div>
+                
+                <!-- Finansal Sözler -->
+                <div class="absolute bottom-6 left-0 right-0 px-6">
+                    <div class="pt-4 border-t border-gray-100">
+                        <p id="financialAdviceText" class="text-center text-[10px] font-bold text-blue-400 italic leading-relaxed fade-text min-h-[30px] flex items-center justify-center">
+                            Yükleniyor...
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -364,7 +373,7 @@
     </div>
 
     <!-- DÜZENLEME MODALI -->
-    <div id="editItemModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm glass-card p-8 rounded-[2rem] z-50 shadow-2xl hidden text-center border-2 border-gray-50 animate-fade-in">
+    <div id="editItemModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm glass-card p-8 rounded-[2rem] z-50 shadow-2xl hidden text-center border-2 border-gray-50 animate-fade-in max-h-[90vh] overflow-y-auto">
         <h4 class="font-black text-xl text-gray-800 mb-4">Düzenle</h4>
         <input type="text" id="editItemName" class="w-full p-3 mb-3 bg-gray-50 rounded-xl font-bold text-sm">
         <input type="number" id="editItemVal" class="w-full p-3 mb-6 bg-gray-50 rounded-xl font-bold text-sm" placeholder="Toplam Tutar">
@@ -439,6 +448,12 @@
         window.userInvites = [];
         window.currentHistoryDateIndex = 0; 
 
+        // HELPER: Get current month days
+        function getDaysInCurrentMonth() {
+            const now = new Date();
+            return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        }
+
         const defaultState = {
             step: 1, salaryDay: 15,
             registrationDate: new Date().toISOString(),
@@ -446,7 +461,7 @@
             bills: [
                 { name: 'Kira', val: null }, { name: 'Aidat', val: null }, { name: 'Elektrik', val: null },
                 { name: 'Su', val: null }, { name: 'Doğalgaz', val: null }, { name: 'İnternet', val: null },
-                { name: 'Telefon', val: null }, { name: 'Bireysel Emeklilik (Aylık)', val: null }
+                { name: 'Telefon', val: null }, { name: 'Dijital Platformlar', val: null }
             ], 
             loans: [], debts: [], 
             otherDebts: [{ name: 'KMH / Avans Hesap (- Bakiye)', val: null }], 
@@ -924,9 +939,12 @@
             const loansAsBills = state.loans.filter(l => l.excludeFromDebt).reduce((s, l) => s + (l.monthly || 0), 0);
             const grossNet = totalInc - (normalBills + loansAsBills);
             const netIncome = totalInc - monthlyFixed; // Her şey düştükten sonra
+            
+            // Dinamik Ay Günü Hesaplama
+            const daysInMonth = getDaysInCurrentMonth();
 
             const dailyLimit = state.manualDailyLimit || 0;
-            const monthlySpend = dailyLimit * 30;
+            const monthlySpend = dailyLimit * daysInMonth;
             const calcSavings = state.calculatedMonthlySavings !== undefined ? state.calculatedMonthlySavings : Math.max(0, netIncome - monthlySpend);
 
             document.getElementById('sumSavings').innerText = `₺${Math.floor(calcSavings).toLocaleString()}`;
@@ -1154,7 +1172,8 @@
             // Ama BES durumunda targetArray zaten assets yapıldı.
             // Tekrar eden eklemeyi engellemek için:
             
-            state[targetArray].push(itemObj);
+            // Yeni öğeyi en başa eklemek için unshift kullanıyoruz
+            state[targetArray].unshift(itemObj);
 
             saveToCloud();
             
@@ -1309,9 +1328,13 @@
 
             // DİĞER BORÇLAR
             let debtHTML = ''; 
-            state.loans.forEach((l, i) => {
+            // Kredileri sıralama büyükten küçüğe
+            const sortedLoans = [...state.loans].sort((a,b) => b.totalDebt - a.totalDebt);
+            sortedLoans.forEach((l) => {
+                // Orijinal indeksini bulmak için state.loans içinde arama yapıyoruz
+                const originalIndex = state.loans.indexOf(l);
                 const isExcluded = l.excludeFromDebt;
-                debtHTML += createRow(l.name + (isExcluded ? ' <span class="text-[8px] text-red-400 font-bold ml-1 bg-red-50 px-1 rounded">(Dahil Değil)</span>' : ''), l.totalDebt, 'loans', i, isExcluded ? 'opacity-50 grayscale cursor-pointer hover:bg-red-50' : 'cursor-pointer hover:bg-red-50', `onclick="showLoanPlan(${i})"`);
+                debtHTML += createRow(l.name + (isExcluded ? ' <span class="text-[8px] text-red-400 font-bold ml-1 bg-red-50 px-1 rounded">(Dahil Değil)</span>' : ''), l.totalDebt, 'loans', originalIndex, isExcluded ? 'opacity-50 grayscale cursor-pointer hover:bg-red-50' : 'cursor-pointer hover:bg-red-50', `onclick="showLoanPlan(${originalIndex})"`);
             }); 
             state.otherDebts.forEach((d, i) => {
                 const isExcluded = d.excludeFromDebt;
@@ -1320,6 +1343,9 @@
             
             // KREDİ KARTLARI AKORDİYONU
             const activeCards = state.debts.filter(d => !d.excludeFromDebt);
+            // Kartları borca göre sırala
+            activeCards.sort((a,b) => b.val - a.val);
+
             const totalCardDebt = activeCards.reduce((s,d)=>s+d.val,0); 
             if(totalCardDebt > 0 || state.debts.length > 0) { 
                 debtHTML += `
@@ -1335,7 +1361,7 @@
                         </div>
                     </div>
                     <div id="cardDetails" class="health-detail space-y-2 px-4 pb-4">
-                        ${state.debts.map((d, i) => createRow(d.name, d.val, 'debts', i, d.excludeFromDebt ? 'bg-gray-100 opacity-50 grayscale' : 'bg-white')).join('')}
+                        ${activeCards.map((d) => createRow(d.name, d.val, 'debts', state.debts.indexOf(d), 'bg-white')).join('')}
                     </div>
                 </div>`; 
             } 
@@ -1391,11 +1417,11 @@
                 if(type === 'loans') newItem = {name, totalDebt:val, monthly:0, totalMonths:1};
                 else if(type === 'debts') newItem = {name, val:val, calcMode: false};
                 
-                // BES Mantığı - Eğer kullanıcı "BES" veya "Emeklilik" eklerse otomatik sor
+                // BES Mantığı - Wizarddan çıkarıldı, burada manuel eklemede sorulacak
                 if(type === 'bills' && (name.toLowerCase().includes('bes') || name.toLowerCase().includes('emeklilik'))) {
                     const besTotal = prompt("Aylık ödeme yapıyorsunuz, peki içeride birikmiş toplam BES tutarınız ne kadar? (Varlıklarınıza eklenecek)");
                     if(besTotal) {
-                         state.assets.push({ 
+                         state.assets.unshift({ // unshift ile başa ekle
                              name: name.replace('Aylık','Toplam') + ' (Birikim)', 
                              val: parseFloat(besTotal)||0, 
                              excludeFromAsset: true 
@@ -1403,7 +1429,7 @@
                     }
                 }
 
-                state[type].push(newItem); 
+                state[type].unshift(newItem); // unshift ile başa ekle
                 saveToCloud(); updateDashboardUI(); 
             } 
         }
@@ -1507,6 +1533,7 @@
             renderWizard();
         }
         function wizardNext() { 
+            // WizardNext içindeki BES mantığı kaldırıldı çünkü artık sihirbazda sorulmuyor.
             if (state.step === 8) { if(document.getElementById('wizRegEmail')) registerFromWizard(); else { saveState(); showDashboard(); } return; } 
             state.step++; renderWizard(); 
         }
@@ -1534,13 +1561,11 @@
                 const grossNet = totalInc - totalFix;
                 const netIncome = grossNet - normalLoanPayments;
                 
-                // Büyük rakam üzerinden hesaplama (Brüt Net)
-                // Kullanıcının "Kalan net gelir 113" dediği rakam grossNet.
-                // "Kredileriniz ödendikten sonra: 107" dediği rakam netIncome.
-                // İşlemleri büyük rakama (grossNet) göre yapıyoruz.
-                
+                // Dinamik Gün Sayısı
+                const daysInMonth = getDaysInCurrentMonth();
+
                 state.remainingAfterFixed = grossNet; 
-                if(!state.manualDailyLimit) state.manualDailyLimit = Math.max(0, grossNet / 30); // Hesabı büyük rakamla başlat
+                if(!state.manualDailyLimit) state.manualDailyLimit = Math.max(0, grossNet / daysInMonth); // Gün sayısına böl
                 
                 content.innerHTML = `
                     <h3 class="text-2xl font-black mb-2">Bütçe Planı</h3>
@@ -1611,10 +1636,44 @@
         }
         
         function updateFromDailyLimitInput(v) { state.manualDailyLimit = parseFloat(v)||0; applyAllocationFromLimit(state.manualDailyLimit); }
-        function handleSliderChange(v) { const spend = state.remainingAfterFixed - ((state.remainingAfterFixed * v) / 100); document.getElementById('idealDailyLimitInput').value = Math.floor(spend / 30); updateFromDailyLimitInput(spend / 30); }
-        function applyAllocationFromLimit(daily) { const spend = daily * 30; const save = state.remainingAfterFixed - spend; document.getElementById('manualSavingsInput').value = Math.floor(save); document.getElementById('allocSpendingInput').value = Math.floor(spend); if(state.remainingAfterFixed > 0) document.getElementById('allocationSlider').value = (save / state.remainingAfterFixed) * 100; state.calculatedMonthlyPool = spend; state.calculatedMonthlySavings = save; }
-        function updateFromSavingsInput(v) { const save = parseFloat(v) || 0; const spend = state.remainingAfterFixed - save; document.getElementById('idealDailyLimitInput').value = Math.floor(spend / 30); document.getElementById('allocSpendingInput').value = Math.floor(spend); if(state.remainingAfterFixed > 0) document.getElementById('allocationSlider').value = (save / state.remainingAfterFixed) * 100; state.calculatedMonthlyPool = spend; state.calculatedMonthlySavings = save; state.manualDailyLimit = spend / 30; }
-        function updateFromSpendingInput(v) { const spend = parseFloat(v) || 0; const save = state.remainingAfterFixed - spend; document.getElementById('idealDailyLimitInput').value = Math.floor(spend / 30); document.getElementById('manualSavingsInput').value = Math.floor(save); if(state.remainingAfterFixed > 0) document.getElementById('allocationSlider').value = (save / state.remainingAfterFixed) * 100; state.calculatedMonthlyPool = spend; state.calculatedMonthlySavings = save; state.manualDailyLimit = spend / 30; }
+        function handleSliderChange(v) { 
+            const daysInMonth = getDaysInCurrentMonth();
+            const spend = state.remainingAfterFixed - ((state.remainingAfterFixed * v) / 100); 
+            document.getElementById('idealDailyLimitInput').value = Math.floor(spend / daysInMonth); 
+            updateFromDailyLimitInput(spend / daysInMonth); 
+        }
+        function applyAllocationFromLimit(daily) { 
+            const daysInMonth = getDaysInCurrentMonth();
+            const spend = daily * daysInMonth; 
+            const save = state.remainingAfterFixed - spend; 
+            document.getElementById('manualSavingsInput').value = Math.floor(save); 
+            document.getElementById('allocSpendingInput').value = Math.floor(spend); 
+            if(state.remainingAfterFixed > 0) document.getElementById('allocationSlider').value = (save / state.remainingAfterFixed) * 100; 
+            state.calculatedMonthlyPool = spend; 
+            state.calculatedMonthlySavings = save; 
+        }
+        function updateFromSavingsInput(v) { 
+            const daysInMonth = getDaysInCurrentMonth();
+            const save = parseFloat(v) || 0; 
+            const spend = state.remainingAfterFixed - save; 
+            document.getElementById('idealDailyLimitInput').value = Math.floor(spend / daysInMonth); 
+            document.getElementById('allocSpendingInput').value = Math.floor(spend); 
+            if(state.remainingAfterFixed > 0) document.getElementById('allocationSlider').value = (save / state.remainingAfterFixed) * 100; 
+            state.calculatedMonthlyPool = spend; 
+            state.calculatedMonthlySavings = save; 
+            state.manualDailyLimit = spend / daysInMonth; 
+        }
+        function updateFromSpendingInput(v) { 
+            const daysInMonth = getDaysInCurrentMonth();
+            const spend = parseFloat(v) || 0; 
+            const save = state.remainingAfterFixed - spend; 
+            document.getElementById('idealDailyLimitInput').value = Math.floor(spend / daysInMonth); 
+            document.getElementById('manualSavingsInput').value = Math.floor(save); 
+            if(state.remainingAfterFixed > 0) document.getElementById('allocationSlider').value = (save / state.remainingAfterFixed) * 100; 
+            state.calculatedMonthlyPool = spend; 
+            state.calculatedMonthlySavings = save; 
+            state.manualDailyLimit = spend / daysInMonth; 
+        }
         
         function removeItem(key, i) { state[key].splice(i, 1); renderWizardLists(); }
         function updateLoanData(i, f, v) { state.loans[i][f] = parseFloat(v)||0; const l = state.loans[i]; if(f==='monthly' && l.totalMonths>0) l.totalDebt = l.monthly*l.totalMonths; else if(f==='totalMonths' && l.monthly>0) l.totalDebt = l.monthly*l.totalMonths; else if(f==='totalDebt' && l.totalMonths>0) l.monthly = l.totalDebt/l.totalMonths; document.getElementById(`wiz_loan_t_${i}`).value = Math.ceil(l.totalDebt); }
@@ -1630,7 +1689,8 @@
             const netIncome = grossNet - normalLoanPayments;
             
             const daily = state.manualDailyLimit || 0;
-            const monthlySpend = daily * 30;
+            const daysInMonth = getDaysInCurrentMonth();
+            const monthlySpend = daily * daysInMonth;
             const savings = netIncome - monthlySpend;
 
             document.getElementById('calcModalContent').innerHTML = `
@@ -1651,6 +1711,7 @@
                     <div class="mt-4 p-4 bg-blue-50 rounded-2xl border border-blue-100 text-center">
                         <p class="text-[10px] font-bold text-blue-400 uppercase mb-1 tracking-widest">Günlük Harcama Limiti</p>
                         <p class="text-3xl font-black text-blue-700">₺${Math.floor(daily).toLocaleString()} <span class="text-xs font-bold text-blue-400">/ gün</span></p>
+                        <p class="text-[9px] text-gray-400 mt-1">(${daysInMonth} gün üzerinden hesaplandı)</p>
                     </div>
                 </div>`; 
             document.getElementById('calcModal').classList.remove('hidden'); 
