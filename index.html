@@ -47,18 +47,17 @@
 
     <div id="overlay" class="overlay fixed inset-0 z-40" onclick="closeDrawer()"></div>
     
-    <!-- Toast Bildirim -->
     <div id="saveIndicator" class="fixed bottom-4 right-4 bg-white px-4 py-2 rounded-full shadow-lg border border-gray-100 flex items-center gap-2 text-xs font-bold text-gray-500 opacity-0 transition-opacity duration-500 pointer-events-none z-50">
         <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> Kaydedildi
     </div>
 
     <!-- SIDE DRAWER (YAN PANEL - TÜM MODALLAR BURADA) -->
     <div id="sideDrawer" class="drawer fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-50 overflow-y-auto flex flex-col">
-        <div class="p-6 flex justify-between items-center border-b border-gray-100">
+        <div class="p-6 flex justify-between items-center border-b border-gray-100 sticky top-0 bg-white z-10">
             <h4 id="drawerTitle" class="font-black text-xl text-gray-800">Başlık</h4>
             <button onclick="closeDrawer()" class="w-8 h-8 flex items-center justify-center bg-gray-50 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"><i class="fas fa-times"></i></button>
         </div>
-        <div id="drawerContent" class="p-6 flex-1">
+        <div id="drawerContent" class="p-6 flex-1 overflow-y-auto pb-20">
             <!-- İçerik JS ile buraya dolacak -->
         </div>
     </div>
@@ -273,7 +272,7 @@
                             <select id="dashDebtType" onchange="handleInlineTypeChange('dashDebt')" class="w-full p-2.5 bg-white rounded-lg text-xs font-bold border border-gray-200 outline-none focus:ring-2 focus:ring-blue-100">
                                 <option value="Kredi">Kredi</option>
                                 <option value="Kredi Kartı">Kredi Kartı</option>
-                                <option value="Diğer">Diğer (Standart TL)</option>
+                                <option value="Diğer">Diğer</option>
                                 <option value="Altın">Altın</option>
                                 <option value="Döviz">Döviz</option>
                                 <option value="Gümüş">Gümüş</option>
@@ -355,6 +354,9 @@
             <div id="historyTable" class="mt-6 space-y-2"></div>
         </div>
     </div>
+
+    <!-- DÜZENLEME MODALI (Drawer Olarak Değil, Modal Olarak Kalsın İstemiştin Ama Taşma Yapıyor Dedin, Bunu Gizli Modal Yapıp İçini Drawer'a Aktaracağız) -->
+    <div id="editItemModal" class="hidden"></div> 
 
     <script>
         const firebaseConfig = {
@@ -826,6 +828,11 @@
             db.collection("users").doc(currentPlanId).get().then((doc) => {
                 if (doc.exists) {
                     state = doc.data();
+                    // Clean up null/zero values from default state that user didn't touch
+                    // We do this cleanup on load to keep UI clean
+                    if(state.incomes) state.incomes = state.incomes.filter(i => i.val !== null);
+                    if(state.bills) state.bills = state.bills.filter(b => b.val !== null);
+                    
                     if(!state.incomes) state.incomes = [];
                     if(!state.bills) state.bills = [];
                     if(!state.loans) state.loans = [];
@@ -841,7 +848,12 @@
         }
         function saveToCloud() {
             if(!currentUser || !currentPlanId) return Promise.resolve();
-            return db.collection("users").doc(currentPlanId).set(JSON.parse(JSON.stringify(state)), { merge: true }).then(() => {
+            // Clean up null values before saving
+            const cleanState = JSON.parse(JSON.stringify(state));
+            cleanState.incomes = cleanState.incomes.filter(i => i.val !== null && i.val !== 0);
+            cleanState.bills = cleanState.bills.filter(b => b.val !== null && b.val !== 0);
+            
+            return db.collection("users").doc(currentPlanId).set(cleanState, { merge: true }).then(() => {
                 const ind = document.getElementById('saveIndicator');
                 ind.style.opacity = '1'; setTimeout(() => ind.style.opacity = '0', 2000);
             });
@@ -1070,31 +1082,33 @@
         function renderDetailedHealthLists() { 
             const createRow = (name, amount, type, idx, extraClass='', onclickAttr='') => `<div ${onclickAttr} class="flex justify-between items-center p-3 rounded-xl text-xs font-bold text-gray-600 bg-gray-50 border border-gray-100 shadow-sm group ${extraClass}"><span>${name}</span><div class="flex items-center gap-3"><span class="font-black text-gray-800">₺${Math.floor(amount).toLocaleString()}</span><div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="event.stopPropagation(); openEditModal('${type}', ${idx})" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pen"></i></button>${idx !== 'total' ? `<button onclick="event.stopPropagation(); deleteHealthItem('${type}', ${idx})" class="text-red-300 hover:text-red-500"><i class="fas fa-trash"></i></button>` : ''}</div></div></div>`; 
             
-            const activeBills = state.bills.filter(b => !b.excludeFromDebt); 
+            const activeBills = state.bills.filter(b => b.val > 0 && !b.excludeFromDebt); 
             const totalBills = activeBills.reduce((s, b) => s + b.val, 0);
-            const billsHTML = state.bills.map((b, i) => createRow(b.name, b.val, 'bills', i, b.excludeFromDebt ? 'bg-gray-100 opacity-50 grayscale' : 'bg-white')).join('');
+            const billsHTML = activeBills.map((b) => createRow(b.name, b.val, 'bills', state.bills.indexOf(b), b.excludeFromDebt ? 'bg-gray-100 opacity-50 grayscale' : 'bg-white')).join('');
             const billsAccordion = `<div class="border border-blue-100 rounded-2xl overflow-hidden bg-blue-50/50 shadow-sm mb-6"><div onclick="document.getElementById('billsDetails').classList.toggle('open');" class="flex justify-between items-center p-4 cursor-pointer hover:bg-blue-100/50 transition-colors"><div class="flex items-center gap-3"><div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center"><i class="fas fa-file-invoice-dollar"></i></div><span class="text-sm font-black text-blue-900 uppercase tracking-wide">Aylık Sabit Giderler</span></div><div class="flex items-center gap-3"><span class="font-black text-blue-900 text-lg">₺${totalBills.toLocaleString()}</span><i class="fas fa-chevron-down text-blue-400"></i></div></div><div id="billsDetails" class="health-detail space-y-2 px-4 pb-4">${billsHTML || '<div class="text-xs text-gray-400 text-center py-2">Kayıtlı sabit gider yok.</div>'}<button onclick="addNewHealthItem('bills')" class="w-full py-3 text-xs font-bold text-blue-500 hover:text-blue-700 bg-white border border-dashed border-blue-200 rounded-xl transition-colors">+ Yeni Sabit Gider Ekle</button></div></div>`;
             document.getElementById('fixedExpensesSection').innerHTML = billsAccordion;
 
             let debtHTML = ''; 
             const sortedLoans = [...state.loans].sort((a,b) => b.totalDebt - a.totalDebt);
             sortedLoans.forEach((l) => {
-                const originalIndex = state.loans.indexOf(l);
-                const isExcluded = l.excludeFromDebt;
-                debtHTML += createRow(l.name + (isExcluded ? ' <span class="text-[8px] text-red-400 font-bold ml-1 bg-red-50 px-1 rounded">(Dahil Değil)</span>' : ''), l.totalDebt, 'loans', originalIndex, isExcluded ? 'opacity-50 grayscale cursor-pointer hover:bg-red-50' : 'cursor-pointer hover:bg-red-50', `onclick="openDrawer('Kredi Detayları', document.getElementById('loanPlanContent').innerHTML); showLoanPlan(${originalIndex});"`);
+                if (l.totalDebt > 0) {
+                    const originalIndex = state.loans.indexOf(l);
+                    const isExcluded = l.excludeFromDebt;
+                    debtHTML += createRow(l.name + (isExcluded ? ' <span class="text-[8px] text-red-400 font-bold ml-1 bg-red-50 px-1 rounded">(Dahil Değil)</span>' : ''), l.totalDebt, 'loans', originalIndex, isExcluded ? 'opacity-50 grayscale cursor-pointer hover:bg-red-50' : 'cursor-pointer hover:bg-red-50', `onclick="openDrawer('Kredi Detayları', document.getElementById('loanPlanContent').innerHTML); showLoanPlan(${originalIndex});"`);
+                }
             }); 
-            state.otherDebts.forEach((d, i) => { const isExcluded = d.excludeFromDebt; debtHTML += createRow(d.name, d.val, 'otherDebts', i, isExcluded ? 'opacity-50 grayscale' : ''); }); 
+            state.otherDebts.filter(d => d.val > 0).forEach((d) => { const isExcluded = d.excludeFromDebt; debtHTML += createRow(d.name, d.val, 'otherDebts', state.otherDebts.indexOf(d), isExcluded ? 'opacity-50 grayscale' : ''); }); 
             
-            const activeCards = state.debts.filter(d => !d.excludeFromDebt);
+            const activeCards = state.debts.filter(d => d.val > 0 && !d.excludeFromDebt);
             activeCards.sort((a,b) => b.val - a.val);
             const totalCardDebt = activeCards.reduce((s,d)=>s+d.val,0); 
             if(totalCardDebt > 0 || state.debts.length > 0) { 
-                debtHTML += `<div class="border border-purple-100 rounded-2xl overflow-hidden bg-purple-50/50 shadow-sm mt-4"><div onclick="document.getElementById('cardDetails').classList.toggle('open');" class="flex justify-between items-center p-4 cursor-pointer hover:bg-purple-100/50 transition-colors"><div class="flex items-center gap-3"><div class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center"><i class="fas fa-credit-card"></i></div><span class="text-xs font-black text-purple-900 uppercase tracking-wide">Kredi Kartları Toplamı</span></div><div class="flex items-center gap-3"><span class="font-black text-purple-900 text-lg">₺${totalCardDebt.toLocaleString()}</span><i class="fas fa-chevron-down text-purple-400"></i></div></div><div id="cardDetails" class="health-detail space-y-2 px-4 pb-4">${state.debts.map((d) => createRow(d.name, d.val, 'debts', state.debts.indexOf(d), 'bg-white')).join('')}</div></div>`; 
+                debtHTML += `<div class="border border-purple-100 rounded-2xl overflow-hidden bg-purple-50/50 shadow-sm mt-4"><div onclick="document.getElementById('cardDetails').classList.toggle('open');" class="flex justify-between items-center p-4 cursor-pointer hover:bg-purple-100/50 transition-colors"><div class="flex items-center gap-3"><div class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center"><i class="fas fa-credit-card"></i></div><span class="text-xs font-black text-purple-900 uppercase tracking-wide">Kredi Kartları Toplamı</span></div><div class="flex items-center gap-3"><span class="font-black text-purple-900 text-lg">₺${totalCardDebt.toLocaleString()}</span><i class="fas fa-chevron-down text-purple-400"></i></div></div><div id="cardDetails" class="health-detail space-y-2 px-4 pb-4">${activeCards.map((d) => createRow(d.name, d.val, 'debts', state.debts.indexOf(d), 'bg-white')).join('')}</div></div>`; 
             } 
             document.getElementById('detailedDebtsList').innerHTML = debtHTML || '<span class="text-gray-300 text-xs">Kayıtlı borç yok</span>'; 
             
             // Assets Sorted
-            const sortedAssets = [...state.assets].sort((a,b) => b.val - a.val);
+            const sortedAssets = [...state.assets].filter(a => a.val > 0).sort((a,b) => b.val - a.val);
             let assetHTML = sortedAssets.map((a) => {
                 const i = state.assets.indexOf(a);
                 const isExcluded = a.excludeFromAsset;
@@ -1125,28 +1139,10 @@
 
         function openEditModal(type, index) { 
             const item = state[type][index]; 
-            document.getElementById('editItemName').value = item.name; 
-            document.getElementById('editItemVal').value = item.val || item.totalDebt || 0; 
-            const cb = document.getElementById('editIncludeCalc');
-            if (type === 'assets') cb.checked = !item.excludeFromAsset;
-            else if (type === 'loans') cb.checked = !item.excludeFromDebt;
-            else cb.checked = !item.excludeFromDebt;
-
-            if(type === 'loans') {
-                document.getElementById('editLoanFields').classList.remove('hidden');
-                document.getElementById('editLoanMonths').value = item.totalMonths || 12;
-                document.getElementById('editLoanPayDay').value = item.paymentDay || (state.salaryDay || 15);
-            } else {
-                document.getElementById('editLoanFields').classList.add('hidden');
-            }
-            
-            // Drawer kullan
-            const content = document.getElementById('editItemModal').innerHTML; // İçeriği al
-            // Ama modal yapısı farklı olduğu için drawer içeriğine manuel build etmemiz daha temiz:
-            // Basitçe modalı açalım, zaten drawer mantığına geçtik ama mevcut modal yapısını drawer içine taşımak uzun iş, modalı drawer gibi gösterebiliriz veya modal olarak bırakabiliriz.
-            // İsteğine göre "Drawer" olarak açılmalı.
-            
+            // Use Drawer instead of Modal
+            const cbChecked = ((type==='assets' && !item.excludeFromAsset) || (type!=='assets' && !item.excludeFromDebt));
             let extraFields = '';
+            
             if(type === 'loans') {
                 extraFields = `
                 <div class="mb-4 space-y-2">
@@ -1155,19 +1151,19 @@
                 </div>`;
             }
             
-            const drawerHTML = `
+            const content = `
                 <div class="space-y-4">
                     <input type="text" id="drawerEditName" class="w-full p-3 bg-gray-50 rounded-xl font-bold text-sm" value="${item.name}">
                     <input type="number" id="drawerEditVal" class="w-full p-3 bg-gray-50 rounded-xl font-bold text-sm" value="${item.val||item.totalDebt||0}">
                     ${extraFields}
                     <div class="flex items-center gap-2 justify-center py-2">
-                        <input type="checkbox" id="drawerEditInclude" class="w-4 h-4 text-blue-600 rounded" ${((type==='assets' && !item.excludeFromAsset) || (type!=='assets' && !item.excludeFromDebt)) ? 'checked' : ''}>
+                        <input type="checkbox" id="drawerEditInclude" class="w-4 h-4 text-blue-600 rounded" ${cbChecked ? 'checked' : ''}>
                         <label for="drawerEditInclude" class="text-xs font-bold text-gray-600">Hesaplamaya Dahil Et</label>
                     </div>
                     <button onclick="saveDrawerEdit('${type}', ${index})" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl">Kaydet</button>
                 </div>
             `;
-            openDrawer('Düzenle', drawerHTML);
+            openDrawer('Düzenle', content);
         }
 
         function saveDrawerEdit(type, idx) {
