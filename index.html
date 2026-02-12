@@ -146,7 +146,10 @@
                 <div class="relative z-10">
                     <div class="flex justify-between items-start mb-6">
                         <div>
-                            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1 opacity-80">Bugünün Limiti</p>
+                            <div class="flex items-center gap-2 mb-1">
+                                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest opacity-80">Bugünün Limiti</p>
+                                <button onclick="openCalcModal()" class="text-blue-300 hover:text-white text-[9px] font-bold underline decoration-dashed underline-offset-2 transition-colors cursor-pointer relative z-20">Nasıl Hesaplandı?</button>
+                            </div>
                             <h2 id="displayDailyLimit" class="text-6xl font-black tracking-tighter leading-none">₺0</h2>
                         </div>
                         <div class="text-right">
@@ -1306,7 +1309,33 @@
         function removeItem(key, i) { state[key].splice(i, 1); renderWizardLists(); }
         function updateLoanData(i, f, v) { state.loans[i][f] = parseFloat(v)||0; const l = state.loans[i]; if(f==='monthly' && l.totalMonths>0) l.totalDebt = l.monthly*l.totalMonths; else if(f==='totalMonths' && l.monthly>0) l.totalDebt = l.monthly*l.totalMonths; else if(f==='totalDebt' && l.totalMonths>0) l.monthly = l.totalDebt/l.totalMonths; document.getElementById(`wiz_loan_t_${i}`).value = Math.ceil(l.totalDebt); }
         
-        function openCalcModal() { const totalInc = state.incomes.reduce((s, i) => s + (i.val||0), 0); const totalFix = state.bills.reduce((s, b) => s + (b.val||0), 0); const loanPayments = state.loans.filter(l => !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0); document.getElementById('calcModalContent').innerHTML = `<div class="flex justify-between font-bold text-green-600 bg-green-50 p-2 rounded-lg"><span>Gelirler:</span><span>+ ₺${totalInc.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div><div class="flex justify-between text-red-500 text-xs px-2"><span>Sabit Giderler:</span><span>- ₺${totalFix.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div><div class="flex justify-between text-red-500 text-xs px-2"><span>Dahil Edilen Krediler:</span><span>- ₺${loanPayments.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div><div class="border-t pt-4 font-black text-blue-600 text-2xl mt-2">KALAN NET: ₺${(state.remainingAfterFixed||0).toLocaleString(undefined, {maximumFractionDigits:0})}</div><p class="text-[10px] text-gray-400 mt-2">Bu tutar üzerinden birikim ve harcama limitiniz belirlenir.</p>`; document.getElementById('calcModal').classList.remove('hidden'); document.getElementById('overlay').classList.add('active'); }
+        function openCalcModal() { 
+            const totalInc = state.incomes.reduce((s, i) => s + (i.val||0), 0); 
+            const totalFix = state.bills.reduce((s, b) => s + (b.val||0), 0); 
+            const loanPayments = state.loans.filter(l => !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0); 
+            const netIncome = totalInc - totalFix - loanPayments;
+            const daily = state.manualDailyLimit || 0;
+            const monthlySpend = daily * 30;
+            const savings = netIncome - monthlySpend;
+
+            document.getElementById('calcModalContent').innerHTML = `
+                <div class="space-y-3 text-left">
+                    <div class="flex justify-between font-bold text-green-700 bg-green-50 p-3 rounded-xl border border-green-100"><span>Toplam Gelir:</span><span>+ ₺${totalInc.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                    <div class="flex justify-between text-red-500 text-xs px-3 font-bold"><span>Sabit Giderler:</span><span>- ₺${totalFix.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                    <div class="flex justify-between text-red-500 text-xs px-3 font-bold"><span>Aylık Krediler:</span><span>- ₺${loanPayments.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                    <div class="border-t border-gray-100 my-2"></div>
+                    <div class="flex justify-between font-black text-gray-800 text-lg px-3"><span>Kalan Net Gelir:</span><span>₺${Math.floor(netIncome).toLocaleString()}</span></div>
+                    <div class="border-t border-gray-100 my-2"></div>
+                    <div class="flex justify-between text-green-600 text-sm px-3 font-bold"><span>Aylık Birikim:</span><span>₺${Math.floor(savings).toLocaleString()}</span></div>
+                    <div class="flex justify-between text-blue-500 text-sm px-3 font-bold"><span>Aylık Harcama Bütçesi:</span><span>₺${Math.floor(monthlySpend).toLocaleString()}</span></div>
+                    <div class="mt-4 p-4 bg-blue-50 rounded-2xl border border-blue-100 text-center">
+                        <p class="text-[10px] font-bold text-blue-400 uppercase mb-1 tracking-widest">Günlük Harcama Limiti</p>
+                        <p class="text-3xl font-black text-blue-700">₺${Math.floor(daily).toLocaleString()} <span class="text-xs font-bold text-blue-400">/ gün</span></p>
+                    </div>
+                </div>`; 
+            document.getElementById('calcModal').classList.remove('hidden'); 
+            document.getElementById('overlay').classList.add('active'); 
+        }
         function closeCalcModal() { document.getElementById('calcModal').classList.add('hidden'); document.getElementById('overlay').classList.remove('active'); }
         function closeAllPopups() { 
             document.getElementById('overlay').classList.remove('active'); 
