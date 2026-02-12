@@ -29,6 +29,12 @@
         
         .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .health-detail { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .health-detail.open { max-height: 1000px; transition: max-height 0.5s ease-in; }
+        
+        .fade-text { animation: textFade 0.5s ease-in-out; }
+        @keyframes textFade { 0% { opacity: 0; } 100% { opacity: 1; } }
     </style>
 </head>
 <body class="min-h-screen p-4 flex flex-col items-center justify-center bg-slate-50">
@@ -199,8 +205,8 @@
         </div>
 
         <div class="glass-card p-10 rounded-[3rem] shadow-xl bg-white border border-gray-100">
-            <h3 class="font-black text-xl text-gray-800 uppercase tracking-widest text-[11px] mb-4">Son İşlemler</h3>
-            <div id="historyList" class="space-y-3 pb-4 max-h-60 overflow-y-auto custom-scrollbar pr-1"></div>
+            <h3 class="font-black text-xl text-gray-800 uppercase tracking-widest text-[11px] mb-4">Son İşlemler (Tarihe Göre)</h3>
+            <div id="historyList" class="pb-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2"></div>
         </div>
 
         <div id="financialHealthSection" class="glass-card p-10 rounded-[3rem] space-y-8 bg-white border border-blue-50 shadow-xl">
@@ -210,12 +216,10 @@
                 <div id="netStatusBadge" class="text-4xl font-black text-gray-800 px-8 py-4 bg-gray-50 rounded-[2rem] transition-colors">
                     <span id="netStatusVal">₺0</span>
                 </div>
-                
-                <div class="flex items-center gap-6 mt-6">
-                    <div class="text-center"><span class="text-[10px] font-bold text-gray-500 uppercase">Borç Endeksi</span><br><span id="sumSalaryMult" class="text-lg font-black text-indigo-600">0.0x</span></div>
-                    <div class="text-center"><span class="text-[10px] font-bold text-gray-500 uppercase">Aylık Sabit Gider</span><br><span id="sumGiderTotal" class="text-lg font-black text-red-600">₺0</span></div>
-                </div>
             </div>
+
+            <!-- SABİT GİDERLER AKORDİYONU -->
+            <div id="fixedExpensesSection" class="w-full mb-8"></div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <!-- BORÇLAR -->
@@ -260,10 +264,10 @@
                         <div id="inlineAdddashAssetContainer" class="hidden mt-2 p-4 border border-green-100 bg-green-50/50 rounded-xl space-y-3 shadow-inner">
                             <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Varlık Türü</label>
                             <select id="dashAssetType" onchange="handleInlineTypeChange('dashAsset')" class="w-full p-2.5 bg-white rounded-lg text-xs font-bold border border-gray-200 outline-none focus:ring-2 focus:ring-blue-100">
+                                <option value="Diğer">Diğer (Standart TL)</option>
                                 <option value="Altın">Altın</option>
                                 <option value="Döviz">Döviz</option>
                                 <option value="Gümüş">Gümüş</option>
-                                <option value="Diğer">Diğer</option>
                             </select>
                             <div id="dashAssetFields" class="space-y-2"></div>
                             <div class="flex gap-2 pt-2">
@@ -492,11 +496,16 @@
             if(!emailInp || !pass) return alert("Alanları doldurun.");
             const btn = document.getElementById('loginBtn');
             const orig = btn.innerHTML; btn.innerHTML = '<div class="loader"></div>';
+            
             try {
                 let email = emailInp;
                 if (!email.includes('@')) {
                     const s = await db.collection('users').where('username', '==', email.toLowerCase()).limit(1).get();
-                    if (s.empty) throw new Error("Kayıt bulunamadı.");
+                    if (s.empty) {
+                        alert("Bu kullanıcı adına ait bir hesap bulunamadı. Lütfen e-posta adresinizi deneyin.");
+                        btn.innerHTML = orig;
+                        return;
+                    }
                     email = s.docs[0].data().email;
                 }
                 await auth.signInWithEmailAndPassword(email, pass);
@@ -718,7 +727,6 @@
             db.collection("users").doc(currentPlanId).get().then((doc) => {
                 if (doc.exists) {
                     state = doc.data();
-                    // Eksik dizi hatasını önlemek için güvenlik kontrolü (CRITICAL FIX)
                     if(!state.incomes) state.incomes = [];
                     if(!state.bills) state.bills = [];
                     if(!state.loans) state.loans = [];
@@ -791,9 +799,6 @@
             const net = assets - totalDebt;
             const inc = state.incomes.reduce((s,i)=>s+(i.val||0),0);
 
-            document.getElementById('sumSalaryMult').innerText = inc>0 ? (totalDebt/inc).toFixed(1)+' Maaş' : '0x';
-            document.getElementById('sumSavings').innerText = `₺${Math.floor(state.calculatedMonthlySavings||0).toLocaleString()}`;
-            document.getElementById('sumGiderTotal').innerText = `₺${Math.floor(state.calculatedMonthlyPool||0).toLocaleString()}`;
             document.getElementById('netStatusVal').innerText = `${net>=0?'+':'-'}₺${Math.abs(Math.floor(net)).toLocaleString()}`;
             document.getElementById('netStatusBadge').className = `text-4xl font-black px-8 py-4 rounded-[2rem] ${net>=0?'text-green-600 bg-green-50':'text-red-600 bg-red-50'}`;
 
@@ -816,6 +821,10 @@
             if (container.classList.contains('hidden')) {
                 container.classList.remove('hidden');
                 btn.classList.add('hidden');
+                
+                if (prefix === 'dashDebt') document.getElementById(`${prefix}Type`).value = 'Kredi';
+                if (prefix === 'dashAsset') document.getElementById(`${prefix}Type`).value = 'Diğer';
+                
                 handleInlineTypeChange(prefix);
             }
         }
@@ -922,7 +931,7 @@
             const rateInput = document.getElementById(`${prefix}_rate`);
             if(!rateInput) return;
 
-            rateInput.placeholder = "Yükleniyor...";
+            rateInput.placeholder = "Kur Çekiliyor...";
             try {
                 const res = await fetch('https://finans.truncgil.com/today.json');
                 const data = await res.json();
@@ -932,8 +941,10 @@
                     let rate = parseFloat(rateStr.toString().replace(/\./g, '').replace(',', '.'));
                     rateInput.value = rate;
                     calcInlineMarket(prefix);
-                } else rateInput.placeholder = "Manuel Giriniz";
-            } catch(e) { rateInput.placeholder = "Manuel Giriniz"; }
+                } else {
+                    rateInput.placeholder = "Manuel Girin";
+                }
+            } catch(e) { rateInput.placeholder = "Manuel Girin"; }
         }
 
         function saveInlineAdd(prefix) {
@@ -1036,36 +1047,109 @@
         function renderHistoryList() {
             const list = document.getElementById('historyList');
             if(!list) return;
-            if(state.expenses.length === 0) return list.innerHTML = '<div class="text-center text-gray-400 text-xs">Harcama yok.</div>';
+            if(state.expenses.length === 0) { list.innerHTML = '<div class="text-center text-gray-400 text-xs">Harcama yok.</div>'; return; }
             
             const myName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Ben';
-            list.innerHTML = state.expenses.map((e, idx) => {
-                const canEdit = currentUserRole === 'owner' || currentUserRole === 'full' || e.addedBy === myName || e.addedBy === 'Ben';
-                return `
-                <div class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-xl mb-2 hover:bg-gray-50 transition-colors group">
-                    <div><p class="font-bold text-gray-800 text-xs">${e.desc}</p><p class="text-[10px] text-gray-400">${e.date} • ${e.addedBy}</p></div>
-                    <div class="flex items-center gap-3"><span class="font-black text-red-500 text-sm">-₺${Math.floor(e.amount).toLocaleString()}</span>
-                    ${canEdit ? `<div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="editExpense(${idx})" class="text-blue-300 hover:text-blue-500"><i class="fas fa-pen"></i></button><button onclick="deleteExpense(${idx})" class="text-gray-200 hover:text-red-500"><i class="fas fa-trash-alt"></i></button></div>` : ''}
-                    </div>
-                </div>`;
-            }).join('');
+            
+            // Tarihe göre grupla
+            const grouped = {};
+            state.expenses.forEach((e, idx) => {
+                if(!grouped[e.date]) grouped[e.date] = [];
+                grouped[e.date].push({ ...e, originalIndex: idx });
+            });
+
+            let html = '';
+            for(const date in grouped) {
+                html += `
+                <div class="mb-4">
+                    <h5 class="text-[10px] font-bold text-gray-400 border-b border-gray-100 pb-1 mb-2">${date}</h5>
+                    <div class="space-y-2">`;
+                
+                grouped[date].forEach(e => {
+                    const canEdit = currentUserRole === 'owner' || currentUserRole === 'full' || e.addedBy === myName || e.addedBy === 'Ben';
+                    html += `
+                        <div class="flex justify-between items-center p-3 bg-white border border-gray-50 rounded-xl hover:bg-gray-50 transition-colors shadow-sm group">
+                            <div><p class="font-bold text-gray-800 text-xs">${e.desc}</p><p class="text-[9px] text-gray-400">${e.addedBy}</p></div>
+                            <div class="flex items-center gap-3"><span class="font-black text-red-500 text-sm">-₺${Math.floor(e.amount).toLocaleString()}</span>
+                            ${canEdit ? `<div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="editExpense(${e.originalIndex})" class="text-blue-300 hover:text-blue-500"><i class="fas fa-pen"></i></button><button onclick="deleteExpense(${e.originalIndex})" class="text-gray-200 hover:text-red-500"><i class="fas fa-trash-alt"></i></button></div>` : ''}
+                            </div>
+                        </div>`;
+                });
+                html += `</div></div>`;
+            }
+            list.innerHTML = html;
         }
 
         function renderDetailedHealthLists() { 
             const createRow = (name, amount, type, idx, extraClass='') => `<div class="flex justify-between items-center p-3 rounded-xl text-xs font-bold text-gray-600 bg-gray-50 border border-gray-100 shadow-sm group ${extraClass}"><span>${name}</span><div class="flex items-center gap-3"><span class="font-black text-gray-800">₺${Math.floor(amount).toLocaleString()}</span><div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="openEditModal('${type}', ${idx})" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pen"></i></button>${idx !== 'total' ? `<button onclick="deleteHealthItem('${type}', ${idx})" class="text-red-300 hover:text-red-500"><i class="fas fa-trash"></i></button>` : ''}</div></div></div>`; 
+            
+            // SABİT GİDERLER (BILLS)
+            const totalBills = state.bills.reduce((s, b) => s + (b.val || 0), 0);
+            const billsHTML = state.bills.map((b, i) => createRow(b.name, b.val, 'bills', i, 'bg-white')).join('');
+            const billsAccordion = `
+            <div class="border border-blue-100 rounded-2xl overflow-hidden bg-blue-50/50 shadow-sm mb-6">
+                <div onclick="document.getElementById('billsDetails').classList.toggle('open');" class="flex justify-between items-center p-4 cursor-pointer hover:bg-blue-100/50 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center"><i class="fas fa-file-invoice-dollar"></i></div>
+                        <span class="text-sm font-black text-blue-900 uppercase tracking-wide">Aylık Sabit Giderler</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-black text-blue-900 text-lg">₺${totalBills.toLocaleString()}</span>
+                        <i class="fas fa-chevron-down text-blue-400"></i>
+                    </div>
+                </div>
+                <div id="billsDetails" class="health-detail space-y-2 px-4 pb-4">
+                    ${billsHTML || '<div class="text-xs text-gray-400 text-center py-2">Kayıtlı sabit gider yok.</div>'}
+                    <button onclick="addNewHealthItem('bills')" class="w-full py-3 text-xs font-bold text-blue-500 hover:text-blue-700 bg-white border border-dashed border-blue-200 rounded-xl transition-colors">+ Yeni Sabit Gider Ekle</button>
+                </div>
+            </div>`;
+            document.getElementById('fixedExpensesSection').innerHTML = billsAccordion;
+
+            // DİĞER BORÇLAR
             let debtHTML = ''; 
             state.loans.forEach((l, i) => debtHTML += createRow(l.name, l.totalDebt, 'loans', i)); 
             state.otherDebts.forEach((d, i) => debtHTML += createRow(d.name, d.val, 'otherDebts', i)); 
+            
+            // KREDİ KARTLARI AKORDİYONU
             const totalCardDebt = state.debts.reduce((s,d)=>s+(d.val||0),0); 
             if(totalCardDebt > 0 || state.debts.length > 0) { 
-                debtHTML += `<div class="border border-purple-100 rounded-xl overflow-hidden bg-purple-50/30"><div onclick="document.getElementById('cardDetails').classList.toggle('open');" class="flex justify-between items-center p-3 cursor-pointer"><div class="flex items-center gap-2"><i class="fas fa-chevron-down text-purple-400"></i> <span class="text-xs font-bold text-purple-800">Kredi Kartları Toplam</span></div><span class="font-black text-purple-900 text-sm">₺${totalCardDebt.toLocaleString()}</span></div><div id="cardDetails" class="health-detail space-y-1 px-2 pb-2">${state.debts.map((d, i) => createRow(d.name, d.val, 'debts', i, 'bg-white')).join('')}</div></div>`; 
+                debtHTML += `
+                <div class="border border-purple-100 rounded-2xl overflow-hidden bg-purple-50/50 shadow-sm mt-4">
+                    <div onclick="document.getElementById('cardDetails').classList.toggle('open');" class="flex justify-between items-center p-4 cursor-pointer hover:bg-purple-100/50 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center"><i class="fas fa-credit-card"></i></div>
+                            <span class="text-xs font-black text-purple-900 uppercase tracking-wide">Kredi Kartları Toplamı</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="font-black text-purple-900 text-lg">₺${totalCardDebt.toLocaleString()}</span>
+                            <i class="fas fa-chevron-down text-purple-400"></i>
+                        </div>
+                    </div>
+                    <div id="cardDetails" class="health-detail space-y-2 px-4 pb-4">
+                        ${state.debts.map((d, i) => createRow(d.name, d.val, 'debts', i, 'bg-white')).join('')}
+                    </div>
+                </div>`; 
             } 
             document.getElementById('detailedDebtsList').innerHTML = debtHTML || '<span class="text-gray-300 text-xs">Kayıtlı borç yok</span>'; 
             
+            // VARLIKLAR
             let assetHTML = state.assets.map((a, i) => createRow(a.name, a.val, 'assets', i)).join(''); 
             document.getElementById('detailedAssetsList').innerHTML = assetHTML || '<span class="text-gray-300 text-xs">Kayıtlı varlık yok</span>'; 
         }
 
+        function addNewHealthItem(type) { 
+            const name = prompt("Yeni Kalem Adı:"); 
+            if(name) { 
+                const val = parseFloat(prompt("Tutar:")) || 0; 
+                let newItem = {name, val:val};
+                if(type === 'loans') newItem = {name, totalDebt:val, monthly:0, totalMonths:1};
+                else if(type === 'debts') newItem = {name, val:val, calcMode: false};
+                
+                state[type].push(newItem); 
+                saveToCloud(); updateDashboardUI(); 
+            } 
+        }
+        
         function openEditModal(type, index) { 
             const item = state[type][index]; 
             document.getElementById('editItemName').value = item.name; 
@@ -1151,7 +1235,7 @@
                 } else if (state.step === 5) {
                     content.innerHTML += `<button id="btnShowwiz_debtForm" onclick="toggleInlineAdd('wiz_debt')" class="w-full py-3 border-2 border-dashed border-red-200 rounded-2xl text-red-500 font-bold">+ Yeni Borç Ekle (Altın, Döviz vb.)</button><div id="inlineAddwiz_debtContainer" class="hidden p-4 border border-red-100 bg-red-50 rounded-xl space-y-3"><select id="wiz_debtType" onchange="handleInlineTypeChange('wiz_debt')" class="w-full p-2.5 bg-white rounded-lg text-xs font-bold border border-gray-200 outline-none"><option value="Altın">Altın</option><option value="Döviz">Döviz</option><option value="Gümüş">Gümüş</option><option value="Diğer">Diğer</option></select><div id="wiz_debtFields" class="space-y-2"></div><div class="flex gap-2"><button onclick="cancelInlineAdd('wiz_debt')" class="flex-1 py-2 bg-white text-gray-600 rounded-lg text-xs font-bold border">İptal</button><button onclick="saveInlineAdd('wiz_debt')" class="flex-1 py-2 bg-red-500 text-white rounded-lg text-xs font-black">Ekle</button></div></div>`;
                 } else if (state.step === 6) {
-                    content.innerHTML += `<button id="btnShowwiz_assetForm" onclick="toggleInlineAdd('wiz_asset')" class="w-full py-3 border-2 border-dashed border-green-200 rounded-2xl text-green-500 font-bold">+ Yeni Varlık Ekle (Altın, Döviz vb.)</button><div id="inlineAddwiz_assetContainer" class="hidden p-4 border border-green-100 bg-green-50 rounded-xl space-y-3"><select id="wiz_assetType" onchange="handleInlineTypeChange('wiz_asset')" class="w-full p-2.5 bg-white rounded-lg text-xs font-bold border border-gray-200 outline-none"><option value="Altın">Altın</option><option value="Döviz">Döviz</option><option value="Gümüş">Gümüş</option><option value="Diğer">Diğer</option></select><div id="wiz_assetFields" class="space-y-2"></div><div class="flex gap-2"><button onclick="cancelInlineAdd('wiz_asset')" class="flex-1 py-2 bg-white text-gray-600 rounded-lg text-xs font-bold border">İptal</button><button onclick="saveInlineAdd('wiz_asset')" class="flex-1 py-2 bg-green-500 text-white rounded-lg text-xs font-black">Ekle</button></div></div>`;
+                    content.innerHTML += `<button id="btnShowwiz_assetForm" onclick="toggleInlineAdd('wiz_asset')" class="w-full py-3 border-2 border-dashed border-green-200 rounded-2xl text-green-500 font-bold">+ Yeni Varlık Ekle (Altın, Döviz vb.)</button><div id="inlineAddwiz_assetContainer" class="hidden p-4 border border-green-100 bg-green-50 rounded-xl space-y-3"><select id="wiz_assetType" onchange="handleInlineTypeChange('wiz_asset')" class="w-full p-2.5 bg-white rounded-lg text-xs font-bold border border-gray-200 outline-none"><option value="Diğer">Diğer (Standart TL)</option><option value="Altın">Altın</option><option value="Döviz">Döviz</option><option value="Gümüş">Gümüş</option></select><div id="wiz_assetFields" class="space-y-2"></div><div class="flex gap-2"><button onclick="cancelInlineAdd('wiz_asset')" class="flex-1 py-2 bg-white text-gray-600 rounded-lg text-xs font-bold border">İptal</button><button onclick="saveInlineAdd('wiz_asset')" class="flex-1 py-2 bg-green-500 text-white rounded-lg text-xs font-black">Ekle</button></div></div>`;
                 } else {
                      content.innerHTML += `<button onclick="addSimpleWizItem('${key}', 'wiz_${key}_list')" class="w-full py-3 border-2 border-dashed border-${colors[state.step]}-200 rounded-2xl text-${colors[state.step]}-500 font-bold mt-4">+ Kalem Ekle</button>`;
                 }
