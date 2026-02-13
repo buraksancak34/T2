@@ -26,6 +26,7 @@
         .opacity-50 { opacity: 0.5; }
         .grayscale { filter: grayscale(100%); }
         
+        /* Drawer (Yan Panel) Animasyonları */
         .drawer { transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .drawer.open { transform: translateX(0); }
 
@@ -34,6 +35,12 @@
         
         .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .health-detail { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .health-detail.open { max-height: 2000px; transition: max-height 0.5s ease-in; }
+        
+        .fade-text { animation: textFade 0.8s ease-in-out; }
+        @keyframes textFade { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 1; } }
     </style>
 </head>
 <body class="min-h-screen p-4 flex flex-col items-center justify-center bg-slate-50">
@@ -44,16 +51,18 @@
         <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> Kaydedildi
     </div>
 
-    <!-- SIDE DRAWER -->
+    <!-- SIDE DRAWER (YAN PANEL - TÜM MODALLAR BURADA) -->
     <div id="sideDrawer" class="drawer fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-50 overflow-y-auto flex flex-col">
         <div class="p-6 flex justify-between items-center border-b border-gray-100 sticky top-0 bg-white z-10">
             <h4 id="drawerTitle" class="font-black text-xl text-gray-800">Başlık</h4>
             <button onclick="closeDrawer()" class="w-8 h-8 flex items-center justify-center bg-gray-50 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"><i class="fas fa-times"></i></button>
         </div>
-        <div id="drawerContent" class="p-6 flex-1 overflow-y-auto pb-20"></div>
+        <div id="drawerContent" class="p-6 flex-1 overflow-y-auto pb-20">
+            <!-- İçerik JS ile buraya dolacak -->
+        </div>
     </div>
 
-    <!-- GİRİŞ EKRANI -->
+    <!-- 1. GİRİŞ EKRANI -->
     <div id="loginScreen" class="max-w-md w-full glass-card p-10 rounded-[2.5rem] shadow-2xl space-y-6 my-auto relative overflow-hidden animate-fade-in">
         <div class="text-center">
             <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-blue-600 shadow-sm transform hover:rotate-12 transition-transform duration-300">
@@ -109,7 +118,7 @@
         </div>
     </div>
 
-    <!-- WIZARD -->
+    <!-- 2. SİHİRBAZ (WIZARD) -->
     <div id="wizardScreen" class="max-w-xl w-full glass-card p-8 rounded-[2.5rem] shadow-2xl hidden space-y-6 my-auto relative animate-fade-in">
         <div class="flex justify-between items-center mb-4">
             <div id="wizardProgress" class="flex gap-1 flex-1 mr-4"></div>
@@ -122,7 +131,7 @@
         </div>
     </div>
 
-    <!-- DASHBOARD -->
+    <!-- 3. DASHBOARD -->
     <div id="dashboardScreen" class="max-w-4xl w-full hidden space-y-8 pb-32 animate-fade-in">
         
         <div id="inviteBanner" class="hidden bg-indigo-600 text-white p-4 rounded-3xl shadow-lg flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -882,8 +891,7 @@
         async function fetchInlineRate(p, t) { const sI = document.getElementById(`${p}_sub`); const s = sI ? sI.value : t; const rI = document.getElementById(`${p}_rate`); if(!rI) return; rI.placeholder = "Kur çekiliyor..."; try { const res = await fetch('https://finans.truncgil.com/today.json'); const data = await res.json(); let rD = data[apiMap[s]]; if(rD) { let r = parseFloat((rD.Alış || rD.Satış).toString().replace(/\./g, '').replace(',', '.')); rI.value = r; calcInlineMarket(p); } else rI.placeholder = "Manuel Girin"; } catch(e) { rI.placeholder = "Manuel Girin"; } }
 
         function saveInlineAdd(prefix) {
-            const typeEl = document.getElementById(`${prefix}Type`);
-            const type = typeEl ? typeEl.value : 'Diğer';
+            const type = document.getElementById(`${prefix}Type`).value;
             let finalVal = 0; let finalName = document.getElementById(`${prefix}_name`) ? document.getElementById(`${prefix}_name`).value.trim() : '';
             let targetArray = 'otherDebts';
             if (prefix.includes('Asset') || prefix.includes('asset')) targetArray = 'assets';
@@ -926,9 +934,7 @@
                 itemObj = { name: finalName, val: finalVal };
             }
 
-            if(type !== 'BES') state[targetArray].unshift(itemObj); // unshift to top
-            else state.assets.unshift(itemObj);
-
+            state[targetArray].unshift(itemObj);
             saveToCloud();
             cancelInlineAdd(prefix);
             if (prefix.startsWith('dash')) updateDashboardUI();
