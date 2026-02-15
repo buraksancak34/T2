@@ -35,6 +35,15 @@
         
         .fade-text { animation: textFade 0.5s ease-in-out; }
         @keyframes textFade { 0% { opacity: 0; } 100% { opacity: 1; } }
+
+        /* Side Panel Animasyonları */
+        .side-panel {
+            position: fixed; top: 0; right: 0; height: 100%; width: 100%; max-width: 28rem; 
+            background: white; z-index: 60; box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+            transform: translateX(100%); transition: transform 0.3s ease-in-out;
+            display: flex; flex-direction: column;
+        }
+        .side-panel.open { transform: translateX(0); }
     </style>
 </head>
 <body class="min-h-screen p-4 flex flex-col items-center justify-center bg-slate-50">
@@ -117,6 +126,17 @@
     <!-- 3. DASHBOARD -->
     <div id="dashboardScreen" class="max-w-4xl w-full hidden space-y-8 pb-32 animate-fade-in">
         
+        <!-- Esprili Mesaj Alanı -->
+        <div id="motivationArea" class="hidden w-full p-4 rounded-3xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white shadow-lg animate-fade-in">
+            <div class="flex items-start gap-3">
+                <div class="text-2xl mt-1">🤖</div>
+                <div>
+                    <p class="text-[10px] font-bold uppercase tracking-widest opacity-80 mb-1">Durum Raporu</p>
+                    <p class="font-black text-sm md:text-base leading-tight" id="motivationText">...</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Davet Bildirim Afişi -->
         <div id="inviteBanner" class="hidden bg-indigo-600 text-white p-4 rounded-3xl shadow-lg flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
@@ -353,20 +373,33 @@
         </div>
     </div>
     
-    <!-- HESAPLAMA DETAY MODALI -->
-    <div id="calcModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm glass-card p-8 rounded-[2rem] z-50 shadow-2xl hidden text-center border-2 border-blue-50 animate-fade-in">
-        <div class="flex justify-between items-center mb-6"><h4 class="font-black text-xl text-gray-800 tracking-tight w-full text-left">Nasıl Hesaplandı?</h4><button onclick="closeCalcModal()" class="text-gray-300 hover:text-red-500 absolute right-6"><i class="fas fa-times"></i></button></div>
-        <div id="calcModalContent" class="space-y-4 text-sm"></div>
+    <!-- HESAPLAMA DETAY YAN PANELİ -->
+    <div id="calcModal" class="side-panel">
+        <div class="p-6 h-full flex flex-col">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b">
+                <h4 class="font-black text-xl text-gray-800 tracking-tight">Nasıl Hesaplandı?</h4>
+                <button onclick="closeCalcModal()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div id="calcModalContent" class="space-y-4 text-sm flex-1 overflow-y-auto custom-scrollbar pb-10"></div>
+        </div>
     </div>
 
-    <!-- KREDİ DETAY MODALI (YENİ) -->
-    <div id="loanPlanModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-lg glass-card p-6 rounded-[2rem] z-50 shadow-2xl hidden border-2 border-red-50 animate-fade-in">
-        <div class="flex justify-between items-center mb-4"><h4 class="font-black text-xl text-gray-800 tracking-tight" id="loanPlanTitle">Ödeme Planı</h4><button onclick="closeLoanPlanModal()" class="text-gray-300 hover:text-red-500"><i class="fas fa-times"></i></button></div>
-        <div class="overflow-y-auto max-h-[300px] custom-scrollbar">
-             <table class="w-full text-xs text-left">
-                 <thead class="text-gray-400 font-bold uppercase border-b"><tr><th class="pb-2">Taksit</th><th class="pb-2">Tarih</th><th class="pb-2 text-right">Tutar</th><th class="pb-2 text-center">Durum</th></tr></thead>
-                 <tbody id="loanPlanBody" class="font-bold text-gray-600"></tbody>
-             </table>
+    <!-- KREDİ ÖDEME PLANI YAN PANELİ -->
+    <div id="loanPlanModal" class="side-panel">
+        <div class="p-6 h-full flex flex-col">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b">
+                <div>
+                    <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Kredi Detayı</span>
+                    <h4 class="font-black text-xl text-gray-800 tracking-tight leading-none" id="loanPlanTitle">Ödeme Planı</h4>
+                </div>
+                <button onclick="closeLoanPlanModal()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto custom-scrollbar pb-10">
+                 <table class="w-full text-xs text-left">
+                     <thead class="text-gray-400 font-bold uppercase border-b sticky top-0 bg-white"><tr><th class="pb-3 pl-2">Tak.</th><th class="pb-3">Tarih</th><th class="pb-3 text-right">Tutar</th><th class="pb-3 text-center">Durum</th></tr></thead>
+                     <tbody id="loanPlanBody" class="font-bold text-gray-600"></tbody>
+                 </table>
+            </div>
         </div>
     </div>
 
@@ -387,6 +420,26 @@
             "Tasarruf geleceğe yapılmış bilinçli bir yatırımdır.",
             "Planlı hareket eden kişi finansal kontrolü elinde tutar.",
             "Bütçe yapmak kısıtlama değil yönlendirmedir."
+        ];
+
+        // --- MOTİVASYON MESAJLARI ---
+        const messages_highSpend = [
+            "Cüzdan bugün cardio yaptı… nabız 180.", "Limit: ‘Ben bu filmde yokum’ dedi.", "Bugün harcama değil, sanat eseri çıkarmışsın.", "Kartın POS cihazıyla duygusal bağ kurmuş olabilir.", "Bütçe planı: ‘Ben yarın geliyorum’ diye kaçtı.",
+            "Harcama grafiği roket gibi… NASA aradı.", "Bugün ‘küçük kaçamak’ değil, mini tatil olmuş.", "Cüzdanın iç sesi: ‘Ben aslında inceydim…’", "Limitleri test ettin, tebrikler: stres testi başarılı.", "Bütçeye ‘sürpriz yumurta’ yaptın: içinden masraf çıktı.",
+            "Bugün para ‘ben gidiyorum’ deyip valiz topladı.", "Harcama modun: ‘Bir tane daha sepet!’", "Kart ekstresi şu an sana bakıp göz kırpıyor.", "Bütçe: ‘Ben şaka mıydım?’", "Bugün ‘indirim’ değil, ‘ikna’ kazanmış.",
+            "Harcamalar: ‘Biz bir aile olduk’ demiş.", "Limit çizgisi aşıldı… uyarı konisi koyuyorum 🚧", "Bugün cüzdan değil, sponsorluk anlaşması var sanki.", "Harcama sayacı ‘dur’ dedi, sen ‘devam’ dedin.", "Bugün paranın özgür iradesi elinden alınmış olabilir."
+        ];
+        const messages_lowSavings = [
+            "Hedefle arana mesafe girmiş… ilişki terapisine gidelim mi?", "Birikim hedefi seni özlemiş. Mesaj atayım mı?", "Hedef uzakta ama imkânsız değil: yürüyüşe çıkıyoruz.", "Birikim planı ‘neredesin?’ diye son görülme attı.", "Hedefe şu an Wi-Fi çekmiyor gibi… yaklaşalım.",
+            "Bugün ‘yaklaşma günü’: hedefle barış çubuğu uzatıyoruz.", "Birikim hedefin: ‘Ben hâlâ buradayım’ diye el sallıyor.", "Mesafe moral bozmasın; küçük adımlar büyük işler yapar.", "Hedefe uzaklık ölçümü: ‘Bir tık’ değil, birkaç tık…", "Bugün birikim değilse bile, en azından niyet artı puan.",
+            "Hedefe giden yol: ‘Az harca’ tabelasıyla başlıyor.", "Birikim hedefinle arana ‘kargo ücreti’ girmiş olabilir.", "Hedef kaçmadı; sadece sen biraz oyalanmışsın.", "Bütçe pusulası şaşmış; kuzeyi yeniden buluyoruz.", "Birikim: ‘Ben senin iyiliğini düşünüyorum’ modunda.",
+            "Hedefe yaklaşma challenge’ı: bugün küçük bir zafer?", "Hedefle arayı kapatmak için ‘mini reset’ zamanı.", "Birikim hedefi: ‘Konum paylaş’ diyor.", "Mesafe var ama rota çizilebilir: başlıyoruz.", "Bugün hedefe 1 adım: büyük kahramanlıklar böyle başlar."
+        ];
+        const messages_streak = [
+            "Üç gün üst üste! Bütçe disiplini DLC’si açıldı.", "Sende bir ‘finans ninja’ enerjisi var.", "Hedef serisi başladı: streak mode ON 🔥", "Cüzdanın bugün sana gururla bakıyor.", "Bütçe planı: ‘İşte aradığım insan!’",
+            "Üç gün… bu artık tesadüf değil, karakter gelişimi.", "Tasarruf kasların şişiyor, devam!", "Hedef tutturan insan aurası: %100 parlak.", "Bütçe grafiği nihayet sakin bir diziye geçti.", "Bu gidişle paran seni işe alacak.",
+            "Kontrol sende. Kart bile saygı duyuyor.", "Disiplinin o kadar iyi ki Excel bile alkışlıyor.", "Hedef serin ‘efsane’ kategorisine göz kırptı.", "Üç gün üst üste: ‘Ben yaparım’ kanıtı.", "Bütçenin direksiyonunda sen varsın. Korna çalma, ilerle.",
+            "Finansal zen: harcama dürtüsü sakinleştirildi.", "Bugün de tutturduysan, artık ‘alışkanlık’ oldu bu.", "Cüzdanın hafiflediği için değil—rahatladığı için.", "Streak bozulmasın diye cüzdana nazar boncuğu takıyorum.", "Tebrikler: ‘Hedef Tutarlı İnsan’ rozeti sende."
         ];
 
         let db, auth, currentUser = null;
@@ -459,16 +512,46 @@
         function showAnalysisScreen() { hideAll(); document.getElementById('analysisScreen').classList.remove('hidden'); renderCharts(); }
 
         function startAdviceRotator() {
-            const el = document.getElementById('financialAdviceText');
-            if(!el) return;
-            const update = () => {
-                el.classList.remove('fade-text');
-                void el.offsetWidth;
-                el.innerText = financialTips[Math.floor(Math.random() * financialTips.length)];
-                el.classList.add('fade-text');
-            };
-            update();
-            adviceInterval = setInterval(update, 30000);
+            // Rotator yerine Gamification sistemi çalışacak
+        }
+
+        function getRandomMessage(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+        function checkGamificationStatus() {
+            const todayStr = new Date().toLocaleDateString('tr-TR');
+            const dailyLimit = state.manualDailyLimit || 0;
+            const spentToday = state.expenses.filter(e => e.date === todayStr).reduce((s,e)=>s+e.amount,0);
+            
+            // 1. Günlük Limit Aşıldı mı?
+            if (spentToday > dailyLimit && dailyLimit > 0) {
+                return getRandomMessage(messages_highSpend);
+            }
+
+            // 2. Streak Kontrolü (Geriye doğru kaç gün tutturuldu?)
+            let streak = 0;
+            const now = new Date();
+            // Bugünü dahil etmiyoruz henüz bitmediği için, dünden başlıyoruz
+            for (let i = 1; i < 30; i++) {
+                const d = new Date(); d.setDate(now.getDate() - i);
+                const dStr = d.toLocaleDateString('tr-TR');
+                const spentThatDay = state.expenses.filter(e => e.date === dStr).reduce((s,e)=>s+e.amount,0);
+                if (spentThatDay <= dailyLimit) streak++;
+                else break; 
+            }
+            if (streak >= 3) return getRandomMessage(messages_streak);
+
+            // 3. Birikim Hedefinden Uzaklaşma (Basit mantık: Bugün harcama yapıldı mı ama limit altında mı?)
+            // Aslında birikimden uzaklaşma kümülatif bakiyenin eksiye düşmesi olarak alınabilir
+            const startCalc = new Date(state.registrationDate);
+            const daysPassed = Math.max(1, Math.ceil(Math.abs(now - startCalc) / (1000 * 60 * 60 * 24)));
+            const totalSpent = state.expenses.reduce((s,e)=>s+e.amount,0);
+            const cumulative = (dailyLimit * daysPassed) - totalSpent;
+            
+            if (cumulative < -(dailyLimit * 2)) { // Bakiyen 2 günlük limit kadar eksiye düştüyse
+                return getRandomMessage(messages_lowSavings);
+            }
+
+            return "Finansal yolculuğunda başarılar dilerim! 🚀";
         }
 
         async function initUserPlan() {
@@ -867,7 +950,9 @@
             const loansAsBills = state.loans.filter(l=>l.excludeFromDebt && !l.excludeFromBudget).reduce((s,l)=>s+(l.monthly||0),0);
             const totalFix = normalBills + loansAsBills;
             const normalLoanPayments = state.loans.filter(l=>!l.excludeFromDebt && !l.excludeFromBudget).reduce((s,l)=>s+(l.monthly||0),0);
-            const monthlyFixed = totalFix + normalLoanPayments; 
+            // DÜZELTME 1: excludeFromDebt true olsa bile excludeFromBudget false ise gidere ekle
+            const allLoanPaymentsForBudget = state.loans.filter(l => !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
+            const monthlyFixed = normalBills + allLoanPaymentsForBudget;
             
             const totalInc = state.incomes.reduce((s, i) => s + (i.val||0), 0);
             const netIncome = totalInc - monthlyFixed; 
@@ -881,6 +966,12 @@
             document.getElementById('netStatusBadge').className = `text-4xl font-black px-8 py-4 rounded-[2rem] ${net>=0?'text-green-600 bg-green-50':'text-red-600 bg-red-50'}`;
 
             document.getElementById('displayInviteCode').innerText = state.inviteCode || '-----';
+            
+            // Motivasyon Mesajını Göster
+            const motivationalMsg = checkGamificationStatus();
+            document.getElementById('motivationText').innerText = motivationalMsg;
+            document.getElementById('motivationArea').classList.remove('hidden');
+
             renderFamilyList();
             renderDetailedHealthLists();
             
@@ -1257,7 +1348,6 @@
             // 3. Diğer Borçlar (Büyükten Küçüğe)
             const sortedOtherDebts = [...state.otherDebts].filter(d => d.val > 0).sort((a,b) => b.val - a.val);
             sortedOtherDebts.forEach((d) => {
-                 // Orjinal indexi bulmak önemli
                  const originalIndex = state.otherDebts.indexOf(d);
                  debtHTML += createRow(d.name + (d.excludeFromNetWorth ? ' <span class="text-[8px] text-red-400 font-bold ml-1 bg-red-50 px-1 rounded">(Dahil Değil)</span>' : ''), d.val, 'otherDebts', originalIndex, '', '', d.excludeFromNetWorth);
             }); 
@@ -1281,7 +1371,7 @@
                 if(type === 'loans') newItem = {name, totalDebt:val, monthly:0, totalMonths:1, startDate: new Date().toISOString().slice(0,10)};
                 else if(type === 'debts') newItem = {name, val:val, calcMode: false};
                 
-                state[type].unshift(newItem); // Listenin başına ekle
+                state[type].unshift(newItem); 
                 saveToCloud(); updateDashboardUI(); 
             } 
         }
@@ -1293,7 +1383,6 @@
             document.getElementById('editItemType').value = type; 
             document.getElementById('editItemIndex').value = index; 
             
-            // Net Varlık Hesabına Katma checkbox'ı
             const chk = document.getElementById('editExcludeNetWorth');
             if (type === 'loans') chk.checked = item.excludeFromDebt || false;
             else chk.checked = item.excludeFromNetWorth || false;
@@ -1345,7 +1434,7 @@
             state.monthlyHistory.push({date, assets: assets||0, debts: debts||0}); saveToCloud(); alert("Kayıt Eklendi");
         }
 
-        // --- KREDİ PLAN MODALI ---
+        // --- KREDİ PLAN MODALI (SIDE PANEL) ---
         function openLoanPlanModal(loanIndex) {
             const loan = state.loans[loanIndex];
             if (!loan) return;
@@ -1374,12 +1463,16 @@
                 currentDate.setMonth(currentDate.getMonth() + 1);
             }
             
-            document.getElementById('loanPlanModal').classList.remove('hidden');
+            const modal = document.getElementById('loanPlanModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
         }
 
         function closeLoanPlanModal() {
-            document.getElementById('loanPlanModal').classList.add('hidden');
+            const modal = document.getElementById('loanPlanModal');
+            modal.classList.remove('open');
+            setTimeout(() => modal.classList.add('hidden'), 300);
             document.getElementById('overlay').classList.remove('active');
         }
 
@@ -1410,25 +1503,32 @@
                 const normalBills = state.bills.reduce((s, b) => s + (b.val||0), 0);
                 const loansAsBills = state.loans.filter(l => l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
                 const totalFix = normalBills + loansAsBills;
-                const normalLoanPayments = state.loans.filter(l => !l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
+                // DÜZELTME 1 TEKRARI: Sihirbazda da excludeFromDebt bakmadan excludeFromBudget false ise düşülmeli
+                const normalLoanPayments = state.loans.filter(l => !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
                 
                 const grossNet = totalInc - totalFix; 
+                // Net = (Gelir - Sabitler) - Krediler
                 const realNet = grossNet - normalLoanPayments;
                 const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
 
+                // DÜZELTME 2: grossNet'i "remainingAfterFixed" olarak atayıp paylaştırmayı buradan yapıyoruz
+                // Ama kullanıcıya "Büyük Rakam" yazısını göstermiyoruz.
                 state.remainingAfterFixed = grossNet; 
                 if(!state.manualDailyLimit) state.manualDailyLimit = Math.max(0, grossNet / daysInMonth);
                 
                 content.innerHTML = `
                     <h3 class="text-2xl font-black mb-2">Bütçe Planı</h3>
                     <div class="text-center mb-6">
-                        <p class="text-gray-400 text-xs uppercase tracking-widest">Dağıtılabilir Gelir (Büyük Rakam)</p>
+                        <p class="text-gray-400 text-xs uppercase tracking-widest">Dağıtılabilir Gelir</p>
                         <div class="flex items-center justify-center gap-2">
                              <p class="text-3xl font-black text-blue-600">₺${Math.floor(grossNet).toLocaleString()}</p>
-                             <button onclick="openCalcModal()" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-lg font-bold hover:bg-blue-200 transition-colors">Bu rakam nasıl hesaplandı?</button>
+                             <button onclick="openCalcModal()" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-lg font-bold hover:bg-blue-200 transition-colors">Detay</button>
                         </div>
                         
-                        ${normalLoanPayments > 0 ? `<p class="text-[10px] text-gray-500 mt-2 px-4 leading-tight border border-gray-100 bg-white rounded-lg py-2 shadow-sm font-bold text-center">(Kredi ödemeleriniz borçtan düşüleceğinden bu hesabın içindedir. Kredileriniz ödendikten sonra kalan net tutarınız: <span class="text-red-500 font-black">₺${Math.floor(realNet).toLocaleString()}</span>)</p>` : ''}
+                        ${normalLoanPayments > 0 ? `<div class="mt-4 p-3 bg-red-50 border border-red-100 rounded-xl text-left shadow-sm">
+                            <div class="flex items-center gap-2 mb-1"><i class="fas fa-info-circle text-red-400"></i><span class="text-[10px] font-bold text-red-400 uppercase">Bilgilendirme</span></div>
+                            <p class="text-xs text-gray-600 font-medium leading-relaxed">Kredi ödemeleriniz borçtan düşüleceğinden bu hesabın içindedir. Kredileriniz ödendikten sonra kalan net tutarınız: <span class="text-red-600 font-black text-sm">₺${Math.floor(realNet).toLocaleString()}</span></p>
+                        </div>` : ''}
                     </div>
                     <div class="space-y-6">
                         <div class="p-4 bg-white border border-gray-200 rounded-[2rem] shadow-sm text-center">
@@ -1492,7 +1592,6 @@
              if(state.step===6) listEl(state.assets, 'wiz_assets_list', 'assets');
         }
         
-        // İSTEK 3: Güncelleme: 30'a değil gerçek gün sayısına göre slider ayarları
         function updateFromDailyLimitInput(v) { 
             state.manualDailyLimit = parseFloat(v)||0; 
             applyAllocationFromLimit(state.manualDailyLimit); 
@@ -1540,6 +1639,7 @@
         function updateLoanData(i, f, v) { state.loans[i][f] = parseFloat(v)||0; const l = state.loans[i]; if(f==='monthly' && l.totalMonths>0) l.totalDebt = l.monthly*l.totalMonths; else if(f==='totalMonths' && l.monthly>0) l.totalDebt = l.monthly*l.totalMonths; else if(f==='totalDebt' && l.totalMonths>0) l.monthly = l.totalDebt/l.totalMonths; document.getElementById(`wiz_loan_t_${i}`).value = Math.ceil(l.totalDebt); }
         
         function openCalcModal() { 
+            // DÜZELTME 3: DETAYLI HESAPLAMA GÖRÜNÜMÜ
             const totalInc = state.incomes.reduce((s, i) => s + (i.val||0), 0); 
             const normalBills = state.bills.reduce((s, b) => s + (b.val||0), 0);
             const loansAsBills = state.loans.filter(l => l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
@@ -1549,40 +1649,69 @@
             const grossNet = totalInc - totalFix;
             const netIncome = grossNet - normalLoanPayments;
             
-            // İSTEK 3: Gerçek gün sayısı
             const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
             const daily = state.manualDailyLimit || 0;
             const monthlySpend = daily * daysInMonth;
-            
             const savings = grossNet - (monthlySpend + normalLoanPayments);
 
+            // Detaylı liste oluşturma
+            let incomeList = state.incomes.map(i => `<div class="flex justify-between text-xs text-green-600 pl-2"><span>${i.name}</span><span>+₺${(i.val||0).toLocaleString()}</span></div>`).join('');
+            let billList = state.bills.filter(b => b.val > 0).map(b => `<div class="flex justify-between text-xs text-red-500 pl-2"><span>${b.name}</span><span>-₺${b.val.toLocaleString()}</span></div>`).join('');
+            
+            // DÜZELTME 1: Bütçeye dahil edilen tüm krediler (Genel borca dahil olsun olmasın)
+            let loanList = state.loans.filter(l => !l.excludeFromBudget).map(l => `<div class="flex justify-between text-xs text-red-500 pl-2"><span>${l.name} (Taksit)</span><span>-₺${(l.monthly||0).toLocaleString()}</span></div>`).join('');
+
             document.getElementById('calcModalContent').innerHTML = `
-                <div class="space-y-3 text-left">
-                    <div class="flex justify-between font-bold text-green-700 bg-green-50 p-3 rounded-xl border border-green-100"><span>Toplam Gelir:</span><span>+ ₺${totalInc.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
-                    <div class="flex justify-between text-red-500 text-xs px-3 font-bold"><span>Sabit Giderler:</span><span>- ₺${totalFix.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                <div class="space-y-4">
+                    <div class="bg-green-50 p-4 rounded-2xl border border-green-100">
+                        <div class="flex justify-between font-black text-green-800 mb-2"><span>Toplam Gelir</span><span>+ ₺${totalInc.toLocaleString()}</span></div>
+                        <div class="space-y-1 border-t border-green-200 pt-2">${incomeList || '<span class="text-xs italic opacity-50">Gelir kalemi yok</span>'}</div>
+                    </div>
+
+                    <div class="bg-red-50 p-4 rounded-2xl border border-red-100">
+                        <div class="flex justify-between font-black text-red-800 mb-2"><span>Giderler (Faturalar & Krediler)</span><span>- ₺${(totalFix + normalLoanPayments).toLocaleString()}</span></div>
+                        <div class="space-y-1 border-t border-red-200 pt-2">
+                            ${billList}
+                            ${loanList}
+                            ${(!billList && !loanList) ? '<span class="text-xs italic opacity-50">Gider kalemi yok</span>' : ''}
+                        </div>
+                    </div>
                     
-                    <div class="border-t border-gray-100 my-2"></div>
-                    <div class="flex justify-between font-black text-gray-800 text-lg px-3"><span>Dağıtılabilir Gelir (Büyük Rakam):</span><span>₺${Math.floor(grossNet).toLocaleString()}</span></div>
-                    <div class="flex justify-between text-red-500 text-xs px-3 mt-2 font-bold"><span>Aylık Krediler:</span><span>- ₺${normalLoanPayments.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
-                    
-                    ${normalLoanPayments > 0 ? `<div class="text-[9px] text-gray-400 px-3 mt-1 italic">(Krediler ödendikten sonra harcanabilir gerçek net tutarınız: ₺${Math.floor(netIncome).toLocaleString()})</div>` : ''}
-                    
-                    <div class="border-t border-gray-100 my-2"></div>
-                    
-                    <div class="flex justify-between text-green-600 text-sm px-3 font-bold"><span>Aylık Birikim:</span><span>₺${Math.floor(savings).toLocaleString()}</span></div>
-                    <div class="flex justify-between text-blue-500 text-sm px-3 font-bold"><span>Aylık Harcama Bütçesi:</span><span>₺${Math.floor(monthlySpend).toLocaleString()}</span></div>
-                    <div class="mt-4 p-4 bg-blue-50 rounded-2xl border border-blue-100 text-center">
-                        <p class="text-[10px] font-bold text-blue-400 uppercase mb-1 tracking-widest">Günlük Harcama Limiti</p>
-                        <p class="text-3xl font-black text-blue-700">₺${Math.floor(daily).toLocaleString()} <span class="text-xs font-bold text-blue-400">/ gün</span></p>
+                    <div class="flex items-center gap-2 py-2">
+                        <div class="h-px bg-gray-200 flex-1"></div>
+                        <span class="text-xs font-bold text-gray-400 uppercase">Sonuç</span>
+                        <div class="h-px bg-gray-200 flex-1"></div>
+                    </div>
+
+                    <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200 space-y-2">
+                        <div class="flex justify-between text-sm font-bold text-gray-600"><span>Kalan Net Gelir:</span><span>₺${Math.floor(netIncome).toLocaleString()}</span></div>
+                        <div class="flex justify-between text-sm font-bold text-green-600"><span>Hedeflenen Birikim:</span><span>- ₺${Math.floor(savings).toLocaleString()}</span></div>
+                        <div class="border-t border-gray-200 pt-2 flex justify-between text-base font-black text-blue-600"><span>Harcanabilir Bütçe:</span><span>₺${Math.floor(monthlySpend).toLocaleString()}</span></div>
+                    </div>
+
+                    <div class="text-center pt-2">
+                        <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-1">Günlük Limit Hesabı</p>
+                        <p class="text-xs font-bold text-gray-500">₺${Math.floor(monthlySpend).toLocaleString()} / ${daysInMonth} Gün</p>
+                        <p class="text-2xl font-black text-blue-600 mt-1">₺${Math.floor(daily).toLocaleString()}</p>
                     </div>
                 </div>`; 
-            document.getElementById('calcModal').classList.remove('hidden'); 
+            
+            // DÜZELTME 4: SIDE PANEL AÇILIMI
+            const modal = document.getElementById('calcModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active'); 
         }
-        function closeCalcModal() { document.getElementById('calcModal').classList.add('hidden'); document.getElementById('overlay').classList.remove('active'); }
+        function closeCalcModal() { 
+            const modal = document.getElementById('calcModal');
+            modal.classList.remove('open');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            document.getElementById('overlay').classList.remove('active'); 
+        }
         function closeAllPopups() { 
             document.getElementById('overlay').classList.remove('active'); 
             document.querySelectorAll('.fixed.z-50').forEach(el => { if(el.id !== 'saveIndicator') el.classList.add('hidden'); }); 
+            document.querySelectorAll('.side-panel').forEach(el => { el.classList.remove('open'); setTimeout(() => el.classList.add('hidden'), 300); });
         }
     </script>
 </body>
