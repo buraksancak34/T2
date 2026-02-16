@@ -357,19 +357,30 @@
         </div>
     </div>
 
-    <!-- DÜZENLEME MODALI -->
-    <div id="editItemModal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-sm glass-card p-8 rounded-[2rem] z-50 shadow-2xl hidden text-center border-2 border-gray-50 animate-fade-in">
-        <h4 class="font-black text-xl text-gray-800 mb-4">Düzenle</h4>
-        <input type="text" id="editItemName" class="w-full p-3 mb-3 bg-gray-50 rounded-xl font-bold text-sm">
-        <input type="number" id="editItemVal" class="w-full p-3 mb-6 bg-gray-50 rounded-xl font-bold text-sm" placeholder="Toplam Tutar">
-        <div class="flex items-center gap-3 mb-6 justify-center">
-             <input type="checkbox" id="editExcludeNetWorth" class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500">
-             <label for="editExcludeNetWorth" class="text-xs font-bold text-gray-600">Net Varlık Hesabına Katma</label>
-        </div>
-        <input type="hidden" id="editItemType"><input type="hidden" id="editItemIndex">
-        <div class="flex gap-2">
-            <button onclick="closeEditModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl">İptal</button>
-            <button onclick="saveEditedItem()" class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl">Kaydet</button>
+    <!-- DÜZENLEME MODALI (YAN PANEL) -->
+    <div id="editItemModal" class="side-panel">
+        <div class="p-6 h-full flex flex-col">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b">
+                <h4 class="font-black text-xl text-gray-800 tracking-tight">Düzenle</h4>
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto custom-scrollbar pb-10">
+                <div class="space-y-4">
+                    <input type="text" id="editItemName" class="w-full p-4 bg-gray-50 rounded-xl font-bold text-sm border border-gray-100" placeholder="İsim">
+                    <input type="number" id="editItemVal" class="w-full p-4 bg-gray-50 rounded-xl font-bold text-sm border border-gray-100" placeholder="Toplam Tutar">
+                    
+                    <div class="p-4 bg-blue-50 rounded-xl border border-blue-100 flex items-center gap-3">
+                         <input type="checkbox" id="editExcludeNetWorth" class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500">
+                         <label for="editExcludeNetWorth" class="text-xs font-bold text-gray-600">Net Varlık Hesabına Katma</label>
+                    </div>
+                    
+                    <input type="hidden" id="editItemType"><input type="hidden" id="editItemIndex">
+                    <div class="flex gap-2 pt-4">
+                        <button onclick="closeEditModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl border border-gray-200">İptal</button>
+                        <button onclick="saveEditedItem()" class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-200">Kaydet</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -947,21 +958,49 @@
             const daysInCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
             
             const normalBills = state.bills.reduce((s, b) => s + (b.val||0), 0);
-            const loansAsBills = state.loans.filter(l=>l.excludeFromDebt && !l.excludeFromBudget).reduce((s,l)=>s+(l.monthly||0),0);
-            const totalFix = normalBills + loansAsBills;
-            const normalLoanPayments = state.loans.filter(l=>!l.excludeFromDebt && !l.excludeFromBudget).reduce((s,l)=>s+(l.monthly||0),0);
-            // DÜZELTME 1: excludeFromDebt true olsa bile excludeFromBudget false ise gidere ekle
-            const allLoanPaymentsForBudget = state.loans.filter(l => !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
-            const monthlyFixed = normalBills + allLoanPaymentsForBudget;
+            
+            // **DÜZELTME 1: Kredi mantığı**
+            // Eğer kredi bütçeye dahil ise (excludeFromBudget: false), o zaman gider olarak sayılmalı.
+            // excludeFromDebt: true olsa bile, bütçeye dahilsa giderdir.
+            // Bu krediler 'loansAsBills' olarak adlandırılır ve fatura gibi davranır.
+            // 'normalLoanPayments' ise SADECE hem borca hem bütçeye dahil olanlar olmalı ki realNet hesabında düşülsün.
+            
+            // 1. Sabit Gider Olarak Davranacak Krediler: (Genel Borca Dahil DEĞİL AMA Bütçeye Dahil)
+            const loansTreatedAsBills = state.loans.filter(l => l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
+            
+            // 2. Normal Kredi Olarak Davranacaklar: (Genel Borca Dahil VE Bütçeye Dahil)
+            // Bunlar 'grossNet'ten düşülmez, 'realNet' hesaplanırken düşülür.
+            const standardLoans = state.loans.filter(l => !l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
+
+            const totalFix = normalBills + loansTreatedAsBills;
             
             const totalInc = state.incomes.reduce((s, i) => s + (i.val||0), 0);
-            const netIncome = totalInc - monthlyFixed; 
-            const dailyLimit = state.manualDailyLimit || 0;
-            const monthlySpend = dailyLimit * daysInCurrentMonth; // 30 yerine gerçek gün sayısı
-            const calcSavings = state.calculatedMonthlySavings !== undefined ? state.calculatedMonthlySavings : Math.max(0, netIncome - monthlySpend);
+            
+            // grossNet: Gelir - (Faturalar + Borçtan Düşülmeyen Kredi Taksitleri)
+            // Bu, kullanıcının "sabit giderleri ödedikten sonra kalan" parasıdır.
+            // Borçtan düşülen krediler henüz düşülmemiştir.
+            const grossNet = totalInc - totalFix; 
+            
+            // realNet: grossNet - Borçtan Düşülen Kredi Taksitleri
+            const realNet = grossNet - standardLoans;
+            
+            // Günlük limit hesabı grossNet üzerinden yapılır (veya realNet, kullanıcının tercihine göre değişebilir ama burada grossNet mantıklı çünkü diğer krediler oradan düşecek)
+            // Ancak, wizard mantığında grossNet üzerinden gidiliyordu.
+            // Burada tutarlılık için wizard ile aynı mantığı kuralım:
+            // Wizard'da: state.remainingAfterFixed = grossNet
+            
+            // Eğer manualDailyLimit belirlenmişse onu kullan, yoksa hesapla
+            let monthlySpend = (state.manualDailyLimit || 0) * daysInCurrentMonth;
+            
+            // Tasarruf = realNet - monthlySpend (Çünkü standardLoans da ödenmeli)
+            const calcSavings = Math.max(0, realNet - monthlySpend);
+            
+            // Ancak arayüzde totalFix + standardLoans'ı "Aylık Sabit Gider" olarak göstermek daha doğru olabilir mi?
+            // Kullanıcı "Aylık Sabit Gider" dediğinde cebinden fix çıkan her şeyi görmek ister.
+            const totalMonthlyOutflow = totalFix + standardLoans;
 
             document.getElementById('sumSavings').innerText = `₺${Math.floor(calcSavings).toLocaleString()}`;
-            document.getElementById('sumGiderTotalHealth').innerText = `₺${Math.floor(monthlyFixed).toLocaleString()}`;
+            document.getElementById('sumGiderTotalHealth').innerText = `₺${Math.floor(totalMonthlyOutflow).toLocaleString()}`;
             document.getElementById('netStatusVal').innerText = `${net>=0?'+':'-'}₺${Math.abs(Math.floor(net)).toLocaleString()}`;
             document.getElementById('netStatusBadge').className = `text-4xl font-black px-8 py-4 rounded-[2rem] ${net>=0?'text-green-600 bg-green-50':'text-red-600 bg-red-50'}`;
 
@@ -1387,7 +1426,10 @@
             if (type === 'loans') chk.checked = item.excludeFromDebt || false;
             else chk.checked = item.excludeFromNetWorth || false;
             
-            document.getElementById('editItemModal').classList.remove('hidden'); 
+            // YENİ: Side Panel olarak aç
+            const modal = document.getElementById('editItemModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active'); 
         }
         
@@ -1411,7 +1453,13 @@
                 saveToCloud(); updateDashboardUI(); closeEditModal(); 
             } 
         }
-        function closeEditModal() { document.getElementById('editItemModal').classList.add('hidden'); document.getElementById('overlay').classList.remove('active'); }
+        function closeEditModal() { 
+            // YENİ: Side Panel kapatma mantığı
+            const modal = document.getElementById('editItemModal');
+            modal.classList.remove('open');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            document.getElementById('overlay').classList.remove('active'); 
+        }
         function deleteHealthItem(type, idx) { if(confirm('Bu kalemi tamamen silmek istediğinize emin misiniz?')) { state[type].splice(idx, 1); saveToCloud(); updateDashboardUI(); } }
 
         function renderCharts() {
@@ -1501,18 +1549,19 @@
                 // YENİ HESAPLAMA MANTIĞI
                 const totalInc = state.incomes.reduce((s, i) => s + (i.val||0), 0);
                 const normalBills = state.bills.reduce((s, b) => s + (b.val||0), 0);
-                const loansAsBills = state.loans.filter(l => l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
-                const totalFix = normalBills + loansAsBills;
-                // DÜZELTME 1 TEKRARI: Sihirbazda da excludeFromDebt bakmadan excludeFromBudget false ise düşülmeli
-                const normalLoanPayments = state.loans.filter(l => !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
+                
+                // DÜZELTME 1: Bütçeye dahil olup Genel Borca dahil olmayanlar "Gizli Gider" (Fatura gibi)
+                const loansTreatedAsBills = state.loans.filter(l => l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
+                const totalFix = normalBills + loansTreatedAsBills;
+                
+                // DÜZELTME 1 Devamı: Sadece "Normal" krediler (Borca ve Bütçeye dahil)
+                const standardLoans = state.loans.filter(l => !l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
                 
                 const grossNet = totalInc - totalFix; 
-                // Net = (Gelir - Sabitler) - Krediler
-                const realNet = grossNet - normalLoanPayments;
+                // Net = (Gelir - Sabitler - GizliKredi) - NormalKredi
+                const realNet = grossNet - standardLoans;
                 const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
 
-                // DÜZELTME 2: grossNet'i "remainingAfterFixed" olarak atayıp paylaştırmayı buradan yapıyoruz
-                // Ama kullanıcıya "Büyük Rakam" yazısını göstermiyoruz.
                 state.remainingAfterFixed = grossNet; 
                 if(!state.manualDailyLimit) state.manualDailyLimit = Math.max(0, grossNet / daysInMonth);
                 
@@ -1525,7 +1574,7 @@
                              <button onclick="openCalcModal()" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-lg font-bold hover:bg-blue-200 transition-colors">Detay</button>
                         </div>
                         
-                        ${normalLoanPayments > 0 ? `<div class="mt-4 p-3 bg-red-50 border border-red-100 rounded-xl text-left shadow-sm">
+                        ${standardLoans > 0 ? `<div class="mt-4 p-3 bg-red-50 border border-red-100 rounded-xl text-left shadow-sm">
                             <div class="flex items-center gap-2 mb-1"><i class="fas fa-info-circle text-red-400"></i><span class="text-[10px] font-bold text-red-400 uppercase">Bilgilendirme</span></div>
                             <p class="text-xs text-gray-600 font-medium leading-relaxed">Kredi ödemeleriniz borçtan düşüleceğinden bu hesabın içindedir. Kredileriniz ödendikten sonra kalan net tutarınız: <span class="text-red-600 font-black text-sm">₺${Math.floor(realNet).toLocaleString()}</span></p>
                         </div>` : ''}
@@ -1642,24 +1691,32 @@
             // DÜZELTME 3: DETAYLI HESAPLAMA GÖRÜNÜMÜ
             const totalInc = state.incomes.reduce((s, i) => s + (i.val||0), 0); 
             const normalBills = state.bills.reduce((s, b) => s + (b.val||0), 0);
-            const loansAsBills = state.loans.filter(l => l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
-            const totalFix = normalBills + loansAsBills;
-            const normalLoanPayments = state.loans.filter(l => !l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0); 
+            
+            // DÜZELTME 1: Bütçeye dahil olup Genel Borca dahil olmayanlar "Gizli Gider"
+            const loansTreatedAsBills = state.loans.filter(l => l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
+            
+            const totalFix = normalBills + loansTreatedAsBills;
+            
+            // DÜZELTME 1 Devamı: Sadece "Normal" krediler
+            const standardLoans = state.loans.filter(l => !l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
             
             const grossNet = totalInc - totalFix;
-            const netIncome = grossNet - normalLoanPayments;
+            const netIncome = grossNet - standardLoans;
             
             const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
             const daily = state.manualDailyLimit || 0;
             const monthlySpend = daily * daysInMonth;
-            const savings = grossNet - (monthlySpend + normalLoanPayments);
+            const savings = grossNet - (monthlySpend + standardLoans);
 
             // Detaylı liste oluşturma
             let incomeList = state.incomes.map(i => `<div class="flex justify-between text-xs text-green-600 pl-2"><span>${i.name}</span><span>+₺${(i.val||0).toLocaleString()}</span></div>`).join('');
             let billList = state.bills.filter(b => b.val > 0).map(b => `<div class="flex justify-between text-xs text-red-500 pl-2"><span>${b.name}</span><span>-₺${b.val.toLocaleString()}</span></div>`).join('');
             
-            // DÜZELTME 1: Bütçeye dahil edilen tüm krediler (Genel borca dahil olsun olmasın)
-            let loanList = state.loans.filter(l => !l.excludeFromBudget).map(l => `<div class="flex justify-between text-xs text-red-500 pl-2"><span>${l.name} (Taksit)</span><span>-₺${(l.monthly||0).toLocaleString()}</span></div>`).join('');
+            // Gizli Krediler Listesi
+            let hiddenLoanList = state.loans.filter(l => l.excludeFromDebt && !l.excludeFromBudget).map(l => `<div class="flex justify-between text-xs text-red-500 pl-2"><span>${l.name} (Gizli Taksit)</span><span>-₺${(l.monthly||0).toLocaleString()}</span></div>`).join('');
+            
+            // Normal Krediler Listesi
+            let standardLoanList = state.loans.filter(l => !l.excludeFromDebt && !l.excludeFromBudget).map(l => `<div class="flex justify-between text-xs text-red-500 pl-2"><span>${l.name} (Taksit)</span><span>-₺${(l.monthly||0).toLocaleString()}</span></div>`).join('');
 
             document.getElementById('calcModalContent').innerHTML = `
                 <div class="space-y-4">
@@ -1669,23 +1726,32 @@
                     </div>
 
                     <div class="bg-red-50 p-4 rounded-2xl border border-red-100">
-                        <div class="flex justify-between font-black text-red-800 mb-2"><span>Giderler (Faturalar & Krediler)</span><span>- ₺${(totalFix + normalLoanPayments).toLocaleString()}</span></div>
+                        <div class="flex justify-between font-black text-red-800 mb-2"><span>Sabit Giderler (Fatura & Gizli Kredi)</span><span>- ₺${totalFix.toLocaleString()}</span></div>
                         <div class="space-y-1 border-t border-red-200 pt-2">
                             ${billList}
-                            ${loanList}
-                            ${(!billList && !loanList) ? '<span class="text-xs italic opacity-50">Gider kalemi yok</span>' : ''}
+                            ${hiddenLoanList}
+                            ${(!billList && !hiddenLoanList) ? '<span class="text-xs italic opacity-50">Gider kalemi yok</span>' : ''}
                         </div>
                     </div>
                     
                     <div class="flex items-center gap-2 py-2">
                         <div class="h-px bg-gray-200 flex-1"></div>
-                        <span class="text-xs font-bold text-gray-400 uppercase">Sonuç</span>
+                        <span class="text-xs font-bold text-gray-400 uppercase">Ara Toplam</span>
                         <div class="h-px bg-gray-200 flex-1"></div>
                     </div>
 
                     <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200 space-y-2">
-                        <div class="flex justify-between text-sm font-bold text-gray-600"><span>Kalan Net Gelir:</span><span>₺${Math.floor(netIncome).toLocaleString()}</span></div>
-                        <div class="flex justify-between text-sm font-bold text-green-600"><span>Hedeflenen Birikim:</span><span>- ₺${Math.floor(savings).toLocaleString()}</span></div>
+                        <div class="flex justify-between text-sm font-bold text-gray-600"><span>Dağıtılabilir Gelir:</span><span>₺${Math.floor(grossNet).toLocaleString()}</span></div>
+                        
+                        ${standardLoans > 0 ? `
+                        <div class="border-t border-gray-200 pt-2">
+                            <div class="flex justify-between font-black text-red-800 mb-1 text-xs"><span>Normal Kredi Taksitleri</span><span>- ₺${standardLoans.toLocaleString()}</span></div>
+                            ${standardLoanList}
+                        </div>
+                        <div class="flex justify-between text-sm font-bold text-gray-600 border-t border-gray-200 pt-2"><span>Kalan Net Gelir:</span><span>₺${Math.floor(netIncome).toLocaleString()}</span></div>
+                        ` : ''}
+                        
+                        <div class="flex justify-between text-sm font-bold text-green-600 border-t border-gray-200 pt-2"><span>Hedeflenen Birikim:</span><span>- ₺${Math.floor(savings).toLocaleString()}</span></div>
                         <div class="border-t border-gray-200 pt-2 flex justify-between text-base font-black text-blue-600"><span>Harcanabilir Bütçe:</span><span>₺${Math.floor(monthlySpend).toLocaleString()}</span></div>
                     </div>
 
