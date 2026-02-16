@@ -87,16 +87,16 @@
     <div id="loginScreen" class="max-w-md w-full glass-card p-10 rounded-[2.5rem] shadow-2xl space-y-6 my-auto relative overflow-hidden animate-fade-in">
         <div class="text-center">
             <!-- LOGO ALANI -->
-            <div class="mx-auto mb-4 w-full max-w-[220px] h-auto hover:scale-105 transition-transform duration-300">
-                <img src="logo.png" alt="Birikim Koçum Logo" class="w-full h-full object-contain" 
+            <div class="mx-auto mb-6 w-full max-w-[200px] h-auto hover:scale-105 transition-transform duration-300">
+                <img src="logo.png" alt="Birikim Koçum Logo" class="w-full h-full object-contain drop-shadow-xl" 
                      onerror="this.src='https://cdn-icons-png.flaticon.com/512/2382/2382461.png'; this.parentElement.classList.add('opacity-80');">
             </div>
             
-            <h1 class="text-3xl font-black text-gray-900 tracking-tight mb-1" id="loginTitle" style="display:none;">Birikim Koçum</h1> <!-- Logo içinde yazı varsa gizlenebilir -->
+            <h1 class="text-3xl font-black text-gray-900 tracking-tight mb-1" id="loginTitle">Birikim Koçum</h1>
             <p class="text-blue-500 text-xs font-bold uppercase tracking-widest" id="loginSubtitle">Gelir - Gider Takip Asistanı</p>
         </div>
         
-        <div class="space-y-3 mt-4" id="authFormContainer">
+        <div class="space-y-3 mt-8" id="authFormContainer">
             <div id="registerFields" class="hidden space-y-3">
                 <input type="text" id="regUsernameInput" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-sm" placeholder="Kullanıcı Adı Belirle (Zorunlu)">
                 <input type="text" id="regInviteCode" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-sm" placeholder="Davet Kodu (Varsa)">
@@ -142,9 +142,9 @@
         </div>
 
         <!-- GİRİŞ EKRANI BİZE ULAŞIN -->
-        <div class="mt-6 text-center pt-4 border-t border-gray-100">
-            <button onclick="openContactModal()" class="text-[11px] font-bold text-gray-400 hover:text-blue-500 transition-colors flex items-center justify-center mx-auto gap-1">
-                <i class="fas fa-envelope"></i> Bize Ulaşın
+        <div class="mt-8 text-center pt-4 border-t border-gray-100">
+            <button onclick="openContactModal()" class="text-[10px] font-bold text-gray-400 hover:text-blue-500 transition-colors">
+                <i class="fas fa-envelope mr-1"></i> Bize Ulaşın
             </button>
         </div>
     </div>
@@ -455,6 +455,7 @@
             <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-700">
                 <h4 class="font-black text-xl tracking-tight text-white"><i class="fas fa-shield-alt mr-2"></i> Admin Paneli</h4>
                 <button onclick="closeAdminPanel()" class="text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+                <button onclick="loadAdminUsers()" class="text-slate-400 hover:text-white ml-2"><i class="fas fa-sync-alt"></i></button>
             </div>
             
             <!-- ADMIN TABS -->
@@ -464,7 +465,7 @@
             </div>
 
             <!-- TAB: KULLANICILAR -->
-            <div id="adminTabUsers" class="flex-1 flex flex-col">
+            <div id="adminTabUsers" class="flex-1 flex flex-col min-h-0">
                 <div class="grid grid-cols-2 gap-4 mb-6">
                     <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
                         <p class="text-[9px] font-bold uppercase text-slate-400">Kullanıcılar</p>
@@ -487,7 +488,7 @@
             </div>
 
             <!-- TAB: MESAJLAR -->
-            <div id="adminTabMessages" class="hidden flex-1 flex flex-col">
+            <div id="adminTabMessages" class="hidden flex-1 flex flex-col min-h-0">
                  <div class="flex-1 overflow-y-auto custom-scrollbar pb-10 space-y-3" id="adminMessageList">
                      <!-- Mesajlar Buraya Gelecek -->
                  </div>
@@ -828,7 +829,8 @@
                             <p class="text-[9px] text-slate-600">Kayıt: ${regDate}</p>
                         </td>
                         <td class="py-3 text-right">
-                            <button onclick="inspectUser('${doc.id}', '${name}')" class="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-500 text-xs font-bold shadow-lg shadow-blue-500/20"><i class="fas fa-eye"></i> İncele</button>
+                            <button onclick="inspectUser('${doc.id}', '${name}')" class="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-500 text-xs font-bold shadow-lg shadow-blue-500/20 mr-2"><i class="fas fa-eye"></i></button>
+                            <button onclick="deleteUserDoc('${doc.id}', '${name}')" class="bg-red-600 text-white p-2 rounded-lg hover:bg-red-500 text-xs font-bold shadow-lg shadow-red-500/20"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>`;
                 });
@@ -839,6 +841,18 @@
 
             } catch(e) {
                 list.innerHTML = `<tr><td colspan="2" class="text-red-500 p-4">Hata: ${e.message}</td></tr>`;
+            }
+        }
+
+        async function deleteUserDoc(uid, name) {
+            if(confirm(name + " adlı kullanıcının tüm verileri silinecek. Bu işlem geri alınamaz. Emin misiniz?")) {
+                try {
+                    await db.collection('users').doc(uid).delete();
+                    alert("Kullanıcı verisi silindi.");
+                    loadAdminUsers(); // Refresh list
+                } catch(e) {
+                    alert("Hata: " + e.message);
+                }
             }
         }
         
