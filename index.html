@@ -1095,7 +1095,9 @@
             const realNet = grossNet - standardLoans;
             let monthlySpend = (state.manualDailyLimit || 0) * daysInCurrentMonth;
             
-            const calcSavings = Math.max(0, realNet - monthlySpend);
+            // DÜZELTME: Ana ekrandaki hedef birikim artık %100 sihirbaz mantığıyla aynı.
+            // Tasarruf = (Gelir - Sabitler - Kredi) - (Harcama Limiti * Ayın Günü)
+            const calcSavings = Math.max(0, grossNet - monthlySpend);
             const totalMonthlyOutflow = totalFix + standardLoans;
 
             document.getElementById('sumSavings').innerText = `₺${Math.floor(calcSavings).toLocaleString()}`;
@@ -1165,9 +1167,11 @@
             if (!val) return;
             const selected = new Date(val);
             const today = new Date();
+            // Reset hours for accurate day diff
             selected.setHours(0,0,0,0);
             today.setHours(0,0,0,0);
             
+            // Farkı hesapla (gün cinsinden)
             const diffTime = today - selected;
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
             
@@ -1176,6 +1180,7 @@
                 updateExpenseDateLabel();
             } else {
                 alert("Geleceğe harcama giremezsiniz!");
+                // Reset to today
                 currentExpenseDateOffset = 0;
                 updateExpenseDateLabel();
             }
@@ -2035,15 +2040,12 @@
                 const standardLoans = getStandardLoans();
                 
                 const grossNet = totalInc - totalFix; 
+                // Net = (Gelir - Sabitler - GizliKredi) - NormalKredi
                 const realNet = grossNet - standardLoans;
                 const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
 
                 state.remainingAfterFixed = grossNet; 
-                // HEDEF BİRİKİM DÜZELTMESİ:
-                // Normalde DailyLimit = realNet / Gün. Ama kullanıcı slider ile oynayınca;
-                // Spending = Daily * Days. 
-                // Savings = realNet - Spending.
-                if(!state.manualDailyLimit) state.manualDailyLimit = Math.max(0, realNet / daysInMonth);
+                if(!state.manualDailyLimit) state.manualDailyLimit = Math.max(0, grossNet / daysInMonth);
                 
                 content.innerHTML = `
                     <h3 class="text-2xl font-black mb-2">Bütçe Planı</h3>
@@ -2127,44 +2129,35 @@
         }
         function handleSliderChange(v) { 
             const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
-            const loans = getStandardLoans();
-            // Spending = RealNet - (% of RealNet)
-            // state.remainingAfterFixed is GrossNet
-            // netAvailable for allocation is GrossNet - Loans
-            const netAvailable = state.remainingAfterFixed - loans;
-            
-            const spend = netAvailable - ((netAvailable * v) / 100); 
+            // Spending = GrossNet * %
+            const spend = state.remainingAfterFixed * (v / 100); 
             document.getElementById('idealDailyLimitInput').value = Math.floor(spend / daysInMonth); 
             updateFromDailyLimitInput(spend / daysInMonth); 
         }
         function applyAllocationFromLimit(daily) { 
             const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
-            const loans = getStandardLoans();
             const spend = daily * daysInMonth; 
-            // Save = GrossNet - Loans - Spend
-            const save = Math.max(0, state.remainingAfterFixed - loans - spend); 
+            // Save = GrossNet - Spend
+            const save = Math.max(0, state.remainingAfterFixed - spend); 
             
             document.getElementById('manualSavingsInput').value = Math.floor(save); 
             document.getElementById('allocSpendingInput').value = Math.floor(spend); 
             
-            const netAvailable = state.remainingAfterFixed - loans;
-            if(netAvailable > 0) document.getElementById('allocationSlider').value = (save / netAvailable) * 100; 
+            if(state.remainingAfterFixed > 0) document.getElementById('allocationSlider').value = (spend / state.remainingAfterFixed) * 100; 
             
             state.calculatedMonthlyPool = spend; 
             state.calculatedMonthlySavings = save; 
         }
         function updateFromSavingsInput(v) { 
             const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
-            const loans = getStandardLoans();
             const save = parseFloat(v) || 0; 
-            // Spend = GrossNet - Loans - Save
-            const spend = Math.max(0, state.remainingAfterFixed - loans - save); 
+            // Spend = GrossNet - Save
+            const spend = Math.max(0, state.remainingAfterFixed - save); 
             
             document.getElementById('idealDailyLimitInput').value = Math.floor(spend / daysInMonth); 
             document.getElementById('allocSpendingInput').value = Math.floor(spend); 
             
-            const netAvailable = state.remainingAfterFixed - loans;
-            if(netAvailable > 0) document.getElementById('allocationSlider').value = (save / netAvailable) * 100; 
+            if(state.remainingAfterFixed > 0) document.getElementById('allocationSlider').value = (spend / state.remainingAfterFixed) * 100; 
             
             state.calculatedMonthlyPool = spend; 
             state.calculatedMonthlySavings = save; 
@@ -2172,16 +2165,14 @@
         }
         function updateFromSpendingInput(v) { 
             const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
-            const loans = getStandardLoans();
             const spend = parseFloat(v) || 0; 
-            // Save = GrossNet - Loans - Spend
-            const save = Math.max(0, state.remainingAfterFixed - loans - spend); 
+            // Save = GrossNet - Spend
+            const save = Math.max(0, state.remainingAfterFixed - spend); 
             
             document.getElementById('idealDailyLimitInput').value = Math.floor(spend / daysInMonth); 
             document.getElementById('manualSavingsInput').value = Math.floor(save); 
             
-            const netAvailable = state.remainingAfterFixed - loans;
-            if(netAvailable > 0) document.getElementById('allocationSlider').value = (save / netAvailable) * 100; 
+            if(state.remainingAfterFixed > 0) document.getElementById('allocationSlider').value = (spend / state.remainingAfterFixed) * 100; 
             
             state.calculatedMonthlyPool = spend; 
             state.calculatedMonthlySavings = save; 
@@ -2205,12 +2196,16 @@
             const standardLoans = state.loans.filter(l => !l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
             
             const grossNet = totalInc - totalFix;
+            
+            // netIncome: Eski "Kalan Net Tutar" (Krediler düşüldükten sonra). Artık çok öne çıkarmıyoruz.
             const netIncome = grossNet - standardLoans;
             
             const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
             const daily = state.manualDailyLimit || 0;
             const monthlySpend = daily * daysInMonth;
-            const savings = grossNet - (monthlySpend + standardLoans);
+            
+            // Hedeflenen Birikim (Kredi Dahil) = grossNet - monthlySpend
+            const savings = grossNet - monthlySpend;
 
             // Detaylı liste oluşturma
             let incomeList = state.incomes.map(i => `<div class="flex justify-between text-xs text-green-600 pl-2"><span>${i.name}</span><span>+₺${(i.val||0).toLocaleString()}</span></div>`).join('');
@@ -2247,16 +2242,14 @@
                     <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200 space-y-2">
                         <div class="flex justify-between text-sm font-bold text-gray-600"><span>Dağıtılabilir Gelir:</span><span>₺${Math.floor(grossNet).toLocaleString()}</span></div>
                         
-                        ${standardLoans > 0 ? `
-                        <div class="border-t border-gray-200 pt-2">
-                            <div class="flex justify-between font-black text-red-800 mb-1 text-xs"><span>Normal Kredi Taksitleri</span><span>- ₺${standardLoans.toLocaleString()}</span></div>
-                            ${standardLoanList}
-                        </div>
-                        <div class="flex justify-between text-sm font-bold text-gray-600 border-t border-gray-200 pt-2"><span>Kalan Net Gelir:</span><span>₺${Math.floor(netIncome).toLocaleString()}</span></div>
-                        ` : ''}
+                        <div class="border-t border-gray-200 pt-2 flex justify-between text-base font-black text-blue-600"><span>Harcanabilir Bütçe (Harcama):</span><span>- ₺${Math.floor(monthlySpend).toLocaleString()}</span></div>
+                        <div class="flex justify-between text-sm font-bold text-green-600 border-t border-gray-200 pt-2"><span>Hedeflenen Birikim (Kredi Dahil):</span><span>= ₺${Math.floor(savings).toLocaleString()}</span></div>
                         
-                        <div class="flex justify-between text-sm font-bold text-green-600 border-t border-gray-200 pt-2"><span>Hedeflenen Birikim:</span><span>- ₺${Math.floor(savings).toLocaleString()}</span></div>
-                        <div class="border-t border-gray-200 pt-2 flex justify-between text-base font-black text-blue-600"><span>Harcanabilir Bütçe:</span><span>₺${Math.floor(monthlySpend).toLocaleString()}</span></div>
+                        ${standardLoans > 0 ? `
+                        <div class="mt-2 text-[10px] text-gray-400 italic">
+                             * Bu birikimin ₺${standardLoans.toLocaleString()} kadarı kredi ödemesidir.
+                        </div>
+                        ` : ''}
                     </div>
 
                     <div class="text-center pt-2">
@@ -2285,3 +2278,4 @@
     </script>
 </body>
 </html>
+```
