@@ -1092,6 +1092,8 @@
             const realNet = grossNet - standardLoans;
             let monthlySpend = (state.manualDailyLimit || 0) * daysInCurrentMonth;
             
+            // DÜZELTME: Ana ekrandaki hedef birikim artık %100 sihirbaz mantığıyla aynı.
+            // Tasarruf = (Gelir - Sabitler - Kredi) - (Harcama Limiti * Ayın Günü)
             const calcSavings = Math.max(0, realNet - monthlySpend);
             const totalMonthlyOutflow = totalFix + standardLoans;
 
@@ -1112,6 +1114,7 @@
             window.currentHistoryDateIndex = 0; 
             renderHistoryList();
             
+            // Tarih Etiketi Güncelleme
             updateExpenseDateLabel();
             renderCategoryOptions(); // Ensure categories are rendered
         }
@@ -1150,6 +1153,7 @@
                 lbl.innerText = `${currentExpenseDateOffset} Gün Önce (${formattedDate})`;
             }
             
+            // Arka plandaki tarih inputunu da güncelle (seçim için)
             const yyyy = d.getFullYear();
             const mm = String(d.getMonth() + 1).padStart(2, '0');
             const dd = String(d.getDate()).padStart(2, '0');
