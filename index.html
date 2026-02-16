@@ -2186,21 +2186,63 @@
             assetsChartInstance = new Chart(ctx1, { type: 'doughnut', data: { labels: ['Varlıklar', 'Borçlar'], datasets: [{ data: [assets, debts], backgroundColor: ['#22c55e', '#ef4444'], borderWidth: 0 }] }, options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } } });
             expensesChartInstance = new Chart(ctx2, { type: 'bar', data: { labels: sortedKeys.slice(0, 8), datasets: [{ label: 'Harcama', data: sortedData.slice(0, 8), backgroundColor: '#3b82f6', borderRadius: 5 }] }, options: { scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } } });
             
+            // YENİ TREND GRAFİĞİ (TEK DEĞİŞKEN: NET DURUM)
             const sortedHistory = [...state.monthlyHistory].sort((a, b) => a.date.localeCompare(b.date));
             const labels = sortedHistory.map(h => h.date);
-            const dAssets = sortedHistory.map(h => h.assets);
-            const dDebts = sortedHistory.map(h => h.debts);
+            // Net = Varlık - Borç
+            const dNet = sortedHistory.map(h => (h.assets || 0) - (h.debts || 0));
 
             historyChartInstance = new Chart(ctx3, {
                 type: 'line',
                 data: {
                     labels: labels,
                     datasets: [
-                        { label: 'Varlık', data: dAssets, borderColor: '#22c55e', backgroundColor: 'rgba(34, 197, 94, 0.1)', fill: true, tension: 0.4 },
-                        { label: 'Borç', data: dDebts, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4 }
+                        { 
+                            label: 'Net Durum', 
+                            data: dNet, 
+                            borderColor: '#3b82f6', // Mavi Çizgi
+                            backgroundColor: (context) => {
+                                const ctx = context.chart.ctx;
+                                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                                gradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+                                gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+                                return gradient;
+                            },
+                            fill: true, 
+                            tension: 0.4,
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            // Nokta rengi: Artıdaysa Yeşil, Eksideyse Kırmızı
+                            pointBackgroundColor: dNet.map(val => val >= 0 ? '#22c55e' : '#ef4444'),
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2
+                        }
                     ]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', intersect: false } }, scales: { y: { beginAtZero: true } } }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { display: false }, 
+                        tooltip: { 
+                            callbacks: {
+                                label: function(context) {
+                                    return `Net: ₺${context.raw.toLocaleString()}`;
+                                }
+                            }
+                        } 
+                    }, 
+                    scales: { 
+                        y: { 
+                            beginAtZero: true,
+                            grid: {
+                                // 0 çizgisini daha belirgin yap
+                                color: (ctx) => ctx.tick.value === 0 ? '#6b7280' : '#f3f4f6',
+                                lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1
+                            }
+                        } 
+                    } 
+                }
             });
         }
 
