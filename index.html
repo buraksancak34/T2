@@ -25,18 +25,16 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
         
-        /* Mobil Uygulama Hissi İçin Seçim Engelleme ve Kaydırma Düzeni */
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: #f8fafc; 
             color: #1e293b;
             -webkit-tap-highlight-color: transparent;
-            user-select: none; /* Metin seçimini engelle */
+            user-select: none;
             -webkit-user-select: none;
             overflow-x: hidden;
         }
         
-        /* İnput alanlarında seçime izin ver */
         input, textarea { user-select: text; -webkit-user-select: text; }
 
         .glass-card { background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1); backdrop-filter: blur(10px); }
@@ -59,13 +57,11 @@
         .fade-text { animation: textFade 0.5s ease-in-out; }
         @keyframes textFade { 0% { opacity: 0; } 100% { opacity: 1; } }
 
-        /* Yanıp Sönme Efektleri */
         @keyframes pulse-red { 0%, 100% { color: #ef4444; text-shadow: 0 0 5px rgba(239, 68, 68, 0.2); } 50% { color: #fca5a5; text-shadow: 0 0 15px rgba(239, 68, 68, 0.6); } }
         @keyframes pulse-green { 0%, 100% { color: #16a34a; text-shadow: 0 0 5px rgba(22, 163, 74, 0.2); } 50% { color: #86efac; text-shadow: 0 0 15px rgba(22, 163, 74, 0.6); } }
         .animate-pulse-red { animation: pulse-red 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         .animate-pulse-green { animation: pulse-green 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 
-        /* Side Panel Animasyonları */
         .side-panel {
             position: fixed; top: 0; right: 0; height: 100%; width: 100%; max-width: 28rem; 
             background: white; z-index: 60; box-shadow: -10px 0 30px rgba(0,0,0,0.1);
@@ -641,7 +637,7 @@
             appId: "1:710002620092:web:94f3ebb8dd2461af29c2b9",
             measurementId: "G-VE0EVVBM0V"
         };
-        
+
         const financialTips = [
             "Finansal sağlık, gelir ve giderler arasında sürdürülebilir bir denge kurabilme becerisidir.",
             "Küçük ama sık harcamalar bütçeyi sessizce tüketir.",
@@ -717,6 +713,7 @@
                     const name = user.displayName || user.email.split('@')[0];
                     document.getElementById('dashWelcome').innerText = `Hoşgeldin, ${name}`;
                     
+                    // ADMIN KONTROLÜ
                     if (user.email.toLowerCase() === 'buraksancak@msn.com') {
                         document.getElementById('btnAdmin').classList.remove('hidden');
                     } else {
@@ -807,6 +804,7 @@
             document.getElementById('adminModal').classList.remove('hidden');
             setTimeout(() => document.getElementById('adminModal').classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
+            // Default load users tab
             switchAdminTab('users');
         }
 
@@ -884,7 +882,7 @@
                 try {
                     await db.collection('users').doc(uid).delete();
                     alert("Kullanıcı verisi silindi.");
-                    loadAdminUsers(); 
+                    loadAdminUsers(); // Refresh list
                 } catch(e) {
                     alert("Hata: " + e.message);
                 }
@@ -927,27 +925,35 @@
         }
 
         async function inspectUser(targetUid, targetName) {
+            // Adminin kendi ID'sini sakla (geri dönmek için)
             if (!originalAdminUid) originalAdminUid = currentUser.uid;
             
+            // Hedef kullanıcı verisini çek
             try {
                 const doc = await db.collection("users").doc(targetUid).get();
                 if (doc.exists) {
                     state = doc.data();
-                    currentPlanId = targetUid; 
-                    currentUserRole = 'owner'; 
+                    currentPlanId = targetUid; // Hedefin plan ID'si
+                    currentUserRole = 'owner'; // Tam yetkiyle gör
                     
+                    // Admin panelini kapat
                     closeAdminPanel();
+                    
+                    // Dashboard'ı güncelle
                     updateDashboardUI();
                     
+                    // Uyarı bandını göster
                     document.getElementById('adminModeBanner').classList.remove('hidden');
                     document.getElementById('adminInspectName').innerText = targetName;
                     
+                    // Overlay'i kapat (Panel kapandı çünkü)
                     document.getElementById('overlay').classList.remove('active');
                 }
             } catch(e) { alert("Hata: " + e.message); }
         }
 
         async function exitAdminInspect() {
+            // Admin verisine geri dön
             if (originalAdminUid) {
                 const doc = await db.collection("users").doc(originalAdminUid).get();
                 state = doc.data();
@@ -965,16 +971,19 @@
             hideAll(); 
             document.getElementById('analysisScreen').classList.remove('hidden'); 
             
+            // Set default date for analysis filter to current month
             const today = new Date();
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
             document.getElementById('analysisDateFilter').value = `${yyyy}-${mm}`;
             
             renderCharts(); 
-            renderHistoryTableUI(); 
+            renderHistoryTableUI(); // Tabloyu ilk açılışta yükle
         }
 
-        function startAdviceRotator() {}
+        function startAdviceRotator() {
+            // Rotator yerine Gamification sistemi çalışacak
+        }
 
         function getRandomMessage(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
@@ -2169,7 +2178,6 @@
             let filteredExpenses = state.expenses;
             
             if (filterVal) {
-                // ... (Filtre mantığı aynı) ...
                 const [year, month] = filterVal.split('-').map(Number);
                 const salaryDay = state.salaryDay || 15;
                 const startDate = new Date(year, month - 1, salaryDay);
