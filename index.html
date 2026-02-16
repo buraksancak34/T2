@@ -234,17 +234,13 @@
             
             <div class="flex flex-col gap-3">
                 <div class="flex gap-2 items-center">
-                    <div class="w-1/3">
-                        <select id="expCat" class="w-full p-4 bg-gray-50 rounded-2xl font-bold text-xs text-gray-700 outline-none focus:ring-4 focus:ring-blue-100 transition-all border-r border-gray-200">
-                             <option value="Diğer">Diğer / Genel</option>
-                             <option value="Market / Manav">Market / Manav</option>
-                             <option value="Kasap">Kasap</option>
-                             <option value="Akaryakıt">Akaryakıt</option>
-                             <option value="Eczane / Sağlık">Eczane / Sağlık</option>
-                             <option value="Eğlence">Eğlence</option>
-                             <option value="Eğitim Ödemeleri">Eğitim</option>
-                             <option value="Vergi / Harç / Sigorta">Vergi / Sigorta</option>
+                    <div class="w-1/3 relative">
+                        <select id="expCat" class="w-full p-4 bg-gray-50 rounded-l-2xl font-bold text-xs text-gray-700 outline-none focus:ring-4 focus:ring-blue-100 transition-all border-r border-gray-200 appearance-none">
+                             <!-- Categories will be injected here -->
                         </select>
+                        <button onclick="openCategoryModal()" class="absolute right-0 top-0 h-full px-2 text-gray-400 hover:text-blue-500 rounded-r-2xl bg-white border-l border-gray-100" title="Kategorileri Düzenle">
+                            <i class="fas fa-pencil-alt text-xs"></i>
+                        </button>
                     </div>
                     <input type="text" id="expDesc" value="" placeholder="Açıklama (Opsiyonel)" onkeyup="if(event.key === 'Enter') addExpense()" class="flex-1 p-4 bg-gray-50 rounded-2xl font-bold text-gray-600 outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm">
                 </div>
@@ -257,12 +253,12 @@
                 
                 <!-- Hızlı Tarih Seçici -->
                 <div class="flex items-center gap-2 bg-gray-50 p-2 rounded-xl border border-gray-100 w-full md:w-auto self-start mt-1">
-                    <button onclick="changeExpenseDate(-1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-500 hover:text-blue-600 shadow-sm transition-colors border border-gray-200"><i class="fas fa-chevron-left"></i></button>
-                    <div class="relative flex-1 text-center min-w-[120px]">
+                    <button onclick="changeExpenseDate(1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-500 hover:text-blue-600 shadow-sm transition-colors border border-gray-200"><i class="fas fa-chevron-left"></i></button>
+                    <div class="relative flex-1 text-center min-w-[160px]">
                         <span id="expenseDateLabel" class="text-xs font-bold text-gray-600 cursor-pointer hover:text-blue-500 select-none" onclick="document.getElementById('expDateInputHidden').showPicker()">Bugün</span>
                         <input type="date" id="expDateInputHidden" class="absolute inset-0 opacity-0 cursor-pointer" onchange="setSpecificDate(this.value)">
                     </div>
-                    <button onclick="changeExpenseDate(1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-500 hover:text-blue-600 shadow-sm transition-colors border border-gray-200"><i class="fas fa-chevron-right"></i></button>
+                    <button onclick="changeExpenseDate(-1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-500 hover:text-blue-600 shadow-sm transition-colors border border-gray-200"><i class="fas fa-chevron-right"></i></button>
                 </div>
             </div>
         </div>
@@ -356,6 +352,7 @@
                      <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Analiz Dönemi:</p>
                      <input type="month" id="analysisDateFilter" class="bg-gray-100 text-gray-700 text-xs font-bold p-1 rounded-lg border-none outline-none" onchange="renderCharts()">
                 </div>
+                <p id="analysisPeriodLabel" class="text-[10px] text-blue-500 font-bold mt-1"></p>
             </div>
             <button onclick="showDashboard()" class="text-[10px] font-black bg-gray-100 text-gray-600 border border-gray-200 px-4 py-2 rounded-full uppercase tracking-widest shadow-sm hover:bg-gray-200">Geri Dön</button>
         </div>
@@ -465,6 +462,21 @@
         </div>
     </div>
 
+    <!-- KATEGORİ DÜZENLEME PANELİ -->
+    <div id="categoryModal" class="side-panel">
+        <div class="p-6 h-full flex flex-col">
+             <div class="flex justify-between items-center mb-6 pb-4 border-b">
+                <h4 class="font-black text-xl text-gray-800 tracking-tight">Kategoriler</h4>
+                <button onclick="closeCategoryModal()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="flex gap-2 mb-4">
+                <input type="text" id="newCatName" placeholder="Yeni Kategori Ekle" class="flex-1 p-3 bg-gray-50 border rounded-xl text-sm font-bold outline-none" onkeyup="if(event.key==='Enter') addNewCategory()">
+                <button onclick="addNewCategory()" class="bg-blue-600 text-white w-12 rounded-xl flex items-center justify-center hover:bg-blue-700 shadow-lg"><i class="fas fa-plus"></i></button>
+            </div>
+            <div id="categoryList" class="flex-1 overflow-y-auto custom-scrollbar space-y-2 pb-10"></div>
+        </div>
+    </div>
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyAyUQaeoVWnT4AuzSwD2M17-z1g2optqdA",
@@ -530,6 +542,7 @@
             assets: [
                 { name: 'Bankadaki Para', val: null }, { name: 'Cepteki Para', val: null }, { name: 'Bireysel Emeklilik (Toplam)', val: null }
             ],
+            categories: ["Market / Manav", "Kasap", "Akaryakıt", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"],
             manualDailyLimit: null, expenses: [], monthlyHistory: [], familyMembers: [], inviteCode: null
         };
         let state = JSON.parse(JSON.stringify(defaultState));
@@ -973,6 +986,12 @@
                     if(!state.expenses) state.expenses = [];
                     if(!state.monthlyHistory) state.monthlyHistory = [];
                     if(!state.familyMembers) state.familyMembers = [];
+                    
+                    // Kategori verisi yoksa default ile başlat
+                    if(!state.categories || state.categories.length === 0) {
+                        state.categories = ["Market / Manav", "Kasap", "Akaryakıt", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"];
+                    }
+                    
                     showDashboard();
                 }
             });
@@ -1073,8 +1092,6 @@
             const realNet = grossNet - standardLoans;
             let monthlySpend = (state.manualDailyLimit || 0) * daysInCurrentMonth;
             
-            // DÜZELTME: Ana ekrandaki hedef birikim artık %100 sihirbaz mantığıyla aynı.
-            // Tasarruf = (Gelir - Sabitler - Kredi) - (Harcama Limiti * Ayın Günü)
             const calcSavings = Math.max(0, realNet - monthlySpend);
             const totalMonthlyOutflow = totalFix + standardLoans;
 
@@ -1095,54 +1112,122 @@
             window.currentHistoryDateIndex = 0; 
             renderHistoryList();
             
-            // Tarih Etiketi Güncelleme
             updateExpenseDateLabel();
+            renderCategoryOptions(); // Ensure categories are rendered
         }
 
         // --- TARİH NAVİGASYON MANTIĞI ---
         function changeExpenseDate(delta) {
-            currentExpenseDateOffset += delta;
-            // Geleceğe gitmeye izin verme
+            // Delta 1 -> Sağ Buton -> Bugüne gel -> Offset azalmalı
+            // Delta -1 -> Sol Buton -> Geçmişe git -> Offset artmalı
+            // TALEBE GÖRE: Sol eski tarihe götürmeli, yani offset artmalı.
+            // Bu durumda: Sol buton (-1 parametreli) -> Offset ARTAR.
+            // Sağ buton (+1 parametreli) -> Offset AZALIR.
+            
+            if (delta === -1) {
+                currentExpenseDateOffset += 1;
+            } else {
+                currentExpenseDateOffset -= 1;
+            }
+            
             if (currentExpenseDateOffset < 0) currentExpenseDateOffset = 0;
             updateExpenseDateLabel();
         }
 
         function updateExpenseDateLabel() {
             const lbl = document.getElementById('expenseDateLabel');
-            if (currentExpenseDateOffset === 0) {
-                lbl.innerText = "Bugün";
-            } else if (currentExpenseDateOffset === 1) {
-                lbl.innerText = "Dün";
-            } else {
-                lbl.innerText = `${currentExpenseDateOffset} Gün Önce`;
-            }
-            
-            // Arka plandaki tarih inputunu da güncelle (seçim için)
             const d = new Date();
             d.setDate(d.getDate() - currentExpenseDateOffset);
-            document.getElementById('expDateInputHidden').valueAsDate = d;
+            
+            const options = { day: 'numeric', month: 'long', weekday: 'long' };
+            const formattedDate = d.toLocaleDateString('tr-TR', options);
+            
+            if (currentExpenseDateOffset === 0) {
+                lbl.innerText = `Bugün (${formattedDate})`;
+            } else if (currentExpenseDateOffset === 1) {
+                lbl.innerText = `Dün (${formattedDate})`;
+            } else {
+                lbl.innerText = `${currentExpenseDateOffset} Gün Önce (${formattedDate})`;
+            }
+            
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            document.getElementById('expDateInputHidden').value = `${yyyy}-${mm}-${dd}`;
         }
         
         function setSpecificDate(val) {
             if (!val) return;
             const selected = new Date(val);
             const today = new Date();
-            // Farkı hesapla (gün cinsinden)
-            const diffTime = Math.abs(today - selected);
+            selected.setHours(0,0,0,0);
+            today.setHours(0,0,0,0);
+            
+            const diffTime = today - selected;
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
             
-            // Eğer bugünse 0, geçmişse fark kadar
-            if (selected.toDateString() === today.toDateString()) {
-                currentExpenseDateOffset = 0;
-            } else if (selected < today) {
+            if (diffDays >= 0) {
                 currentExpenseDateOffset = diffDays;
-                // Ceil bazen 1 fazla verebilir saat farkından, basit fix:
-                // Tam gün farkı hesabı daha güvenli:
-                const utc1 = Date.UTC(selected.getFullYear(), selected.getMonth(), selected.getDate());
-                const utc2 = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
-                currentExpenseDateOffset = Math.floor((utc2 - utc1) / (1000 * 60 * 60 * 24));
+                updateExpenseDateLabel();
+            } else {
+                alert("Geleceğe harcama giremezsiniz!");
+                currentExpenseDateOffset = 0;
+                updateExpenseDateLabel();
             }
-            updateExpenseDateLabel();
+        }
+
+        // --- KATEGORİ YÖNETİMİ ---
+        function renderCategoryOptions() {
+            const sel = document.getElementById('expCat');
+            // Check if categories exist in state, if not use defaults
+            if (!state.categories) {
+                state.categories = ["Market / Manav", "Kasap", "Akaryakıt", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"];
+            }
+            
+            sel.innerHTML = state.categories.map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            // Render modal list as well
+            const list = document.getElementById('categoryList');
+            list.innerHTML = state.categories.map((c, i) => `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                    <span class="text-sm font-bold text-gray-700">${c}</span>
+                    <button onclick="deleteCategory(${i})" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function openCategoryModal() {
+            renderCategoryOptions();
+            const modal = document.getElementById('categoryModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('open'), 10);
+            document.getElementById('overlay').classList.add('active');
+        }
+
+        function closeCategoryModal() {
+            const modal = document.getElementById('categoryModal');
+            modal.classList.remove('open');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            document.getElementById('overlay').classList.remove('active');
+        }
+
+        function addNewCategory() {
+            const inp = document.getElementById('newCatName');
+            const val = inp.value.trim();
+            if (val && !state.categories.includes(val)) {
+                state.categories.push(val);
+                inp.value = '';
+                saveToCloud();
+                renderCategoryOptions();
+            }
+        }
+
+        function deleteCategory(idx) {
+            if (confirm("Bu kategoriyi silmek istediğinize emin misiniz?")) {
+                state.categories.splice(idx, 1);
+                saveToCloud();
+                renderCategoryOptions();
+            }
         }
 
         // --- SATIR İÇİ (INLINE) EKLEME SİSTEMİ ---
@@ -1396,7 +1481,7 @@
                 });
             }
             
-            amtInp.value = ''; descInp.value = ''; catInp.value = 'Diğer'; 
+            amtInp.value = ''; descInp.value = ''; 
             currentExpenseDateOffset = 0; 
             updateExpenseDateLabel();
             
@@ -1671,15 +1756,29 @@
             if(assetsChartInstance) assetsChartInstance.destroy();
             if(expensesChartInstance) expensesChartInstance.destroy();
             
-            // Filter expenses by selected month
+            // DÖNEMLİK ANALİZ MANTIĞI
             const filterVal = document.getElementById('analysisDateFilter').value; // YYYY-MM
             let filteredExpenses = state.expenses;
             
             if (filterVal) {
-                const [year, month] = filterVal.split('-');
+                const [year, month] = filterVal.split('-').map(Number);
+                const salaryDay = state.salaryDay || 15;
+                
+                // Başlangıç: Seçilen Ay, Maaş Günü
+                const startDate = new Date(year, month - 1, salaryDay);
+                // Bitiş: Bir sonraki ay, Maaş Günü
+                const endDate = new Date(year, month, salaryDay);
+                
+                // Dönem Bilgisini Ekrana Yaz
+                const startStr = startDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+                const endStr = new Date(endDate - 1).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+                document.getElementById('analysisPeriodLabel').innerText = `Dönem: ${startStr} - ${endStr}`;
+                
                 filteredExpenses = state.expenses.filter(e => {
                     const parts = e.date.split('.'); // DD.MM.YYYY
-                    return parts[2] === year && parts[1] === month;
+                    // JS Date objesi oluştur (Ay indeksi 0-11)
+                    const d = new Date(parts[2], parts[1] - 1, parts[0]);
+                    return d >= startDate && d < endDate;
                 });
             }
 
@@ -1689,8 +1788,7 @@
             // Group expenses by Category
             const expenseMap = {};
             filteredExpenses.forEach(e => {
-                let key = e.category; // Use category first
-                // If category is "Diğer" or empty, check if description is standard, otherwise group under "Diğer / Özel"
+                let key = e.category; 
                 if (!key || key === 'Diğer') {
                     key = 'Diğer / Özel';
                 }
@@ -2113,7 +2211,6 @@
                     </div>
                 </div>`; 
             
-            // DÜZELTME 4: SIDE PANEL AÇILIMI
             const modal = document.getElementById('calcModal');
             modal.classList.remove('hidden');
             setTimeout(() => modal.classList.add('open'), 10);
