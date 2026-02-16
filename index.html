@@ -2,8 +2,17 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bizim Bütçe | Finansal Asistan</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Birikim Koçum | Gelir-Gider Takip</title>
+    
+    <!-- PWA ve Mobil Uygulama Ayarları -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="application-name" content="Birikim Koçum">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -15,7 +24,21 @@
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        
+        /* Mobil Uygulama Hissi İçin Seçim Engelleme ve Kaydırma Düzeni */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc; 
+            color: #1e293b;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none; /* Metin seçimini engelle */
+            -webkit-user-select: none;
+            overflow-x: hidden;
+        }
+        
+        /* İnput alanlarında seçime izin ver */
+        input, textarea { user-select: text; -webkit-user-select: text; }
+
         .glass-card { background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1); backdrop-filter: blur(10px); }
         .hidden { display: none !important; }
         input[type="range"] { accent-color: #2563eb; }
@@ -63,14 +86,17 @@
     <!-- 1. GİRİŞ EKRANI -->
     <div id="loginScreen" class="max-w-md w-full glass-card p-10 rounded-[2.5rem] shadow-2xl space-y-6 my-auto relative overflow-hidden animate-fade-in">
         <div class="text-center">
-            <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-blue-600 shadow-sm transform hover:rotate-12 transition-transform duration-300">
-                <i class="fas fa-cloud text-2xl"></i>
+            <!-- LOGO ALANI -->
+            <div class="mx-auto mb-4 w-full max-w-[220px] h-auto hover:scale-105 transition-transform duration-300">
+                <img src="logo.png" alt="Birikim Koçum Logo" class="w-full h-full object-contain" 
+                     onerror="this.src='https://cdn-icons-png.flaticon.com/512/2382/2382461.png'; this.parentElement.classList.add('opacity-80');">
             </div>
-            <h1 class="text-2xl font-black text-gray-900 tracking-tight" id="loginTitle">Giriş Yap</h1>
-            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-1" id="loginSubtitle">Hesabına Eriş</p>
+            
+            <h1 class="text-3xl font-black text-gray-900 tracking-tight mb-1" id="loginTitle" style="display:none;">Birikim Koçum</h1> <!-- Logo içinde yazı varsa gizlenebilir -->
+            <p class="text-blue-500 text-xs font-bold uppercase tracking-widest" id="loginSubtitle">Gelir - Gider Takip Asistanı</p>
         </div>
         
-        <div class="space-y-3" id="authFormContainer">
+        <div class="space-y-3 mt-4" id="authFormContainer">
             <div id="registerFields" class="hidden space-y-3">
                 <input type="text" id="regUsernameInput" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-sm" placeholder="Kullanıcı Adı Belirle (Zorunlu)">
                 <input type="text" id="regInviteCode" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-sm" placeholder="Davet Kodu (Varsa)">
@@ -95,7 +121,7 @@
             </p>
         </div>
         
-        <div class="relative py-2">
+        <div class="relative py-4">
             <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-200"></div></div>
             <div class="relative flex justify-center"><span class="bg-white px-4 text-xs font-bold text-gray-400 uppercase">veya</span></div>
         </div>
@@ -112,6 +138,13 @@
             <p class="text-[10px] text-center text-gray-400 px-4 mt-2">Bütçeni oluşturmaya başla, en son adımda kaydedip üye ol.</p>
             <button onclick="showRegisterMode()" class="w-full bg-white border-2 border-gray-100 text-gray-600 font-bold py-3 rounded-2xl active:scale-95 transition-all hover:border-indigo-200 hover:text-indigo-600 mt-2">
                 Bir Plana Dahil Ol
+            </button>
+        </div>
+
+        <!-- GİRİŞ EKRANI BİZE ULAŞIN -->
+        <div class="mt-6 text-center pt-4 border-t border-gray-100">
+            <button onclick="openContactModal()" class="text-[11px] font-bold text-gray-400 hover:text-blue-500 transition-colors flex items-center justify-center mx-auto gap-1">
+                <i class="fas fa-envelope"></i> Bize Ulaşın
             </button>
         </div>
     </div>
@@ -355,6 +388,13 @@
             </div>
             <!-- SABİT GİDERLER AKORDİYONU -->
             <div id="fixedExpensesSection" class="w-full pt-4"></div>
+            
+            <!-- DASHBOARD BİZE ULAŞIN -->
+            <div class="text-center mt-6 pt-6 border-t border-gray-100">
+                <button onclick="openContactModal()" class="text-xs font-bold text-gray-400 hover:text-blue-500 transition-colors">
+                    <i class="fas fa-comment-alt mr-1"></i> Görüş ve Öneri Bildir
+                </button>
+            </div>
         </div>
     </div>
 
@@ -417,24 +457,40 @@
                 <button onclick="closeAdminPanel()" class="text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
             </div>
             
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-                    <p class="text-[9px] font-bold uppercase text-slate-400">Kullanıcılar</p>
-                    <p class="text-2xl font-black text-white" id="adminTotalUsers">-</p>
+            <!-- ADMIN TABS -->
+            <div class="flex gap-2 mb-4 bg-slate-800 p-1 rounded-xl">
+                <button onclick="switchAdminTab('users')" id="tabAdminUsers" class="flex-1 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all">Kullanıcılar</button>
+                <button onclick="switchAdminTab('messages')" id="tabAdminMessages" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all">Mesajlar</button>
+            </div>
+
+            <!-- TAB: KULLANICILAR -->
+            <div id="adminTabUsers" class="flex-1 flex flex-col">
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                        <p class="text-[9px] font-bold uppercase text-slate-400">Kullanıcılar</p>
+                        <p class="text-2xl font-black text-white" id="adminTotalUsers">-</p>
+                    </div>
+                     <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                        <p class="text-[9px] font-bold uppercase text-slate-400">Yönetilen Para</p>
+                        <p class="text-xl font-black text-green-400" id="adminTotalMoney">-</p>
+                    </div>
                 </div>
-                 <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-                    <p class="text-[9px] font-bold uppercase text-slate-400">Yönetilen Para</p>
-                    <p class="text-xl font-black text-green-400" id="adminTotalMoney">-</p>
+
+                <div class="flex-1 overflow-y-auto custom-scrollbar pb-10">
+                    <table class="w-full text-xs text-left">
+                         <thead class="text-slate-500 font-bold uppercase border-b border-slate-700 sticky top-0 bg-slate-900">
+                             <tr><th class="pb-3 pl-1">Kullanıcı</th><th class="pb-3 text-right">İşlem</th></tr>
+                         </thead>
+                         <tbody id="adminUserList" class="font-bold text-slate-300"></tbody>
+                     </table>
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto custom-scrollbar pb-10">
-                <table class="w-full text-xs text-left">
-                     <thead class="text-slate-500 font-bold uppercase border-b border-slate-700 sticky top-0 bg-slate-900">
-                         <tr><th class="pb-3 pl-1">Kullanıcı</th><th class="pb-3 text-right">İşlem</th></tr>
-                     </thead>
-                     <tbody id="adminUserList" class="font-bold text-slate-300"></tbody>
-                 </table>
+            <!-- TAB: MESAJLAR -->
+            <div id="adminTabMessages" class="hidden flex-1 flex flex-col">
+                 <div class="flex-1 overflow-y-auto custom-scrollbar pb-10 space-y-3" id="adminMessageList">
+                     <!-- Mesajlar Buraya Gelecek -->
+                 </div>
             </div>
         </div>
     </div>
@@ -521,6 +577,21 @@
             </div>
             
             <div id="categoryList" class="flex-1 overflow-y-auto custom-scrollbar space-y-2 pb-10"></div>
+        </div>
+    </div>
+
+    <!-- İLETİŞİM MODALI (MESAJ GÖNDERME) -->
+    <div id="contactModal" class="side-panel">
+        <div class="p-6 h-full flex flex-col">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b">
+                <h4 class="font-black text-xl text-gray-800 tracking-tight">Bize Ulaşın</h4>
+                <button onclick="closeContactModal()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="flex-1 flex flex-col gap-4">
+                <p class="text-sm text-gray-500">Görüş, öneri veya şikayetlerinizi bizimle paylaşın. Size en kısa sürede dönüş yapacağız.</p>
+                <textarea id="contactMsg" rows="6" class="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 outline-none focus:ring-4 focus:ring-blue-100 transition-all resize-none" placeholder="Mesajınız..."></textarea>
+                <button onclick="sendContactMessage()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all hover:bg-blue-700">GÖNDER</button>
+            </div>
         </div>
     </div>
 
@@ -639,15 +710,101 @@
             document.getElementById('analysisScreen').classList.add('hidden');
         }
 
+        // --- İLETİŞİM / MESAJLAŞMA ---
+        function openContactModal() {
+            document.getElementById('contactMsg').value = '';
+            const modal = document.getElementById('contactModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('open'), 10);
+            document.getElementById('overlay').classList.add('active');
+        }
+
+        function closeContactModal() {
+            const modal = document.getElementById('contactModal');
+            modal.classList.remove('open');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            document.getElementById('overlay').classList.remove('active'); 
+        }
+
+        async function sendContactMessage() {
+            const msg = document.getElementById('contactMsg').value.trim();
+            if (!msg) return alert("Lütfen bir mesaj yazın.");
+            
+            const btn = document.querySelector('#contactModal button');
+            const origText = btn.innerText;
+            btn.innerText = "Gönderiliyor...";
+            btn.disabled = true;
+
+            try {
+                let sender = "Misafir";
+                let email = "-";
+                let uid = "-";
+
+                if (currentUser) {
+                    sender = currentUser.displayName || "Kullanıcı";
+                    email = currentUser.email;
+                    uid = currentUser.uid;
+                }
+
+                await db.collection('messages').add({
+                    content: msg,
+                    senderName: sender,
+                    senderEmail: email,
+                    senderUid: uid,
+                    date: new Date().toISOString(),
+                    isRead: false
+                });
+
+                alert("Mesajınız iletildi! Teşekkürler.");
+                closeContactModal();
+            } catch (e) {
+                alert("Hata: " + e.message);
+            } finally {
+                btn.innerText = origText;
+                btn.disabled = false;
+            }
+        }
+
         // --- ADMIN FONKSİYONLARI ---
         async function openAdminPanel() {
-            const list = document.getElementById('adminUserList');
-            list.innerHTML = '<tr><td colspan="2" class="p-4 text-center"><div class="loader"></div></td></tr>';
-            
             document.getElementById('adminModal').classList.remove('hidden');
             setTimeout(() => document.getElementById('adminModal').classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
+            // Default load users tab
+            switchAdminTab('users');
+        }
 
+        function closeAdminPanel() {
+            const modal = document.getElementById('adminModal');
+            modal.classList.remove('open');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            if(!originalAdminUid) document.getElementById('overlay').classList.remove('active'); 
+        }
+        
+        function switchAdminTab(tabName) {
+            const btnUsers = document.getElementById('tabAdminUsers');
+            const btnMsgs = document.getElementById('tabAdminMessages');
+            const divUsers = document.getElementById('adminTabUsers');
+            const divMsgs = document.getElementById('adminTabMessages');
+
+            if (tabName === 'users') {
+                btnUsers.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all";
+                btnMsgs.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all";
+                divUsers.classList.remove('hidden');
+                divMsgs.classList.add('hidden');
+                loadAdminUsers();
+            } else {
+                btnMsgs.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all";
+                btnUsers.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all";
+                divMsgs.classList.remove('hidden');
+                divUsers.classList.add('hidden');
+                loadAdminMessages();
+            }
+        }
+
+        async function loadAdminUsers() {
+            const list = document.getElementById('adminUserList');
+            list.innerHTML = '<tr><td colspan="2" class="p-4 text-center"><div class="loader"></div></td></tr>';
             try {
                 const snap = await db.collection('users').get();
                 let totalUsers = 0;
@@ -684,12 +841,40 @@
                 list.innerHTML = `<tr><td colspan="2" class="text-red-500 p-4">Hata: ${e.message}</td></tr>`;
             }
         }
-
-        function closeAdminPanel() {
-            const modal = document.getElementById('adminModal');
-            modal.classList.remove('open');
-            setTimeout(() => modal.classList.add('hidden'), 300);
-            if(!originalAdminUid) document.getElementById('overlay').classList.remove('active'); 
+        
+        async function loadAdminMessages() {
+            const list = document.getElementById('adminMessageList');
+            list.innerHTML = '<div class="text-center p-4"><div class="loader"></div></div>';
+            
+            try {
+                const snap = await db.collection('messages').orderBy('date', 'desc').get();
+                if (snap.empty) {
+                    list.innerHTML = '<div class="text-center text-slate-500 text-xs p-4">Hiç mesaj yok.</div>';
+                    return;
+                }
+                
+                let html = '';
+                snap.forEach(doc => {
+                    const m = doc.data();
+                    const date = new Date(m.date).toLocaleString('tr-TR');
+                    
+                    html += `
+                    <div class="bg-slate-800 p-3 rounded-xl border border-slate-700">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <p class="text-xs font-bold text-white">${m.senderName}</p>
+                                <p class="text-[9px] text-slate-400">${m.senderEmail}</p>
+                            </div>
+                            <span class="text-[9px] text-slate-500">${date}</span>
+                        </div>
+                        <p class="text-xs text-slate-300 bg-slate-900/50 p-2 rounded-lg leading-relaxed">${m.content}</p>
+                    </div>`;
+                });
+                
+                list.innerHTML = html;
+            } catch(e) {
+                 list.innerHTML = `<div class="text-red-400 text-xs p-4">Hata: ${e.message}</div>`;
+            }
         }
 
         async function inspectUser(targetUid, targetName) {
