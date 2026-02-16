@@ -1263,7 +1263,9 @@
             let monthlySpend = (state.manualDailyLimit || 0) * daysInCurrentMonth;
             
             // Tasarruf = realNet - monthlySpend (Çünkü standardLoans da ödenmeli)
-            const calcSavings = Math.max(0, realNet - monthlySpend);
+            // const calcSavings = Math.max(0, realNet - monthlySpend);
+            // DÜZELTME: Kredi Dahil Tutarın Gösterilmesi
+            const calcSavings = Math.max(0, grossNet - monthlySpend);
             
             const totalMonthlyOutflow = totalFix + standardLoans;
 
@@ -2358,21 +2360,18 @@
         function updateLoanData(i, f, v) { state.loans[i][f] = parseFloat(v)||0; const l = state.loans[i]; if(f==='monthly' && l.totalMonths>0) l.totalDebt = l.monthly*l.totalMonths; else if(f==='totalMonths' && l.monthly>0) l.totalDebt = l.monthly*l.totalMonths; else if(f==='totalDebt' && l.totalMonths>0) l.monthly = l.totalDebt/l.totalMonths; document.getElementById(`wiz_loan_t_${i}`).value = Math.ceil(l.totalDebt); }
         
         function openCalcModal() { 
-            // DÜZELTME 3: DETAYLI HESAPLAMA GÖRÜNÜMÜ
+            // DETAYLI HESAPLAMA GÖRÜNÜMÜ
             const totalInc = state.incomes.reduce((s, i) => s + (i.val||0), 0); 
             const normalBills = state.bills.reduce((s, b) => s + (b.val||0), 0);
             
-            // DÜZELTME 1: Bütçeye dahil olup Genel Borca dahil olmayanlar "Gizli Gider"
             const loansTreatedAsBills = state.loans.filter(l => l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
             
             const totalFix = normalBills + loansTreatedAsBills;
             
-            // DÜZELTME 1 Devamı: Sadece "Normal" krediler
             const standardLoans = state.loans.filter(l => !l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
             
             const grossNet = totalInc - totalFix;
             
-            // netIncome: Eski "Kalan Net Tutar" (Krediler düşüldükten sonra). Artık çok öne çıkarmıyoruz.
             const netIncome = grossNet - standardLoans;
             
             const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
