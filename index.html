@@ -469,10 +469,12 @@
                 <h4 class="font-black text-xl text-gray-800 tracking-tight">Kategoriler</h4>
                 <button onclick="closeCategoryModal()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
             </div>
+            
             <div class="flex gap-2 mb-4">
                 <input type="text" id="newCatName" placeholder="Yeni Kategori Ekle" class="flex-1 p-3 bg-gray-50 border rounded-xl text-sm font-bold outline-none" onkeyup="if(event.key==='Enter') addNewCategory()">
                 <button onclick="addNewCategory()" class="bg-blue-600 text-white w-12 rounded-xl flex items-center justify-center hover:bg-blue-700 shadow-lg"><i class="fas fa-plus"></i></button>
             </div>
+            
             <div id="categoryList" class="flex-1 overflow-y-auto custom-scrollbar space-y-2 pb-10"></div>
         </div>
     </div>
@@ -527,6 +529,7 @@
         window.userInvites = [];
         window.currentHistoryDateIndex = 0;
         let currentExpenseDateOffset = 0;
+        let editingCategoryIndex = -1; // New state for editing category
 
         const defaultState = {
             step: 1, salaryDay: 15,
@@ -1033,14 +1036,9 @@
             let startCalc = new Date(state.registrationDate);
             if(isNaN(startCalc.getTime())) startCalc = new Date();
             
-            // --- HİBRİT HESAPLAMA MANTIĞI ---
-            // Eğer harcamalar içinde "Kayıt Tarihinden Önce" bir tarih varsa,
-            // Başlangıç tarihi olarak "Son Maaş Günü"nü baz al.
             if (state.expenses.length > 0) {
-                let minExpDate = new Date(); // Bugünle başla
-                
+                let minExpDate = new Date();
                 state.expenses.forEach(e => {
-                    // Tarih formatı: "DD.MM.YYYY" (tr-TR)
                     let dParts = e.date.split('.');
                     if(dParts.length === 3) {
                         let d = new Date(dParts[2], dParts[1]-1, dParts[0]);
@@ -1048,12 +1046,9 @@
                     }
                 });
                 
-                // Eğer en eski harcama, kayıt tarihinden eskiyse
-                // (Küçük bir tolerans payı bırakalım, saat farkı vs için)
                 if (minExpDate.getTime() < startCalc.getTime() - (1000 * 60 * 60 * 24)) {
                     const salaryDay = state.salaryDay || 15;
                     let lastSalaryDate = new Date(now.getFullYear(), now.getMonth(), salaryDay);
-                    // Eğer bugün maaş gününden önceyse, son maaş günü geçen aydır
                     if (now.getDate() < salaryDay) {
                         lastSalaryDate.setMonth(lastSalaryDate.getMonth() - 1);
                     }
@@ -1089,42 +1084,18 @@
             const totalDebt = loans + cards + others;
             const net = assets - totalDebt;
             
-            // DİKKAT: Artık 30'a değil, gerçek gün sayısına bölüyoruz
             const daysInCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-            
             const normalBills = state.bills.reduce((s, b) => s + (b.val||0), 0);
-            
-            // **DÜZELTME 1: Kredi mantığı**
             const loansTreatedAsBills = state.loans.filter(l => l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
-            
-            // 2. Normal Kredi Olarak Davranacaklar: (Genel Borca Dahil VE Bütçeye Dahil)
             const standardLoans = state.loans.filter(l => !l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
-
             const totalFix = normalBills + loansTreatedAsBills;
-            
             const totalInc = state.incomes.reduce((s, i) => s + (i.val||0), 0);
             
-            // grossNet: Gelir - (Faturalar + Borçtan Düşülmeyen Kredi Taksitleri)
-            // Bu, kullanıcının "sabit giderleri ödedikten sonra kalan" parasıdır.
-            // Borçtan düşülen krediler henüz düşülmemiştir.
             const grossNet = totalInc - totalFix; 
-            
-            // realNet: grossNet - Borçtan Düşülen Kredi Taksitleri
             const realNet = grossNet - standardLoans;
-            
             let monthlySpend = (state.manualDailyLimit || 0) * daysInCurrentMonth;
             
-            // DÜZELTME: Ana ekrandaki hedef birikim artık %100 sihirbaz mantığıyla aynı.
-            // Tasarruf (Dağıtılabilir Gelir - Harcama)
-            // Kredi Ödemeleri de "Dağıtılabilir Gelir" içinden karşılandığı için,
-            // Kalan Para = (Gelir - Sabitler) - HarcamaLimiti = (Kredi Taksitleri + Nakit Birikim)
-            // VEYA: Eğer "Hedef Birikim" derken sadece Nakit Birikimi kastediyorsak:
-            // (Gelir - Sabitler - Krediler) - HarcamaLimiti
-            
-            // Kullanıcı isteği: "Kredi ödemeleri genel borctan düşülecek bir borc indirmedir tıpkı birikim gibidir."
-            // Bu yüzden "Dağıtılabilir Gelir"den "Harcama Limiti"ni çıkarırsak elimize "Toplam Birikim (Kredi + Nakit)" kalır.
-            const calcSavings = Math.max(0, grossNet - monthlySpend);
-            
+            const calcSavings = Math.max(0, realNet - monthlySpend);
             const totalMonthlyOutflow = totalFix + standardLoans;
 
             document.getElementById('sumSavings').innerText = `₺${Math.floor(calcSavings).toLocaleString()}`;
@@ -1134,7 +1105,6 @@
 
             document.getElementById('displayInviteCode').innerText = state.inviteCode || '-----';
             
-            // Motivasyon Mesajını Göster
             const motivationalMsg = checkGamificationStatus();
             document.getElementById('motivationText').innerText = motivationalMsg;
             document.getElementById('motivationArea').classList.remove('hidden');
@@ -1173,7 +1143,6 @@
             const d = new Date();
             d.setDate(d.getDate() - currentExpenseDateOffset);
             
-            // Format options
             const options = { day: 'numeric', month: 'long', weekday: 'long' };
             const formattedDate = d.toLocaleDateString('tr-TR', options);
             
@@ -1196,11 +1165,9 @@
             if (!val) return;
             const selected = new Date(val);
             const today = new Date();
-            // Reset hours for accurate day diff
             selected.setHours(0,0,0,0);
             today.setHours(0,0,0,0);
             
-            // Farkı hesapla (gün cinsinden)
             const diffTime = today - selected;
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
             
@@ -1209,7 +1176,6 @@
                 updateExpenseDateLabel();
             } else {
                 alert("Geleceğe harcama giremezsiniz!");
-                // Reset to today
                 currentExpenseDateOffset = 0;
                 updateExpenseDateLabel();
             }
@@ -1229,8 +1195,21 @@
             const list = document.getElementById('categoryList');
             list.innerHTML = state.categories.map((c, i) => `
                 <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
-                    <span class="text-sm font-bold text-gray-700">${c}</span>
-                    <button onclick="deleteCategory(${i})" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button>
+                    <div class="flex-1">
+                        ${editingCategoryIndex === i 
+                            ? `<div class="flex gap-2">
+                                 <input type="text" id="catEditInput_${i}" value="${c}" class="w-full p-2 border border-blue-200 rounded-lg text-sm" onkeyup="if(event.key==='Enter') saveCategoryEdit(${i})">
+                                 <button onclick="saveCategoryEdit(${i})" class="text-green-600 hover:text-green-800"><i class="fas fa-check"></i></button>
+                                 <button onclick="cancelCategoryEdit()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+                               </div>`
+                            : `<span class="text-sm font-bold text-gray-700">${c}</span>`
+                        }
+                    </div>
+                    ${editingCategoryIndex !== i ? 
+                    `<div class="flex gap-2">
+                        <button onclick="startCategoryEdit(${i})" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pen"></i></button>
+                        <button onclick="deleteCategory(${i})" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button>
+                    </div>` : ''}
                 </div>
             `).join('');
         }
@@ -1244,10 +1223,12 @@
         }
 
         function closeCategoryModal() {
+            editingCategoryIndex = -1; // Reset edit state
             const modal = document.getElementById('categoryModal');
             modal.classList.remove('open');
             setTimeout(() => modal.classList.add('hidden'), 300);
             document.getElementById('overlay').classList.remove('active');
+            renderCategoryOptions(); // Re-render select box to update options
         }
 
         function addNewCategory() {
@@ -1258,6 +1239,41 @@
                 inp.value = '';
                 saveToCloud();
                 renderCategoryOptions();
+            }
+        }
+        
+        function startCategoryEdit(idx) {
+            editingCategoryIndex = idx;
+            renderCategoryOptions();
+            setTimeout(() => document.getElementById(`catEditInput_${idx}`).focus(), 50);
+        }
+        
+        function cancelCategoryEdit() {
+            editingCategoryIndex = -1;
+            renderCategoryOptions();
+        }
+        
+        function saveCategoryEdit(idx) {
+            const input = document.getElementById(`catEditInput_${idx}`);
+            const newVal = input.value.trim();
+            if (newVal && newVal !== state.categories[idx]) {
+                const oldVal = state.categories[idx];
+                // Update category list
+                state.categories[idx] = newVal;
+                
+                // Update all past expenses with this category
+                state.expenses.forEach(exp => {
+                    if (exp.category === oldVal) {
+                        exp.category = newVal;
+                    }
+                });
+                
+                saveToCloud();
+                editingCategoryIndex = -1;
+                renderCategoryOptions();
+                updateDashboardUI(); // To refresh expense list if visible
+            } else {
+                cancelCategoryEdit();
             }
         }
 
@@ -2243,4 +2259,29 @@
                         <div class="border-t border-gray-200 pt-2 flex justify-between text-base font-black text-blue-600"><span>Harcanabilir Bütçe:</span><span>₺${Math.floor(monthlySpend).toLocaleString()}</span></div>
                     </div>
 
-                    <div class="text-
+                    <div class="text-center pt-2">
+                        <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-1">Günlük Limit Hesabı</p>
+                        <p class="text-xs font-bold text-gray-500">₺${Math.floor(monthlySpend).toLocaleString()} / ${daysInMonth} Gün</p>
+                        <p class="text-2xl font-black text-blue-600 mt-1">₺${Math.floor(daily).toLocaleString()}</p>
+                    </div>
+                </div>`; 
+            
+            const modal = document.getElementById('calcModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('open'), 10);
+            document.getElementById('overlay').classList.add('active'); 
+        }
+        function closeCalcModal() { 
+            const modal = document.getElementById('calcModal');
+            modal.classList.remove('open');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            document.getElementById('overlay').classList.remove('active'); 
+        }
+        function closeAllPopups() { 
+            document.getElementById('overlay').classList.remove('active'); 
+            document.querySelectorAll('.fixed.z-50').forEach(el => { if(el.id !== 'saveIndicator') el.classList.add('hidden'); }); 
+            document.querySelectorAll('.side-panel').forEach(el => { el.classList.remove('open'); setTimeout(() => el.classList.add('hidden'), 300); });
+        }
+    </script>
+</body>
+</html>
