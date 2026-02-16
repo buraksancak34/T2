@@ -80,7 +80,7 @@
     </div>
 
     <!-- 1. GİRİŞ EKRANI -->
-    <!-- DÜZELTME: overflow-hidden kaldırıldı (Bize Ulaşın butonunun kesilmemesi için) -->
+    <!-- DÜZELTME: overflow-hidden kaldırıldı -->
     <div id="loginScreen" class="max-w-md w-full glass-card p-10 rounded-[2.5rem] shadow-2xl space-y-6 my-auto relative animate-fade-in">
         <div class="text-center">
             <!-- LOGO ALANI -->
@@ -631,6 +631,9 @@
             </div>
             <div class="flex-1 flex flex-col gap-4">
                 <p class="text-sm text-gray-500">Görüş, öneri veya şikayetlerinizi bizimle paylaşın. Size en kısa sürede dönüş yapacağız.</p>
+                <!-- YENİ: E-POSTA ALANI (Sadece misafirler için görünür, JS ile kontrol edilir) -->
+                <input type="email" id="contactEmail" class="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 outline-none focus:ring-4 focus:ring-blue-100 transition-all hidden" placeholder="E-posta Adresiniz (Dönüş yapabilmemiz için)">
+                
                 <textarea id="contactMsg" rows="6" class="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 outline-none focus:ring-4 focus:ring-blue-100 transition-all resize-none" placeholder="Mesajınız..."></textarea>
                 <button onclick="sendContactMessage()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all hover:bg-blue-700">GÖNDER</button>
             </div>
@@ -701,7 +704,6 @@
                     const name = user.displayName || user.email.split('@')[0];
                     document.getElementById('dashWelcome').innerText = `Hoşgeldin, ${name}`;
                     
-                    // ADMIN KONTROLÜ
                     if (user.email.toLowerCase() === 'buraksancak@msn.com') {
                         document.getElementById('btnAdmin').classList.remove('hidden');
                     } else {
@@ -735,6 +737,16 @@
         // --- İLETİŞİM / MESAJLAŞMA ---
         function openContactModal() {
             document.getElementById('contactMsg').value = '';
+            const emailInput = document.getElementById('contactEmail');
+            emailInput.value = '';
+            
+            // Eğer giriş yapılmamışsa (misafir) e-posta alanını göster
+            if (!currentUser) {
+                emailInput.classList.remove('hidden');
+            } else {
+                emailInput.classList.add('hidden');
+            }
+
             const modal = document.getElementById('contactModal');
             modal.classList.remove('hidden');
             setTimeout(() => modal.classList.add('open'), 10);
@@ -750,8 +762,11 @@
 
         async function sendContactMessage() {
             const msg = document.getElementById('contactMsg').value.trim();
-            if (!msg) return alert("Lütfen bir mesaj yazın.");
+            const emailInp = document.getElementById('contactEmail').value.trim();
             
+            if (!msg) return alert("Lütfen bir mesaj yazın.");
+            if (!currentUser && !emailInp) return alert("Lütfen size dönebilmemiz için bir e-posta adresi girin.");
+
             const btn = document.querySelector('#contactModal button');
             const origText = btn.innerText;
             btn.innerText = "Gönderiliyor...";
@@ -759,7 +774,7 @@
 
             try {
                 let sender = "Misafir";
-                let email = "-";
+                let email = emailInp || "-";
                 let uid = "-";
 
                 if (currentUser) {
@@ -2107,6 +2122,7 @@
             if (type === 'loans') chk.checked = item.excludeFromDebt || false;
             else chk.checked = item.excludeFromNetWorth || false;
             
+            // YENİ: Side Panel olarak aç
             const modal = document.getElementById('editItemModal');
             modal.classList.remove('hidden');
             setTimeout(() => modal.classList.add('open'), 10);
@@ -2134,6 +2150,7 @@
             } 
         }
         function closeEditModal() { 
+            // YENİ: Side Panel kapatma mantığı
             const modal = document.getElementById('editItemModal');
             modal.classList.remove('open');
             setTimeout(() => modal.classList.add('hidden'), 300);
@@ -2150,21 +2167,27 @@
             if(expensesChartInstance) expensesChartInstance.destroy();
             if(historyChartInstance) historyChartInstance.destroy();
             
-            const filterVal = document.getElementById('analysisDateFilter').value; 
+            // DÖNEMLİK ANALİZ MANTIĞI
+            const filterVal = document.getElementById('analysisDateFilter').value; // YYYY-MM
             let filteredExpenses = state.expenses;
             
             if (filterVal) {
                 const [year, month] = filterVal.split('-').map(Number);
                 const salaryDay = state.salaryDay || 15;
+                
+                // Başlangıç: Seçilen Ay, Maaş Günü
                 const startDate = new Date(year, month - 1, salaryDay);
+                // Bitiş: Bir sonraki ay, Maaş Günü
                 const endDate = new Date(year, month, salaryDay);
                 
+                // Dönem Bilgisini Ekrana Yaz
                 const startStr = startDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
                 const endStr = new Date(endDate - 1).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
                 document.getElementById('analysisPeriodLabel').innerText = `Dönem: ${startStr} - ${endStr}`;
                 
                 filteredExpenses = state.expenses.filter(e => {
-                    const parts = e.date.split('.'); 
+                    const parts = e.date.split('.'); // DD.MM.YYYY
+                    // JS Date objesi oluştur (Ay indeksi 0-11)
                     const d = new Date(parts[2], parts[1] - 1, parts[0]);
                     return d >= startDate && d < endDate;
                 });
@@ -2173,20 +2196,39 @@
             const assets = state.assets.reduce((s,a)=>s+(a.val||0),0);
             const debts = state.loans.filter(l=>!l.excludeFromDebt).reduce((s,l)=>s+(l.totalDebt||0),0) + state.debts.reduce((s,d)=>s+(d.val||0),0) + state.otherDebts.reduce((s,d)=>s+(d.val||0),0);
             
+            // Group expenses by Category
             const expenseMap = {};
             filteredExpenses.forEach(e => {
                 let key = e.category; 
-                if (!key || key === 'Diğer') key = 'Diğer / Özel';
+                if (!key || key === 'Diğer') {
+                    key = 'Diğer / Özel';
+                }
                 expenseMap[key] = (expenseMap[key] || 0) + e.amount; 
             });
 
+            // Sort by value
             const sortedKeys = Object.keys(expenseMap).sort((a,b) => expenseMap[b] - expenseMap[a]);
             const sortedData = sortedKeys.map(k => expenseMap[k]);
 
             assetsChartInstance = new Chart(ctx1, { type: 'doughnut', data: { labels: ['Varlıklar', 'Borçlar'], datasets: [{ data: [assets, debts], backgroundColor: ['#22c55e', '#ef4444'], borderWidth: 0 }] }, options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } } });
-            expensesChartInstance = new Chart(ctx2, { type: 'bar', data: { labels: sortedKeys.slice(0, 8), datasets: [{ label: 'Harcama', data: sortedData.slice(0, 8), backgroundColor: '#3b82f6', borderRadius: 5 }] }, options: { scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } } });
-            
-            // --- GÜNCELLENMİŞ TREND GRAFİĞİ (TL / USD SEÇENEKLİ - 2 ÇİZGİLİ) ---
+            expensesChartInstance = new Chart(ctx2, { 
+                type: 'bar', 
+                data: { 
+                    labels: sortedKeys.slice(0, 8), 
+                    datasets: [{ 
+                        label: 'Harcama', 
+                        data: sortedData.slice(0, 8), 
+                        backgroundColor: '#3b82f6', 
+                        borderRadius: 5 
+                    }] 
+                }, 
+                options: { 
+                    scales: { y: { beginAtZero: true } }, 
+                    plugins: { legend: { display: false } } 
+                } 
+            });
+
+            // --- YENİ TREND GRAFİĞİ (TL / USD SEÇENEKLİ - 2 ÇİZGİLİ) ---
             const sortedHistory = [...state.monthlyHistory].sort((a, b) => a.date.localeCompare(b.date));
             const labels = sortedHistory.map(h => h.date);
             
@@ -2254,6 +2296,7 @@
             });
         }
 
+        // --- YENİ GRAFİK FONKSİYONLARI ---
         function switchChartMode(mode) {
             currentChartMode = mode;
             // Buton stillerini güncelle
@@ -2279,6 +2322,7 @@
             
             if(!date) return alert("Tarih seçin");
             
+            // Aynı aya ait kayıt varsa güncelle, yoksa ekle
             const existingIndex = state.monthlyHistory.findIndex(h => h.date === date);
             if(existingIndex > -1) {
                  if(confirm("Bu aya ait kayıt zaten var. Güncellensin mi?")) {
@@ -2289,8 +2333,8 @@
             }
             
             saveToCloud(); 
-            renderCharts(); 
-            renderHistoryTableUI();
+            renderCharts(); // Grafiği güncelle
+            renderHistoryTableUI(); // Tabloyu güncelle
             alert("Kayıt Eklendi/Güncellendi");
         }
 
@@ -2298,7 +2342,7 @@
             const tbody = document.getElementById('historyTableBody');
             if(!tbody) return;
             
-            const sorted = [...state.monthlyHistory].sort((a,b) => b.date.localeCompare(a.date)); 
+            const sorted = [...state.monthlyHistory].sort((a,b) => b.date.localeCompare(a.date)); // Yeniden eskiye
             
             if(sorted.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-400 font-normal">Henüz geçmiş kayıt yok.</td></tr>';
@@ -2327,6 +2371,9 @@
             }
         }
         
+        // ... (Kredi Planı, Bakiye Modalı, Sihirbaz, Auth, vb. diğer fonksiyonlar aynen korunuyor) ...
+
+        // KREDİ PLAN MODALI (SIDE PANEL)
         function openLoanPlanModal(loanIndex) {
             const loan = state.loans[loanIndex];
             if (!loan) return;
@@ -2368,11 +2415,13 @@
             document.getElementById('overlay').classList.remove('active'); 
         }
 
+        // GERÇEK BAKİYE MODALI
         function openBalanceModal() {
             const now = new Date(); const todayStr = now.toLocaleDateString('tr-TR');
             let startCalc = new Date(state.registrationDate);
             if(isNaN(startCalc.getTime())) startCalc = new Date();
             
+            // Hibrit Mantık
             let isSalaryBased = false;
             if (state.expenses.length > 0) {
                 let minExpDate = new Date();
@@ -2448,8 +2497,9 @@
             document.getElementById('overlay').classList.remove('active'); 
         }
 
+        // HESAPLAMA DETAYI
         function openCalcModal() { 
-            // Veri koruması eklendi (|| [])
+            // Veri koruması (HATA DÜZELTME)
             const totalInc = (state.incomes || []).reduce((s, i) => s + (i.val||0), 0); 
             const normalBills = (state.bills || []).reduce((s, b) => s + (b.val||0), 0);
             
@@ -2461,13 +2511,11 @@
             
             const grossNet = totalInc - totalFix;
             
-            const netIncome = grossNet - standardLoans;
-            
             const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
             const daily = state.manualDailyLimit || 0;
             const monthlySpend = daily * daysInMonth;
             
-            // Hedeflenen Birikim (Kredi Dahil) = grossNet - monthlySpend
+            // Hedeflenen Birikim (Kredi Dahil)
             const savings = grossNet - monthlySpend;
 
             // Detaylı liste oluşturma
@@ -2476,8 +2524,6 @@
             
             let hiddenLoanList = (state.loans || []).filter(l => l.excludeFromDebt && !l.excludeFromBudget).map(l => `<div class="flex justify-between text-xs text-red-500 pl-2"><span>${l.name} (Gizli Taksit)</span><span>-₺${(l.monthly||0).toLocaleString()}</span></div>`).join('');
             
-            let standardLoanList = (state.loans || []).filter(l => !l.excludeFromDebt && !l.excludeFromBudget).map(l => `<div class="flex justify-between text-xs text-red-500 pl-2"><span>${l.name} (Taksit)</span><span>-₺${(l.monthly||0).toLocaleString()}</span></div>`).join('');
-
             document.getElementById('calcModalContent').innerHTML = `
                 <div class="space-y-4">
                     <div class="bg-green-50 p-4 rounded-2xl border border-green-100">
@@ -2525,12 +2571,14 @@
             setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active'); 
         }
+
         function closeCalcModal() { 
             const modal = document.getElementById('calcModal');
             modal.classList.remove('open');
             setTimeout(() => modal.classList.add('hidden'), 300);
             document.getElementById('overlay').classList.remove('active'); 
         }
+
         function closeAllPopups() { 
             document.getElementById('overlay').classList.remove('active'); 
             document.querySelectorAll('.fixed.z-50').forEach(el => { if(el.id !== 'saveIndicator') el.classList.add('hidden'); }); 
