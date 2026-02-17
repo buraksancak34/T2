@@ -76,14 +76,21 @@
         .animate-pulse-red { animation: pulse-red 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         .animate-pulse-green { animation: pulse-green 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 
-        /* Side Panel Animasyonları */
+        /* Side Panel Animasyonları - GÖLGE DÜZELTMESİ */
         .side-panel {
             position: fixed; top: 0; right: 0; height: 100%; width: 100%; max-width: 28rem; 
             background: white; z-index: 60; box-shadow: -10px 0 30px rgba(0,0,0,0.1);
-            transform: translateX(100%); transition: transform 0.3s ease-in-out;
+            transform: translateX(100%); 
+            /* GÖLGE DÜZELTMESİ: Kapalıyken visibility hidden yaparak gölgeyi yok ediyoruz */
+            visibility: hidden;
+            transition: transform 0.3s ease-in-out, visibility 0s linear 0.3s; /* Kapanırken visibility gecikmeli */
             display: flex; flex-direction: column;
         }
-        .side-panel.open { transform: translateX(0); }
+        .side-panel.open { 
+            transform: translateX(0); 
+            visibility: visible;
+            transition: transform 0.3s ease-in-out, visibility 0s linear 0s; /* Açılırken visibility anında */
+        }
 
         /* Bottom Nav Bar */
         .bottom-nav {
@@ -147,6 +154,24 @@
     
     <div id="saveIndicator" class="fixed bottom-20 right-4 bg-white px-4 py-2 rounded-full shadow-lg border border-gray-100 flex items-center gap-2 text-xs font-bold text-gray-500 opacity-0 transition-opacity duration-500 pointer-events-none z-50">
         <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> Kaydedildi
+    </div>
+
+    <!-- ÖZEL ONAY KUTUSU (CUSTOM CONFIRM MODAL) -->
+    <div id="customConfirmModal" class="fixed inset-0 z-[70] hidden flex items-center justify-center">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeCustomConfirm()"></div>
+        <!-- Modal Content -->
+        <div class="bg-white rounded-3xl p-6 w-[85%] max-w-sm relative z-10 shadow-2xl animate-fade-in text-center border-2 border-white">
+            <div class="w-14 h-14 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+                <i class="fas fa-exclamation-triangle text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-black text-gray-800 mb-2 tracking-tight">Emin misiniz?</h3>
+            <p id="customConfirmMsg" class="text-xs text-gray-500 font-bold mb-6 leading-relaxed">Bu işlem geri alınamaz.</p>
+            <div class="flex gap-3">
+                <button onclick="closeCustomConfirm()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-black rounded-xl text-xs hover:bg-gray-200 transition-colors">Vazgeç</button>
+                <button id="customConfirmBtn" class="flex-1 py-3 bg-red-500 text-white font-black rounded-xl text-xs hover:bg-red-600 shadow-lg shadow-red-200 transition-colors">Evet, Sil</button>
+            </div>
+        </div>
     </div>
 
     <!-- 1. GİRİŞ EKRANI -->
@@ -787,6 +812,31 @@
         let editingCategoryIndex = -1; 
         let originalAdminUid = null;
 
+        // Custom Confirm Logic
+        let pendingConfirmAction = null;
+
+        function showConfirm(message, callback) {
+            document.getElementById('customConfirmMsg').innerText = message;
+            pendingConfirmAction = callback;
+            const modal = document.getElementById('customConfirmModal');
+            modal.classList.remove('hidden');
+            // Butona click eventini temizleyip yenisini ekleyelim
+            const btn = document.getElementById('customConfirmBtn');
+            // Clone node to remove all event listeners
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+            
+            newBtn.onclick = () => {
+                if (pendingConfirmAction) pendingConfirmAction();
+                closeCustomConfirm();
+            };
+        }
+
+        function closeCustomConfirm() {
+            document.getElementById('customConfirmModal').classList.add('hidden');
+            pendingConfirmAction = null;
+        }
+
         const defaultState = {
             step: 1, salaryDay: 15,
             registrationDate: new Date().toISOString(),
@@ -1006,7 +1056,7 @@
         }
 
         async function deleteUserDoc(uid, name) {
-            if(confirm(name + " adlı kullanıcının tüm verileri silinecek. Bu işlem geri alınamaz. Emin misiniz?")) {
+            showConfirm(name + " adlı kullanıcının tüm verileri silinecek?", async () => {
                 try {
                     await db.collection('users').doc(uid).delete();
                     alert("Kullanıcı verisi silindi.");
@@ -1014,7 +1064,7 @@
                 } catch(e) {
                     alert("Hata: " + e.message);
                 }
-            }
+            });
         }
         
         async function loadAdminMessages() {
@@ -1395,15 +1445,16 @@
             alert("Plana başarıyla katıldınız!"); window.location.reload();
         }
         async function leaveCurrentPlan() {
-            if(!confirm("Mevcut plandan ayrılmak istediğinize emin misiniz?")) return;
-            const ownerDoc = await db.collection('users').doc(currentPlanId).get();
-            if(ownerDoc.exists) {
-                let members = ownerDoc.data().familyMembers || [];
-                members = members.filter(m => m.uid !== currentUser.uid);
-                await db.collection('users').doc(currentPlanId).update({ familyMembers: members });
-            }
-            await db.collection('users').doc(currentUser.uid).update({ connectedPlanId: null });
-            alert("Plandan ayrıldınız."); window.location.reload();
+            showConfirm("Mevcut plandan ayrılmak istediğinize emin misiniz?", async () => {
+                const ownerDoc = await db.collection('users').doc(currentPlanId).get();
+                if(ownerDoc.exists) {
+                    let members = ownerDoc.data().familyMembers || [];
+                    members = members.filter(m => m.uid !== currentUser.uid);
+                    await db.collection('users').doc(currentPlanId).update({ familyMembers: members });
+                }
+                await db.collection('users').doc(currentUser.uid).update({ connectedPlanId: null });
+                alert("Plandan ayrıldınız."); window.location.reload();
+            });
         }
 
         // --- AİLE YÖNETİMİ & DAVET SİSTEMİ ---
@@ -1497,11 +1548,11 @@
 
         async function removeFamilyMember(idx) {
              const m = state.familyMembers[idx];
-             if(confirm(`${m.name} plandan çıkarılacak?`)) {
+             showConfirm(`${m.name} plandan çıkarılacak?`, async () => {
                  await db.collection('users').doc(m.uid).update({ connectedPlanId: null });
                  state.familyMembers.splice(idx, 1);
                  saveToCloud(); renderFamilyList();
-             }
+             });
         }
 
         // --- BULUT İŞLEMLERİ ---
@@ -1834,11 +1885,11 @@
         }
 
         function deleteCategory(idx) {
-            if (confirm("Bu kategoriyi silmek istediğinize emin misiniz?")) {
+            showConfirm("Bu kategoriyi silmek istediğinize emin misiniz?", () => {
                 state.categories.splice(idx, 1);
                 saveToCloud();
                 renderCategoryOptions();
-            }
+            });
         }
 
         // --- SATIR İÇİ (INLINE) EKLEME SİSTEMİ ---
@@ -2114,9 +2165,11 @@
         }
 
         function deleteExpense(idx) {
-            if(confirm("Bu harcamayı silmek istediğinize emin misiniz?")) { 
-                state.expenses.splice(idx, 1); saveToCloud(); updateDashboardUI(); 
-            }
+            showConfirm("Bu harcamayı silmek istediğinize emin misiniz?", () => { 
+                state.expenses.splice(idx, 1); 
+                saveToCloud(); 
+                updateDashboardUI(); 
+            });
         }
 
         function changeHistoryDate(step) {
@@ -2353,7 +2406,14 @@
             setTimeout(() => modal.classList.add('hidden'), 300);
             document.getElementById('overlay').classList.remove('active'); 
         }
-        function deleteHealthItem(type, idx) { if(confirm('Bu kalemi tamamen silmek istediğinize emin misiniz?')) { state[type].splice(idx, 1); saveToCloud(); updateDashboardUI(); } }
+        
+        function deleteHealthItem(type, idx) { 
+            showConfirm('Bu kalemi tamamen silmek istediğinize emin misiniz?', () => { 
+                state[type].splice(idx, 1); 
+                saveToCloud(); 
+                updateDashboardUI(); 
+            }); 
+        }
 
         function renderCharts() {
             const ctx1 = document.getElementById('assetsChart').getContext('2d');
@@ -2543,12 +2603,12 @@
         }
 
         function deleteHistoryItem(index) {
-            if(confirm("Bu geçmiş kaydı silmek istediğinize emin misiniz?")) {
+            showConfirm("Bu geçmiş kaydı silmek istediğinize emin misiniz?", () => {
                 state.monthlyHistory.splice(index, 1);
                 saveToCloud();
                 renderHistoryTable();
                 renderTrendChart();
-            }
+            });
         }
 
         // --- KREDİ PLAN MODALI (SIDE PANEL) ---
