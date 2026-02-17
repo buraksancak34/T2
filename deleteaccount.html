@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hesap Silme Talebi - Birikim Koçum</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px; color: #333; background-color: #f8fafc; }
+        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0; }
+        h1 { color: #dc2626; border-bottom: 2px solid #fee2e2; padding-bottom: 10px; margin-top: 0; font-size: 1.5rem; }
+        p { margin-bottom: 15px; font-size: 0.95rem; color: #475569; }
+        
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #1e293b; font-size: 0.9rem; }
+        input, textarea { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
+        input:focus, textarea:focus { outline: none; border-color: #2563eb; ring: 2px solid #bfdbfe; }
+        
+        button {
+            width: 100%;
+            background-color: #dc2626;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 1rem;
+        }
+        button:hover { background-color: #b91c1c; }
+        
+        .info-box { background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 10px 15px; margin-bottom: 20px; border-radius: 4px; font-size: 0.85rem; color: #1e40af; }
+        .footer { margin-top: 20px; text-align: center; font-size: 0.8rem; color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Hesap Silme Talebi</h1>
+        <p><strong>Birikim Koçum</strong> uygulamasındaki hesabınızı ve ilişkili tüm verilerinizi (gelir, gider, bütçe kayıtları) kalıcı olarak silmek için aşağıdaki formu doldurun.</p>
+
+        <div class="info-box">
+            <strong>Bilgi:</strong> Bu işlem geri alınamaz. Talebiniz tarafımıza ulaştıktan sonra en geç 24 saat içinde verileriniz sistemlerimizden (Firebase) tamamen kaldırılacaktır.
+        </div>
+
+        <form id="deleteForm" onsubmit="prepareEmail(event)">
+            <label for="username">Uygulamadaki Kullanıcı Adınız / Adınız</label>
+            <input type="text" id="username" placeholder="Örn: Ahmet Yılmaz" required>
+
+            <label for="email">Uygulamaya Kayıtlı E-posta Adresi</label>
+            <input type="email" id="email" placeholder="ornek@email.com" required>
+
+            <label for="reason">Silme Sebebi (Opsiyonel)</label>
+            <textarea id="reason" rows="3" placeholder="Uygulamayı neden silmek istediğinizi belirtirseniz kendimizi geliştirebiliriz."></textarea>
+
+            <button type="submit">Talebi Oluştur ve Gönder</button>
+        </form>
+    </div>
+
+    <div class="footer">
+        &copy; 2026 Sancak Developer - Birikim Koçum
+    </div>
+
+    <script>
+        function prepareEmail(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const reason = document.getElementById('reason').value;
+            const targetEmail = "desteksancak@gmail.com";
+            
+            const subject = encodeURIComponent("Hesap Silme Talebi: " + email);
+            const body = encodeURIComponent(
+                "Merhaba Sancak Developer Ekibi,\n\n" +
+                "Aşağıdaki hesaba ait verilerin Birikim Koçum uygulamasından kalıcı olarak silinmesini talep ediyorum.\n\n" +
+                "--- HESAP BİLGİLERİ ---\n" +
+                "Kullanıcı Adı: " + username + "\n" +
+                "E-posta: " + email + "\n\n" +
+                "--- SEBEP ---\n" +
+                (reason ? reason : "Belirtilmedi") + "\n\n" +
+                "Gereğinin yapılmasını arz ederim."
+            );
+
+            // Kullanıcının e-posta uygulamasını aç
+            window.location.href = "mailto:" + targetEmail + "?subject=" + subject + "&body=" + body;
+        }
+    </script>
+
+</body>
+</html>
