@@ -209,7 +209,7 @@
             <!-- LOGO ALANI -->
             <div class="mx-auto mb-6 w-full max-w-[150px] h-auto hover:scale-105 transition-transform duration-300">
                 <img src="logo.png" alt="Birikim Koçum Logo" class="w-full h-full object-contain drop-shadow-xl" 
-                     onerror="this.src='https://cdn-icons-png.flaticon.com/512/2382/2382461.png'; this.parentElement.classList.add('opacity-80');">
+                      onerror="this.src='https://cdn-icons-png.flaticon.com/512/2382/2382461.png'; this.parentElement.classList.add('opacity-80');">
             </div>
             
             <h1 class="text-2xl font-black text-gray-900 tracking-tight mb-1" id="loginTitle">Birikim Koçum</h1>
@@ -3100,6 +3100,76 @@
         
         function getStandardLoans() {
              return state.loans.filter(l => !l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
+        }
+
+        // EKSİK FONKSİYON 1: LİSTELERİ RENDER ETME
+        function renderWizardLists() {
+            // Step 1: Incomes, 2: Bills, 3: Loans, 4: Debts (Cards), 5: Other Debts, 6: Assets
+            const keys = ["", "incomes", "bills", "loans", "debts", "otherDebts", "assets"];
+            const key = keys[state.step];
+            if (!key) return; // Steps 7 & 8 don't use lists
+
+            const container = document.getElementById(`wiz_${key}_list`);
+            if (!container) return;
+
+            if (state[key].length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-400 text-xs py-4">Henüz kalem eklenmedi.</div>';
+                return;
+            }
+
+            let html = '';
+            state[key].forEach((item, i) => {
+                let valDisplay = '';
+                let inputHtml = '';
+
+                if (key === 'loans') {
+                    valDisplay = `₺${Math.floor(item.totalDebt).toLocaleString()}`;
+                    inputHtml = `
+                        <div class="flex-1">
+                            <p class="font-bold text-gray-700 text-xs">${item.name}</p>
+                            <p class="text-[9px] text-gray-400">${item.totalMonths} Ay x ₺${item.monthly}</p>
+                        </div>
+                        <input type="number" id="wiz_loan_t_${i}" value="${Math.ceil(item.totalDebt)}" onchange="updateLoanData(${i}, 'totalDebt', this.value)" class="w-20 p-2 bg-white border rounded-lg text-xs font-bold text-right outline-none">
+                    `;
+                } else if (key === 'debts') {
+                    // Credit Cards
+                    valDisplay = `₺${Math.floor(item.val).toLocaleString()}`;
+                    inputHtml = `
+                        <div class="flex-1">
+                            <p class="font-bold text-gray-700 text-xs">${item.name}</p>
+                            ${item.limit ? `<p class="text-[9px] text-gray-400">Limit: ₺${item.limit}</p>` : ''}
+                        </div>
+                        <input type="number" value="${item.val}" onchange="state.debts[${i}].val=parseFloat(this.value)||0; saveState();" class="w-20 p-2 bg-white border rounded-lg text-xs font-bold text-right outline-none">
+                    `;
+                } else {
+                    // Standard
+                    valDisplay = `₺${Math.floor(item.val).toLocaleString()}`;
+                    inputHtml = `
+                        <input type="text" value="${item.name}" onchange="state.${key}[${i}].name=this.value; saveState();" class="flex-1 p-2 bg-white border rounded-lg text-xs font-bold outline-none mr-2">
+                        <input type="number" value="${item.val}" onchange="state.${key}[${i}].val=parseFloat(this.value)||0; saveState();" class="w-24 p-2 bg-white border rounded-lg text-xs font-bold text-right outline-none">
+                    `;
+                }
+
+                html += `
+                    <div class="flex items-center gap-2 mb-2 bg-gray-50 p-2 rounded-xl border border-gray-100">
+                        ${inputHtml}
+                        <button onclick="removeItem('${key}', ${i})" class="w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors"><i class="fas fa-trash text-xs"></i></button>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // EKSİK FONKSİYON 2: BASİT KALEM EKLEME
+        function addSimpleWizItem(key, listId) {
+            const name = prompt("Kalem Adı:");
+            if (!name) return;
+            const val = parseFloat(prompt("Tutar (TL):")) || 0;
+            
+            state[key].push({ name, val });
+            saveState();
+            renderWizardLists();
         }
 
         function renderWizard() {
