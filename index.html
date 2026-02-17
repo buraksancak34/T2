@@ -686,7 +686,8 @@
             <div id="adminTabSpecials" class="hidden flex-1 flex flex-col min-h-0 space-y-4">
                 <div class="bg-slate-800 p-3 rounded-xl border border-slate-700">
                      <p class="text-[10px] font-bold uppercase text-slate-400 mb-2">Özel Gün Mesajı Ayarla</p>
-                     <input type="text" id="adminSpecDate" placeholder="Tarih (GG.AA.YYYY)" class="w-full p-2 bg-slate-700 text-white rounded mb-2 text-xs font-bold border-none outline-none">
+                     <!-- Tarih formatı standardı için type="date" yapıldı -->
+                     <input type="date" id="adminSpecDate" class="w-full p-2 bg-slate-700 text-white rounded mb-2 text-xs font-bold border-none outline-none">
                      <input type="text" id="adminSpecTitle" placeholder="Başlık (Örn: 29 Ekim)" class="w-full p-2 bg-slate-700 text-white rounded mb-2 text-xs font-bold border-none outline-none">
                      <textarea id="adminSpecMsg" rows="3" placeholder="Kutlama Mesajı..." class="w-full p-2 bg-slate-700 text-white rounded mb-2 text-xs font-bold border-none outline-none resize-none"></textarea>
                      <button onclick="saveSpecialDayConfig()" class="w-full bg-blue-600 py-2 rounded font-bold text-xs hover:bg-blue-500">Özel Günü Kaydet</button>
@@ -893,6 +894,30 @@
             "Cüzdanın hafiflediği için değil—rahatladığı için.",
             "Streak bozulmasın diye cüzdana nazar boncuğu takıyorum.",
             "Tebrikler: ‘Hedef Tutarlı İnsan’ rozeti sende."
+        ];
+
+        // YENİ: NORMAL DURUM MESAJLARI (RANDOM İÇİN)
+        let messages_general = [
+            "Bütçen senin kontrolünde, harika gidiyorsun!",
+            "Planlı harcamak, özgürce yaşamaktır.",
+            "Bugün finansal hedeflerin için ne yaptın?",
+            "Tasarruf bir alışkanlıktır, sende bu ışık var.",
+            "Gelecekteki sen, bugünkü sana teşekkür edecek.",
+            "Para bir araçtır, direksiyon senin elinde.",
+            "Küçük birikimler, büyük hayallerin tohumudur.",
+            "Bütçeye sadık kalmak, kendine verdiğin sözü tutmaktır.",
+            "Harcarken kazanmak: İhtiyaç mı, istek mi? Doğru karar!",
+            "Finansal huzur, en güzel yastıktır.",
+            "Bugün cüzdanın sana gülümsüyor.",
+            "Adım adım hedefe: İstikrarın anahtarı sensin.",
+            "Bütçe yapmak kısıtlanmak değil, yönetmektir.",
+            "Her kuruşun bir görevi olsun.",
+            "Finansal zeka: İstekleri erteleyebilme gücüdür.",
+            "Yarınki rahatın için bugün biraz disiplin.",
+            "Başarı, her gün tekrarlanan küçük çabalardır.",
+            "Paranı yönet, hayatını yönet.",
+            "Zenginlik sahip oldukların değil, yetinebildiklerindir.",
+            "Finansal özgürlük yolculuğunda iyi yolculuklar!"
         ];
 
         let db, auth, currentUser = null;
@@ -1120,8 +1145,8 @@
                 const doc = await db.collection('system_config').doc('special_day').get();
                 if(doc.exists) {
                     const data = doc.data();
-                    // Tarih kontrolü (GG.AA.YYYY formatında bekleniyor)
-                    const today = new Date().toLocaleDateString('tr-TR'); // "16.02.2024" gibi
+                    // Tarih kontrolü (YYYY-MM-DD standart formatta bekleniyor)
+                    const today = new Date().toISOString().split('T')[0]; // "2024-02-17" gibi
                     if (data.date === today) {
                         showSpecialDayModal(data.title, data.message);
                     }
@@ -1216,7 +1241,7 @@
 
             document.getElementById('adminNewSysMsg').value = '';
             loadAdminSystemMessagesListUI();
-            alert("Mesaj eklendi.");
+            showAppAlert("Mesaj eklendi.");
         }
 
         async function deleteSystemMessage(cat, idx) {
@@ -1240,12 +1265,12 @@
             const title = document.getElementById('adminSpecTitle').value;
             const msg = document.getElementById('adminSpecMsg').value;
 
-            if(!date || !title || !msg) return alert("Tüm alanları doldurun");
+            if(!date || !title || !msg) return showAppAlert("Tüm alanları doldurun");
 
             await db.collection('system_config').doc('special_day').set({
                 date, title, message: msg
             });
-            alert("Özel gün kaydedildi!");
+            showAppAlert("Özel gün kaydedildi!");
         }
 
         // --- İLETİŞİM / MESAJLAŞMA ---
@@ -1533,7 +1558,8 @@
                 return getRandomMessage(messages_lowSavings, 'lowSavings');
             }
 
-            return "Finansal yolculuğunda başarılar dilerim! 🚀";
+            // HİÇBİR EKSTREM DURUM YOKSA RASTGELE MOTİVASYON MESAJI
+            return getRandomMessage(messages_general, 'general');
         }
 
         async function initUserPlan() {
@@ -3152,34 +3178,6 @@
                 if (state.step === 1) content.innerHTML += `<div class="pt-4 mt-6 border-t"><p class="text-[10px] font-bold text-gray-400 uppercase mb-2">Maaş Günü</p><input type="number" id="wiz_salary_day_val" oninput="state.salaryDay=this.value" value="${state.salaryDay || 15}" class="w-20 p-3 bg-gray-50 rounded-xl font-black text-center text-xl" placeholder="15"></div>`;
             }
             renderWizardLists();
-        }
-
-        function addSimpleWizItem(key, id) { state[key].unshift({name:'',val:0}); renderWizardLists(); setTimeout(() => { const c = document.getElementById(id); if(c && c.firstElementChild) { c.firstElementChild.scrollIntoView({ behavior: 'smooth' }); const i = c.firstElementChild.querySelector('input'); if(i) i.focus(); } }, 100); }
-
-        function renderWizardLists() {
-             const listEl = (data, id, type) => { const el = document.getElementById(id); if(!el) return; el.innerHTML = data.map((item, idx) => `<div class="flex flex-wrap gap-2 mb-2 items-center"><input type="text" value="${item.name||''}" onchange="state.${type}[${idx}].name=this.value" class="flex-[2] min-w-[120px] p-3 bg-white border border-gray-100 rounded-xl text-xs outline-none" placeholder="İsim"> <input type="number" value="${item.val||''}" onchange="state.${type}[${idx}].val=parseFloat(this.value)||0" class="flex-1 min-w-[80px] p-3 bg-gray-50 border rounded-xl text-right text-xs" placeholder="0"><button onclick="removeItem('${type}', ${idx})" class="text-gray-300 hover:text-red-500 px-2"><i class="fas fa-trash"></i></button></div>`).join(''); };
-             if(state.step===1) listEl(state.incomes, 'wiz_incomes_list', 'incomes');
-             if(state.step===2) listEl(state.bills, 'wiz_bills_list', 'bills');
-             
-             if(state.step===3) { 
-                 const el = document.getElementById('wiz_loans_list'); 
-                 if(el) el.innerHTML = state.loans.map((l, i) => `<div class="p-4 bg-white border rounded-2xl mb-3 space-y-3 relative"><button onclick="removeItem('loans', ${i})" class="absolute top-2 right-2 text-gray-300 hover:text-red-500"><i class="fas fa-times"></i></button><input type="text" value="${l.name}" onchange="state.loans[${i}].name=this.value" class="w-full border-b pb-1 font-black text-sm outline-none" placeholder="Kredi Adı"><div class="grid grid-cols-3 gap-2"><input type="number" value="${l.monthly||''}" oninput="updateLoanData(${i}, 'monthly', this.value)" class="p-2 bg-gray-50 rounded-lg text-xs" placeholder="Aylık"><input type="number" value="${l.totalMonths||''}" oninput="updateLoanData(${i}, 'totalMonths', this.value)" class="p-2 bg-gray-50 rounded-lg text-xs" placeholder="Vade"><input type="number" id="wiz_loan_t_${i}" value="${l.totalDebt||''}" oninput="updateLoanData(${i}, 'totalDebt', this.value)" class="p-2 bg-gray-50 rounded-lg text-xs" placeholder="Toplam"></div><div class="mb-1"><label class="text-[9px] font-bold text-gray-400">Sıradaki Taksit Tarihi</label><input type="date" value="${l.startDate || ''}" onchange="state.loans[${i}].startDate=this.value" class="w-full p-2 bg-gray-50 rounded-lg text-xs"></div><div class="flex flex-col gap-1 pt-1 border-t border-gray-50 mt-2"><div class="flex items-center gap-2"><input type="checkbox" id="wiz_ex_${i}" ${l.excludeFromBudget ? 'checked' : ''} onchange="state.loans[${i}].excludeFromBudget=this.checked" class="w-3.5 h-3.5 rounded text-blue-600 focus:ring-blue-500"><label for="wiz_ex_${i}" class="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Aylık gidere dahil etme</label></div><div class="flex items-center gap-2"><input type="checkbox" id="wiz_ex_debt_${i}" ${l.excludeFromDebt ? 'checked' : ''} onchange="state.loans[${i}].excludeFromDebt=this.checked" class="w-3.5 h-3.5 rounded text-blue-600 focus:ring-blue-500"><label for="wiz_ex_debt_${i}" class="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Genel borca dahil etme</label></div></div></div>`).join(''); 
-             }
-             
-             if(state.step===4) { 
-                 const el = document.getElementById('wiz_debts_list'); 
-                 if(el) el.innerHTML = state.debts.map((d, i) => `
-                    <div class="p-4 bg-white border rounded-2xl mb-3 space-y-3 text-left relative">
-                        <button onclick="removeItem('debts', ${i})" class="absolute top-2 right-2 text-gray-300 hover:text-red-500"><i class="fas fa-times"></i></button>
-                        <div class="flex justify-between items-center pr-6">
-                            <input type="text" value="${d.name}" onchange="state.debts[${i}].name=this.value" class="font-black text-sm outline-none flex-1" placeholder="Kart Adı">
-                        </div>
-                        <input type="number" value="${d.val||''}" onchange="state.debts[${i}].val=parseFloat(this.value)||0; state.debts[${i}].calcMode=false;" class="w-full p-2 bg-gray-50 rounded-xl text-right text-sm" placeholder="Toplam Borç Tutarı">
-                    </div>`).join(''); 
-             }
-             
-             if(state.step===5) listEl(state.otherDebts, 'wiz_otherDebts_list', 'otherDebts');
-             if(state.step===6) listEl(state.assets, 'wiz_assets_list', 'assets');
         }
         
         function updateFromDailyLimitInput(v) { 
