@@ -844,14 +844,14 @@
             bills: [
                 { name: 'Kira', val: null }, { name: 'Aidat', val: null }, { name: 'Elektrik', val: null },
                 { name: 'Su', val: null }, { name: 'Doğalgaz', val: null }, { name: 'İnternet', val: null },
-               { name: 'Dijital Ödemeler', val: null }, { name: 'Telefon', val: null }, { name: 'Bireysel Emeklilik (Aylık)', val: null }
+                { name: 'Telefon', val: null }, { name: 'Dijital Ödemeler', val: null }, { name: 'Bireysel Emeklilik (Aylık)', val: null }
             ], 
             loans: [], debts: [], 
             otherDebts: [{ name: 'KMH / Avans Hesap (- Bakiye)', val: null }], 
             assets: [
                 { name: 'Bankadaki Para', val: null }, { name: 'Cepteki Para', val: null }, { name: 'Bireysel Emeklilik (Toplam)', val: null }
             ],
-            categories: ["Market / Manav", "Kasap", "Akaryakıt", "Eczane / Sağlık", "Eğlence", "Dışarıda Yemek", "Vergi / Harç / Sigorta", "Diğer"],
+            categories: ["Market / Manav", "Kasap", "Akaryakıt", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"],
             manualDailyLimit: null, expenses: [], monthlyHistory: [], familyMembers: [], inviteCode: null
         };
         let state = JSON.parse(JSON.stringify(defaultState));
@@ -1572,7 +1572,7 @@
                     if(!state.familyMembers) state.familyMembers = [];
                     
                     if(!state.categories || state.categories.length === 0) {
-                        state.categories = ["Market / Manav", "Kasap", "Akaryakıt", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"];
+                        state.categories = ["Market / Manav", "Kasap", "Akaryakıt", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"];
                     }
                     
                     showDashboard();
@@ -2990,5 +2990,6 @@
     </script>
 </body>
 </html>
+
 
 
