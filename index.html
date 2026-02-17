@@ -1517,13 +1517,101 @@
             document.getElementById('motivationArea').classList.remove('hidden');
 
             renderFamilyList();
-            renderDetailedHealthLists();
+            renderDetailedHealthLists(); // BU FONKSİYON ARTIK TANIMLI
             
             window.currentHistoryDateIndex = 0; 
             renderHistoryList();
             
             updateExpenseDateLabel();
             renderCategoryOptions(); 
+        }
+        
+        // --- EKSİK OLAN FONKSİYONLAR EKLENDİ ---
+        function renderDetailedHealthLists() {
+            // Borçlar Listesi
+            const debtsList = document.getElementById('detailedDebtsList');
+            let debtHtml = '';
+            
+            // 1. Krediler
+            state.loans.forEach((l, i) => {
+                 if (l.excludeFromDebt) return;
+                 const progress = l.totalDebt > 0 ? (1 - (l.totalDebt / (l.monthly * l.totalMonths))) * 100 : 0;
+                 debtHtml += `
+                 <div class="flex justify-between items-center p-3 bg-red-50 rounded-xl border border-red-100 group relative">
+                    <button onclick="deleteDashItem('loans', ${i})" class="absolute top-2 right-2 text-red-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-trash-alt"></i></button>
+                     <div class="flex-1">
+                         <div class="flex items-center gap-2">
+                            <span class="font-bold text-gray-700 text-xs">${l.name}</span>
+                            <button onclick="openLoanPlanModal(${i})" class="text-[9px] text-blue-500 font-bold underline">Plan</button>
+                         </div>
+                         <div class="w-full bg-red-200 h-1 rounded-full mt-1"><div class="bg-red-500 h-1 rounded-full" style="width:${progress}%"></div></div>
+                         <p class="text-[9px] text-gray-400 mt-1">${l.totalMonths} ay vade • Aylık ₺${Math.floor(l.monthly).toLocaleString()}</p>
+                     </div>
+                     <span class="font-black text-red-600 text-sm ml-4">-₺${Math.floor(l.totalDebt).toLocaleString()}</span>
+                 </div>`;
+            });
+            
+            // 2. Kredi Kartları (Borçlar)
+            state.debts.forEach((d, i) => {
+                 debtHtml += `
+                 <div class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-xl group relative">
+                     <button onclick="deleteDashItem('debts', ${i})" class="absolute top-2 right-2 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-trash-alt"></i></button>
+                     <div>
+                         <span class="font-bold text-gray-700 text-xs block">${d.name}</span>
+                         ${d.calcMode ? `<span class="text-[9px] text-gray-400">Limit: ₺${d.limit} / Kul: ₺${d.avail}</span>` : ''}
+                     </div>
+                     <span class="font-black text-red-600 text-sm">-₺${Math.floor(d.val).toLocaleString()}</span>
+                 </div>`;
+            });
+
+            // 3. Diğer Borçlar
+            state.otherDebts.forEach((d, i) => {
+                 debtHtml += `
+                 <div class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-xl group relative">
+                     <button onclick="deleteDashItem('otherDebts', ${i})" class="absolute top-2 right-2 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-trash-alt"></i></button>
+                     <span class="font-bold text-gray-700 text-xs">${d.name}</span>
+                     <span class="font-black text-red-600 text-sm">-₺${Math.floor(d.val).toLocaleString()}</span>
+                 </div>`;
+            });
+
+            debtsList.innerHTML = debtHtml || '<p class="text-[10px] text-gray-400 text-center py-2">Kayıtlı borç yok.</p>';
+
+            // Varlıklar Listesi
+            const assetsList = document.getElementById('detailedAssetsList');
+            let assetHtml = '';
+            
+            state.assets.forEach((a, i) => {
+                 assetHtml += `
+                 <div class="flex justify-between items-center p-3 bg-green-50 rounded-xl border border-green-100 group relative">
+                     <button onclick="deleteDashItem('assets', ${i})" class="absolute top-2 right-2 text-green-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-trash-alt"></i></button>
+                     <span class="font-bold text-gray-700 text-xs">${a.name}</span>
+                     <span class="font-black text-green-600 text-sm">+₺${Math.floor(a.val).toLocaleString()}</span>
+                 </div>`;
+            });
+            
+            assetsList.innerHTML = assetHtml || '<p class="text-[10px] text-gray-400 text-center py-2">Kayıtlı varlık yok.</p>';
+
+            // Sabit Giderler Bölümü
+            const fixedSection = document.getElementById('fixedExpensesSection');
+            let fixedHtml = '<h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 border-t pt-4">Aylık Sabit Giderler</h4>';
+            
+            state.bills.forEach(b => {
+                 fixedHtml += `<div class="flex justify-between text-xs text-gray-600 py-1 border-b border-gray-50 last:border-0"><span>${b.name}</span><span class="font-bold">₺${b.val.toLocaleString()}</span></div>`;
+            });
+            state.loans.forEach(l => {
+                 if(l.excludeFromBudget) return;
+                 fixedHtml += `<div class="flex justify-between text-xs text-red-500 py-1 border-b border-gray-50 last:border-0"><span>${l.name} (Kredi)</span><span class="font-bold">₺${l.monthly.toLocaleString()}</span></div>`;
+            });
+            
+            fixedSection.innerHTML = fixedHtml;
+        }
+
+        function deleteDashItem(type, index) {
+            if(confirm("Bu kalemi silmek istediğinize emin misiniz?")) {
+                state[type].splice(index, 1);
+                saveToCloud();
+                updateDashboardUI();
+            }
         }
 
         // --- TARİH NAVİGASYON MANTIĞI ---
