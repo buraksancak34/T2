@@ -747,6 +747,12 @@
                          <label for="editExcludeNetWorth" class="text-xs font-bold text-gray-600">Net Varlık Hesabına Katma</label>
                     </div>
                     
+                    <!-- YENİ: KREDİYE ÖZEL BÜTÇE AYARI (DÜZENLEME MODU) -->
+                    <div id="editLoanSpecificContainer" class="hidden mt-2 p-4 bg-red-50 rounded-xl border border-red-100 flex items-center gap-3">
+                         <input type="checkbox" id="editExcludeBudget" class="w-5 h-5 rounded text-red-600 focus:ring-red-500">
+                         <label for="editExcludeBudget" class="text-xs font-bold text-gray-600">Aylık Bütçeye (Gidere) Katma</label>
+                    </div>
+                    
                     <input type="hidden" id="editItemType"><input type="hidden" id="editItemIndex">
                     <div class="flex gap-2 pt-4">
                         <button onclick="closeEditModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl border border-gray-200">İptal</button>
@@ -2292,7 +2298,19 @@
                             <label class="text-[9px] font-bold text-gray-400 uppercase">Sıradaki Taksit Tarihi</label>
                             <input type="date" id="${prefix}_date" class="${cmnCls}">
                         </div>
-                        <input type="number" id="${prefix}_total" placeholder="Toplam Borç" class="${cmnCls}">`;
+                        <input type="number" id="${prefix}_total" placeholder="Toplam Borç" class="${cmnCls} mb-2">
+                        
+                        <!-- Restored Options -->
+                        <div class="space-y-2 bg-red-50 p-2 rounded-lg border border-red-100">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="${prefix}_incDebt" checked class="w-4 h-4 text-red-600 rounded focus:ring-red-500">
+                                <label for="${prefix}_incDebt" class="text-[10px] font-bold text-gray-600">Genel Borç Toplamına Eklensin</label>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="${prefix}_incBudget" checked class="w-4 h-4 text-red-600 rounded focus:ring-red-500">
+                                <label for="${prefix}_incBudget" class="text-[10px] font-bold text-gray-600">Aylık Bütçeden (Sabit Gider) Düşülsün</label>
+                            </div>
+                        </div>`;
             } else if (type === 'Kredi Kartı') {
                 html = `<input type="text" id="${prefix}_name" placeholder="Kart Adı (Örn: Bonus)" class="${cmnCls} mb-2">
                         <div class="flex justify-between items-center mb-2">
@@ -2411,7 +2429,15 @@
                 const months = parseFloat(document.getElementById(`${prefix}_months`).value) || 0;
                 finalVal = parseFloat(document.getElementById(`${prefix}_total`).value) || (monthly * months);
                 const lDate = document.getElementById(`${prefix}_date`).value || new Date().toISOString().slice(0,10);
-                itemObj = { name: finalName, totalDebt: finalVal, monthly: monthly, totalMonths: months, startDate: lDate, excludeFromBudget: false, excludeFromDebt: false };
+                
+                // Read checkboxes (if they exist, otherwise default to true/false logic)
+                const incDebtEl = document.getElementById(`${prefix}_incDebt`);
+                const incBudgetEl = document.getElementById(`${prefix}_incBudget`);
+                
+                const excludeFromDebt = incDebtEl ? !incDebtEl.checked : false;
+                const excludeFromBudget = incBudgetEl ? !incBudgetEl.checked : false;
+
+                itemObj = { name: finalName, totalDebt: finalVal, monthly: monthly, totalMonths: months, startDate: lDate, excludeFromBudget: excludeFromBudget, excludeFromDebt: excludeFromDebt };
             } else if (type === 'Kredi Kartı') {
                 const mode = document.getElementById(`${prefix}_cc_mode`).value;
                 if (mode === 'limit') {
@@ -2730,9 +2756,19 @@
             document.getElementById('editItemType').value = type; 
             document.getElementById('editItemIndex').value = index; 
             
+            // Exclude from Debt / NetWorth Checkbox
             const chk = document.getElementById('editExcludeNetWorth');
             if (type === 'loans') chk.checked = item.excludeFromDebt || false;
             else chk.checked = item.excludeFromNetWorth || false;
+            
+            // YENİ: Krediler için "Bütçeye Katma" seçeneği
+            const loanSpecificContainer = document.getElementById('editLoanSpecificContainer');
+            if (type === 'loans') {
+                loanSpecificContainer.classList.remove('hidden');
+                document.getElementById('editExcludeBudget').checked = item.excludeFromBudget || false;
+            } else {
+                loanSpecificContainer.classList.add('hidden');
+            }
             
             const modal = document.getElementById('editItemModal');
             modal.classList.remove('hidden');
@@ -2752,6 +2788,8 @@
                 if(type === 'loans') {
                     state[type][idx].totalDebt = val; 
                     state[type][idx].excludeFromDebt = excluded;
+                    // YENİ: Bütçe ayarını kaydet
+                    state[type][idx].excludeFromBudget = document.getElementById('editExcludeBudget').checked;
                 } else { 
                     state[type][idx].val = val; 
                     state[type][idx].excludeFromNetWorth = excluded;
