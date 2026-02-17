@@ -1517,101 +1517,13 @@
             document.getElementById('motivationArea').classList.remove('hidden');
 
             renderFamilyList();
-            renderDetailedHealthLists(); // BU FONKSİYON ARTIK TANIMLI
+            renderDetailedHealthLists();
             
             window.currentHistoryDateIndex = 0; 
             renderHistoryList();
             
             updateExpenseDateLabel();
             renderCategoryOptions(); 
-        }
-        
-        // --- EKSİK OLAN FONKSİYONLAR EKLENDİ ---
-        function renderDetailedHealthLists() {
-            // Borçlar Listesi
-            const debtsList = document.getElementById('detailedDebtsList');
-            let debtHtml = '';
-            
-            // 1. Krediler
-            state.loans.forEach((l, i) => {
-                 if (l.excludeFromDebt) return;
-                 const progress = l.totalDebt > 0 ? (1 - (l.totalDebt / (l.monthly * l.totalMonths))) * 100 : 0;
-                 debtHtml += `
-                 <div class="flex justify-between items-center p-3 bg-red-50 rounded-xl border border-red-100 group relative">
-                    <button onclick="deleteDashItem('loans', ${i})" class="absolute top-2 right-2 text-red-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-trash-alt"></i></button>
-                     <div class="flex-1">
-                         <div class="flex items-center gap-2">
-                            <span class="font-bold text-gray-700 text-xs">${l.name}</span>
-                            <button onclick="openLoanPlanModal(${i})" class="text-[9px] text-blue-500 font-bold underline">Plan</button>
-                         </div>
-                         <div class="w-full bg-red-200 h-1 rounded-full mt-1"><div class="bg-red-500 h-1 rounded-full" style="width:${progress}%"></div></div>
-                         <p class="text-[9px] text-gray-400 mt-1">${l.totalMonths} ay vade • Aylık ₺${Math.floor(l.monthly).toLocaleString()}</p>
-                     </div>
-                     <span class="font-black text-red-600 text-sm ml-4">-₺${Math.floor(l.totalDebt).toLocaleString()}</span>
-                 </div>`;
-            });
-            
-            // 2. Kredi Kartları (Borçlar)
-            state.debts.forEach((d, i) => {
-                 debtHtml += `
-                 <div class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-xl group relative">
-                     <button onclick="deleteDashItem('debts', ${i})" class="absolute top-2 right-2 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-trash-alt"></i></button>
-                     <div>
-                         <span class="font-bold text-gray-700 text-xs block">${d.name}</span>
-                         ${d.calcMode ? `<span class="text-[9px] text-gray-400">Limit: ₺${d.limit} / Kul: ₺${d.avail}</span>` : ''}
-                     </div>
-                     <span class="font-black text-red-600 text-sm">-₺${Math.floor(d.val).toLocaleString()}</span>
-                 </div>`;
-            });
-
-            // 3. Diğer Borçlar
-            state.otherDebts.forEach((d, i) => {
-                 debtHtml += `
-                 <div class="flex justify-between items-center p-3 bg-white border border-gray-100 rounded-xl group relative">
-                     <button onclick="deleteDashItem('otherDebts', ${i})" class="absolute top-2 right-2 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-trash-alt"></i></button>
-                     <span class="font-bold text-gray-700 text-xs">${d.name}</span>
-                     <span class="font-black text-red-600 text-sm">-₺${Math.floor(d.val).toLocaleString()}</span>
-                 </div>`;
-            });
-
-            debtsList.innerHTML = debtHtml || '<p class="text-[10px] text-gray-400 text-center py-2">Kayıtlı borç yok.</p>';
-
-            // Varlıklar Listesi
-            const assetsList = document.getElementById('detailedAssetsList');
-            let assetHtml = '';
-            
-            state.assets.forEach((a, i) => {
-                 assetHtml += `
-                 <div class="flex justify-between items-center p-3 bg-green-50 rounded-xl border border-green-100 group relative">
-                     <button onclick="deleteDashItem('assets', ${i})" class="absolute top-2 right-2 text-green-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-trash-alt"></i></button>
-                     <span class="font-bold text-gray-700 text-xs">${a.name}</span>
-                     <span class="font-black text-green-600 text-sm">+₺${Math.floor(a.val).toLocaleString()}</span>
-                 </div>`;
-            });
-            
-            assetsList.innerHTML = assetHtml || '<p class="text-[10px] text-gray-400 text-center py-2">Kayıtlı varlık yok.</p>';
-
-            // Sabit Giderler Bölümü
-            const fixedSection = document.getElementById('fixedExpensesSection');
-            let fixedHtml = '<h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 border-t pt-4">Aylık Sabit Giderler</h4>';
-            
-            state.bills.forEach(b => {
-                 fixedHtml += `<div class="flex justify-between text-xs text-gray-600 py-1 border-b border-gray-50 last:border-0"><span>${b.name}</span><span class="font-bold">₺${b.val.toLocaleString()}</span></div>`;
-            });
-            state.loans.forEach(l => {
-                 if(l.excludeFromBudget) return;
-                 fixedHtml += `<div class="flex justify-between text-xs text-red-500 py-1 border-b border-gray-50 last:border-0"><span>${l.name} (Kredi)</span><span class="font-bold">₺${l.monthly.toLocaleString()}</span></div>`;
-            });
-            
-            fixedSection.innerHTML = fixedHtml;
-        }
-
-        function deleteDashItem(type, index) {
-            if(confirm("Bu kalemi silmek istediğinize emin misiniz?")) {
-                state[type].splice(index, 1);
-                saveToCloud();
-                updateDashboardUI();
-            }
         }
 
         // --- TARİH NAVİGASYON MANTIĞI ---
@@ -2119,6 +2031,177 @@
             html += `</div></div>`;
             list.innerHTML = html;
         }
+
+        function renderDetailedHealthLists() { 
+            const createRow = (name, amount, type, idx, extraClass='', clickAction='', isExcluded=false) => `
+                <div class="flex justify-between items-center p-3 rounded-xl text-xs font-bold text-gray-600 bg-gray-50 border border-gray-100 shadow-sm group ${extraClass} ${isExcluded ? 'opacity-50 grayscale' : ''}" ${clickAction ? `onclick="${clickAction}" style="cursor:pointer"` : ''}>
+                    <span>${name}</span>
+                    <div class="flex items-center gap-3">
+                        <span class="font-black text-gray-800">₺${Math.floor(amount).toLocaleString()}</span>
+                        <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="event.stopPropagation(); openEditModal('${type}', ${idx})" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pen"></i></button>
+                            ${idx !== 'total' ? `<button onclick="event.stopPropagation(); deleteHealthItem('${type}', ${idx})" class="text-red-300 hover:text-red-500"><i class="fas fa-trash"></i></button>` : ''}
+                        </div>
+                    </div>
+                </div>`; 
+            
+            // SABİT GİDERLER (BILLS) - Show all
+            const activeBills = state.bills; 
+            const totalBills = activeBills.reduce((s, b) => s + (b.val||0), 0);
+            const billsHTML = activeBills.map((b) => createRow(b.name, b.val||0, 'bills', state.bills.indexOf(b), 'bg-white')).join('');
+            
+            const billsAccordion = `
+            <div class="border border-blue-100 rounded-2xl overflow-hidden bg-blue-50/50 shadow-sm mb-6">
+                <div onclick="document.getElementById('billsDetails').classList.toggle('open');" class="flex justify-between items-center p-4 cursor-pointer hover:bg-blue-100/50 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center"><i class="fas fa-file-invoice-dollar"></i></div>
+                        <span class="text-sm font-black text-blue-900 uppercase tracking-wide">Aylık Sabit Giderler</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="font-black text-blue-900 text-lg">₺${totalBills.toLocaleString()}</span>
+                        <i class="fas fa-chevron-down text-blue-400"></i>
+                    </div>
+                </div>
+                <div id="billsDetails" class="health-detail space-y-2 px-4 pb-4">
+                    ${billsHTML || '<div class="text-xs text-gray-400 text-center py-2">Kayıtlı sabit gider yok.</div>'}
+                    <button onclick="addNewHealthItem('bills')" class="w-full py-3 text-xs font-bold text-blue-500 hover:text-blue-700 bg-white border border-dashed border-blue-200 rounded-xl transition-colors">+ Yeni Sabit Gider Ekle</button>
+                </div>
+            </div>`;
+            document.getElementById('fixedExpensesSection').innerHTML = billsAccordion;
+
+            // BORÇLAR BÖLÜMÜ
+            let debtHTML = ''; 
+            
+            // 1. Krediler - Show all
+            const activeLoans = state.loans;
+            const totalLoanDebt = activeLoans.reduce((s,l) => s + (l.excludeFromDebt ? 0 : (l.totalDebt||0)), 0);
+            
+            if (activeLoans.length > 0) {
+                 const loansHTML = activeLoans.map(l => {
+                    const isExcluded = l.excludeFromDebt;
+                    return createRow(l.name + (isExcluded ? ' <span class="text-[8px] text-red-400 font-bold ml-1 bg-red-50 px-1 rounded">(Dahil Değil)</span>' : ''), l.totalDebt||0, 'loans', state.loans.indexOf(l), 'bg-white', `openLoanPlanModal(${state.loans.indexOf(l)})`, isExcluded);
+                 }).join('');
+
+                 debtHTML += `
+                 <div class="border border-red-100 rounded-2xl overflow-hidden bg-red-50/50 shadow-sm mb-2">
+                    <div onclick="document.getElementById('loanDetails').classList.toggle('open');" class="flex justify-between items-center p-3 cursor-pointer hover:bg-red-100/50 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center"><i class="fas fa-hand-holding-usd"></i></div>
+                            <span class="text-xs font-black text-red-900 uppercase tracking-wide">Toplam Kredi Borcu</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="font-black text-red-900 text-sm">₺${totalLoanDebt.toLocaleString()}</span>
+                            <i class="fas fa-chevron-down text-red-400"></i>
+                        </div>
+                    </div>
+                    <div id="loanDetails" class="health-detail space-y-2 px-3 pb-3">
+                        ${loansHTML}
+                    </div>
+                </div>`;
+            }
+
+            // 2. Kredi Kartları - Show all
+            const activeCards = state.debts;
+            const totalCardDebt = activeCards.reduce((s,d) => s + (d.excludeFromNetWorth ? 0 : (d.val||0)), 0);
+            
+            if (activeCards.length > 0) {
+                 const cardsHTML = activeCards.map(d => createRow(d.name + (d.excludeFromNetWorth ? ' <span class="text-[8px] text-red-400 font-bold ml-1 bg-red-50 px-1 rounded">(Dahil Değil)</span>' : ''), d.val||0, 'debts', state.debts.indexOf(d), 'bg-white', '', d.excludeFromNetWorth)).join('');
+                 
+                 debtHTML += `
+                 <div class="border border-purple-100 rounded-2xl overflow-hidden bg-purple-50/50 shadow-sm mb-2">
+                    <div onclick="document.getElementById('cardDetails').classList.toggle('open');" class="flex justify-between items-center p-3 cursor-pointer hover:bg-purple-100/50 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center"><i class="fas fa-credit-card"></i></div>
+                            <span class="text-xs font-black text-purple-900 uppercase tracking-wide">Kredi Kartları Toplamı</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="font-black text-purple-900 text-sm">₺${totalCardDebt.toLocaleString()}</span>
+                            <i class="fas fa-chevron-down text-purple-400"></i>
+                        </div>
+                    </div>
+                    <div id="cardDetails" class="health-detail space-y-2 px-3 pb-3">
+                        ${cardsHTML}
+                    </div>
+                </div>`;
+            }
+
+            // 3. Diğer Borçlar - Show all
+            const sortedOtherDebts = [...state.otherDebts].sort((a,b) => (b.val||0) - (a.val||0));
+            sortedOtherDebts.forEach((d) => {
+                 const originalIndex = state.otherDebts.indexOf(d);
+                 debtHTML += createRow(d.name + (d.excludeFromNetWorth ? ' <span class="text-[8px] text-red-400 font-bold ml-1 bg-red-50 px-1 rounded">(Dahil Değil)</span>' : ''), d.val||0, 'otherDebts', originalIndex, '', '', d.excludeFromNetWorth);
+            }); 
+            
+            document.getElementById('detailedDebtsList').innerHTML = debtHTML || '<span class="text-gray-300 text-xs">Kayıtlı borç yok</span>'; 
+            
+            // VARLIKLAR - Show all
+            const sortedAssets = [...state.assets].sort((a,b) => (b.val||0) - (a.val||0));
+            let assetHTML = sortedAssets.map((a) => {
+                const originalIndex = state.assets.indexOf(a);
+                return createRow(a.name + (a.excludeFromNetWorth ? ' <span class="text-[8px] text-red-400 font-bold ml-1 bg-red-50 px-1 rounded">(Dahil Değil)</span>' : ''), a.val||0, 'assets', originalIndex, '', '', a.excludeFromNetWorth);
+            }).join(''); 
+            document.getElementById('detailedAssetsList').innerHTML = assetHTML || '<span class="text-gray-300 text-xs">Kayıtlı varlık yok</span>'; 
+        }
+
+        function addNewHealthItem(type) { 
+            const name = prompt("Yeni Kalem Adı:"); 
+            if(name) { 
+                const val = parseFloat(prompt("Tutar:")) || 0; 
+                let newItem = {name, val:val};
+                if(type === 'loans') newItem = {name, totalDebt:val, monthly:0, totalMonths:1, startDate: new Date().toISOString().slice(0,10)};
+                else if(type === 'debts') newItem = {name, val:val, calcMode: false};
+                
+                state[type].unshift(newItem); 
+                saveToCloud(); updateDashboardUI(); 
+            } 
+        }
+        
+        function openEditModal(type, index) { 
+            const item = state[type][index]; 
+            document.getElementById('editItemName').value = item.name; 
+            document.getElementById('editItemVal').value = item.val || item.totalDebt || 0; 
+            document.getElementById('editItemType').value = type; 
+            document.getElementById('editItemIndex').value = index; 
+            
+            const chk = document.getElementById('editExcludeNetWorth');
+            if (type === 'loans') chk.checked = item.excludeFromDebt || false;
+            else chk.checked = item.excludeFromNetWorth || false;
+            
+            // YENİ: Side Panel olarak aç
+            const modal = document.getElementById('editItemModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('open'), 10);
+            document.getElementById('overlay').classList.add('active'); 
+        }
+        
+        function saveEditedItem() { 
+            const type = document.getElementById('editItemType').value; 
+            const idx = parseInt(document.getElementById('editItemIndex').value); 
+            const name = document.getElementById('editItemName').value; 
+            const val = parseFloat(document.getElementById('editItemVal').value); 
+            const excluded = document.getElementById('editExcludeNetWorth').checked;
+
+            if(state[type][idx]) { 
+                state[type][idx].name = name; 
+                if(type === 'loans') {
+                    state[type][idx].totalDebt = val; 
+                    state[type][idx].excludeFromDebt = excluded;
+                } else { 
+                    state[type][idx].val = val; 
+                    state[type][idx].excludeFromNetWorth = excluded;
+                    if (type === 'debts' && state[type][idx].calcMode) state[type][idx].calcMode = false; 
+                }
+                saveToCloud(); updateDashboardUI(); closeEditModal(); 
+            } 
+        }
+        function closeEditModal() { 
+            // YENİ: Side Panel kapatma mantığı
+            const modal = document.getElementById('editItemModal');
+            modal.classList.remove('open');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            document.getElementById('overlay').classList.remove('active'); 
+        }
+        function deleteHealthItem(type, idx) { if(confirm('Bu kalemi tamamen silmek istediğinize emin misiniz?')) { state[type].splice(idx, 1); saveToCloud(); updateDashboardUI(); } }
 
         function renderCharts() {
             const ctx1 = document.getElementById('assetsChart').getContext('2d');
