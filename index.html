@@ -174,6 +174,35 @@
         </div>
     </div>
 
+    <!-- YENİ: APP UYARI MODALI (ALERT YERİNE) -->
+    <div id="appAlertModal" class="fixed inset-0 z-[80] hidden flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeAppAlert()"></div>
+        <div class="bg-white rounded-3xl p-6 w-[85%] max-w-sm relative z-10 shadow-2xl animate-fade-in text-center border-2 border-white">
+            <div class="w-12 h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+                <i class="fas fa-info text-xl"></i>
+            </div>
+            <h3 class="text-lg font-black text-gray-800 mb-2 tracking-tight">Bilgi</h3>
+            <p id="appAlertMsg" class="text-xs text-gray-500 font-bold mb-6 leading-relaxed">...</p>
+            <button onclick="closeAppAlert()" class="w-full py-3 bg-blue-600 text-white font-black rounded-xl text-xs hover:bg-blue-700 shadow-lg shadow-blue-200 transition-colors">Tamam</button>
+        </div>
+    </div>
+
+    <!-- YENİ: ÖZEL GÜN MODALI (TAM EKRAN KUTLAMA) -->
+    <div id="specialDayModal" class="fixed inset-0 z-[90] hidden flex items-center justify-center">
+        <!-- Konfeti Efekti -->
+        <canvas id="confettiCanvas" class="absolute inset-0 pointer-events-none z-0"></canvas>
+        <div class="absolute inset-0 bg-gradient-to-br from-red-600/90 to-red-900/95 backdrop-blur-md"></div>
+        
+        <div class="relative z-10 w-full max-w-md p-8 text-center text-white animate-fade-in">
+             <div class="mb-6 animate-bounce">
+                <i class="fas fa-star text-5xl text-yellow-300 drop-shadow-lg"></i>
+             </div>
+             <h2 id="specialDayTitle" class="text-3xl font-black mb-4 drop-shadow-md tracking-tight leading-tight">...</h2>
+             <p id="specialDayMsg" class="text-base font-bold text-red-50 mb-8 leading-relaxed opacity-90">...</p>
+             <button onclick="closeSpecialDayModal()" class="bg-white text-red-600 font-black py-4 px-10 rounded-full shadow-2xl hover:bg-gray-100 transition-transform active:scale-95 text-sm uppercase tracking-widest">Harika!</button>
+        </div>
+    </div>
+
     <!-- 1. GİRİŞ EKRANI -->
     <div id="loginScreen" class="max-w-md w-full glass-card p-6 rounded-[2rem] shadow-2xl space-y-6 my-auto relative overflow-hidden animate-fade-in">
         <div class="text-center">
@@ -622,6 +651,7 @@
             <div class="flex gap-2 mb-4 bg-slate-800 p-1 rounded-xl">
                 <button onclick="switchAdminTab('users')" id="tabAdminUsers" class="flex-1 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all">Kullanıcılar</button>
                 <button onclick="switchAdminTab('messages')" id="tabAdminMessages" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all">Mesajlar</button>
+                <button onclick="switchAdminTab('specials')" id="tabAdminSpecials" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all">Özel Gün</button>
             </div>
 
             <!-- TAB: KULLANICILAR -->
@@ -647,9 +677,36 @@
                 </div>
             </div>
 
-            <!-- TAB: MESAJLAR -->
+            <!-- TAB: MESAJLAR (SOHBET/İLETİŞİM) -->
             <div id="adminTabMessages" class="hidden flex-1 flex flex-col min-h-0">
                  <div class="flex-1 overflow-y-auto custom-scrollbar pb-10 space-y-3" id="adminMessageList"></div>
+            </div>
+
+            <!-- TAB: SİSTEM MESAJLARI VE ÖZEL GÜNLER (YENİ) -->
+            <div id="adminTabSpecials" class="hidden flex-1 flex flex-col min-h-0 space-y-4">
+                <div class="bg-slate-800 p-3 rounded-xl border border-slate-700">
+                     <p class="text-[10px] font-bold uppercase text-slate-400 mb-2">Özel Gün Mesajı Ayarla</p>
+                     <input type="text" id="adminSpecDate" placeholder="Tarih (GG.AA.YYYY)" class="w-full p-2 bg-slate-700 text-white rounded mb-2 text-xs font-bold border-none outline-none">
+                     <input type="text" id="adminSpecTitle" placeholder="Başlık (Örn: 29 Ekim)" class="w-full p-2 bg-slate-700 text-white rounded mb-2 text-xs font-bold border-none outline-none">
+                     <textarea id="adminSpecMsg" rows="3" placeholder="Kutlama Mesajı..." class="w-full p-2 bg-slate-700 text-white rounded mb-2 text-xs font-bold border-none outline-none resize-none"></textarea>
+                     <button onclick="saveSpecialDayConfig()" class="w-full bg-blue-600 py-2 rounded font-bold text-xs hover:bg-blue-500">Özel Günü Kaydet</button>
+                </div>
+                
+                <div class="flex-1 flex flex-col min-h-0 bg-slate-800 p-3 rounded-xl border border-slate-700">
+                     <div class="flex justify-between items-center mb-2">
+                        <p class="text-[10px] font-bold uppercase text-slate-400">Sistem Mesajları Yönetimi</p>
+                        <select id="adminMsgCat" class="bg-slate-700 text-white text-[10px] p-1 rounded border-none outline-none">
+                            <option value="highSpend">Yüksek Harcama</option>
+                            <option value="lowSavings">Düşük Birikim</option>
+                            <option value="streak">Seri (Streak)</option>
+                        </select>
+                     </div>
+                     <div class="flex gap-2 mb-2">
+                        <input type="text" id="adminNewSysMsg" class="flex-1 p-2 bg-slate-700 text-white rounded text-xs border-none outline-none" placeholder="Yeni Mesaj Ekle...">
+                        <button onclick="addSystemMessage()" class="bg-green-600 px-3 rounded text-xs font-bold hover:bg-green-500"><i class="fas fa-plus"></i></button>
+                     </div>
+                     <div id="adminSysMsgList" class="flex-1 overflow-y-auto custom-scrollbar space-y-2"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -768,32 +825,74 @@
             measurementId: "G-VE0EVVBM0V"
         };
 
-        const financialTips = [
-            "Finansal sağlık, gelir ve giderler arasında sürdürülebilir bir denge kurabilme becerisidir.",
-            "Küçük ama sık harcamalar bütçeyi sessizce tüketir.",
-            "Tasarruf geleceğe yapılmış bilinçli bir yatırımdır.",
-            "Planlı hareket eden kişi finansal kontrolü elinde tutar.",
-            "Bütçe yapmak kısıtlama değil yönlendirmedir."
+        // --- YENİ MESAJ SETLERİ (VARSAYILAN) ---
+        let messages_highSpend = [
+            "Cüzdan bugün cardio yaptı… nabız 180.",
+            "Limit: ‘Ben bu filmde yokum’ dedi.",
+            "Bugün harcama değil, sanat eseri çıkarmışsın.",
+            "Kartın POS cihazıyla duygusal bağ kurmuş olabilir.",
+            "Bütçe planı: ‘Ben yarın geliyorum’ diye kaçtı.",
+            "Harcama grafiği roket gibi… NASA aradı.",
+            "Bugün ‘küçük kaçamak’ değil, mini tatil olmuş.",
+            "Cüzdanın iç sesi: ‘Ben aslında inceydim…’",
+            "Limitleri test ettin, tebrikler: stres testi başarılı.",
+            "Bütçeye ‘sürpriz yumurta’ yaptın: içinden masraf çıktı.",
+            "Bugün para ‘ben gidiyorum’ deyip valiz topladı.",
+            "Harcama modun: ‘Bir tane daha sepet!’",
+            "Kart ekstresi şu an sana bakıp göz kırpıyor.",
+            "Bütçe: ‘Ben şaka mıydım?’",
+            "Bugün ‘indirim’ değil, ‘ikna’ kazanmış.",
+            "Harcamalar: ‘Biz bir aile olduk’ demiş.",
+            "Limit çizgisi aşıldı… uyarı konisi koyuyorum 🚧",
+            "Bugün cüzdan değil, sponsorluk anlaşması var sanki.",
+            "Harcama sayacı ‘dur’ dedi, sen ‘devam’ dedin.",
+            "Bugün paranın özgür iradesi elinden alınmış olabilir."
         ];
 
-        // --- MOTİVASYON MESAJLARI ---
-        const messages_highSpend = [
-            "Cüzdan bugün cardio yaptı… nabız 180.", "Limit: ‘Ben bu filmde yokum’ dedi.", "Bugün harcama değil, sanat eseri çıkarmışsın.", "Kartın POS cihazıyla duygusal bağ kurmuş olabilir.", "Bütçe planı: ‘Ben yarın geliyorum’ diye kaçtı.",
-            "Harcama grafiği roket gibi… NASA aradı.", "Bugün ‘küçük kaçamak’ değil, mini tatil olmuş.", "Cüzdanın iç sesi: ‘Ben aslında inceydim…’", "Limitleri test ettin, tebrikler: stres testi başarılı.", "Bütçeye ‘sürpriz yumurta’ yaptın: içinden masraf çıktı.",
-            "Bugün para ‘ben gidiyorum’ deyip valiz topladı.", "Harcama modun: ‘Bir tane daha sepet!’", "Kart ekstresi şu an sana bakıp göz kırpıyor.", "Bütçe: ‘Ben şaka mıydım?’", "Bugün ‘indirim’ değil, ‘ikna’ kazanmış.",
-            "Harcamalar: ‘Biz bir aile olduk’ demiş.", "Limit çizgisi aşıldı… uyarı konisi koyuyorum 🚧", "Bugün cüzdan değil, sponsorluk anlaşması var sanki.", "Harcama sayacı ‘dur’ dedi, sen ‘devam’ dedin.", "Bugün paranın özgür iradesi elinden alınmış olabilir."
+        let messages_lowSavings = [
+            "Hedefle arana mesafe girmiş… ilişki terapisine gidelim mi?",
+            "Birikim hedefi seni özlemiş. Mesaj atayım mı?",
+            "Hedef uzakta ama imkânsız değil: yürüyüşe çıkıyoruz.",
+            "Birikim planı ‘neredesin?’ diye son görülme attı.",
+            "Hedefe şu an Wi-Fi çekmiyor gibi… yaklaşalım.",
+            "Bugün ‘yaklaşma günü’: hedefle barış çubuğu uzatıyoruz.",
+            "Birikim hedefin: ‘Ben hâlâ buradayım’ diye el sallıyor.",
+            "Mesafe moral bozmasın; küçük adımlar büyük işler yapar.",
+            "Hedefe uzaklık ölçümü: ‘Bir tık’ değil, birkaç tık…",
+            "Bugün birikim değilse bile, en azından niyet artı puan.",
+            "Hedefe giden yol: ‘Az harca’ tabelasıyla başlıyor.",
+            "Birikim hedefinle arana ‘kargo ücreti’ girmiş olabilir.",
+            "Hedef kaçmadı; sadece sen biraz oyalanmışsın.",
+            "Bütçe pusulası şaşmış; kuzeyi yeniden buluyoruz.",
+            "Birikim: ‘Ben senin iyiliğini düşünüyorum’ modunda.",
+            "Hedefe yaklaşma challenge’ı: bugün küçük bir zafer?",
+            "Hedefle arayı kapatmak için ‘mini reset’ zamanı.",
+            "Birikim hedefi: ‘Konum paylaş’ diyor.",
+            "Mesafe var ama rota çizilebilir: başlıyoruz.",
+            "Bugün hedefe 1 adım: büyük kahramanlıklar böyle başlar."
         ];
-        const messages_lowSavings = [
-            "Hedefle arana mesafe girmiş… ilişki terapisine gidelim mi?", "Birikim hedefi seni özlemiş. Mesaj atayım mı?", "Hedef uzakta ama imkânsız değil: yürüyüşe çıkıyoruz.", "Birikim planı ‘neredesin?’ diye son görülme attı.", "Hedefe şu an Wi-Fi çekmiyor gibi… yaklaşalım.",
-            "Bugün ‘yaklaşma günü’: hedefle barış çubuğu uzatıyoruz.", "Birikim hedefin: ‘Ben hâlâ buradayım’ diye el sallıyor.", "Mesafe moral bozmasın; küçük adımlar büyük işler yapar.", "Hedefe uzaklık ölçümü: ‘Bir tık’ değil, birkaç tık…", "Bugün birikim değilse bile, en azından niyet artı puan.",
-            "Hedefe giden yol: ‘Az harca’ tabelasıyla başlıyor.", "Birikim hedefinle arana ‘kargo ücreti’ girmiş olabilir.", "Hedef kaçmadı; sadece sen biraz oyalanmışsın.", "Bütçe pusulası şaşmış; kuzeyi yeniden buluyoruz.", "Birikim: ‘Ben senin iyiliğini düşünüyorum’ modunda.",
-            "Hedefe yaklaşma challenge’ı: bugün küçük bir zafer?", "Hedefle arayı kapatmak için ‘mini reset’ zamanı.", "Birikim hedefi: ‘Konum paylaş’ diyor.", "Mesafe var ama rota çizilebilir: başlıyoruz.", "Bugün hedefe 1 adım: büyük kahramanlıklar böyle başlar."
-        ];
-        const messages_streak = [
-            "Üç gün üst üste! Bütçe disiplini DLC’si açıldı.", "Sende bir ‘finans ninja’ enerjisi var.", "Hedef serisi başladı: streak mode ON 🔥", "Cüzdanın bugün sana gururla bakıyor.", "Bütçe planı: ‘İşte aradığım insan!’",
-            "Üç gün… bu artık tesadüf değil, karakter gelişimi.", "Tasarruf kasların şişiyor, devam!", "Hedef tutturan insan aurası: %100 parlak.", "Bütçe grafiği nihayet sakin bir diziye geçti.", "Bu gidişle paran seni işe alacak.",
-            "Kontrol sende. Kart bile saygı duyuyor.", "Disiplinin o kadar iyi ki Excel bile alkışlıyor.", "Hedef serin ‘efsane’ kategorisine göz kırptı.", "Üç gün üst üste: ‘Ben yaparım’ kanıtı.", "Bütçenin direksiyonunda sen varsın. Korna çalma, ilerle.",
-            "Finansal zen: harcama dürtüsü sakinleştirildi.", "Bugün de tutturduysan, artık ‘alışkanlık’ oldu bu.", "Cüzdanın hafiflediği için değil—rahatladığı için.", "Streak bozulmasın diye cüzdana nazar boncuğu takıyorum.", "Tebrikler: ‘Hedef Tutarlı İnsan’ rozeti sende."
+
+        let messages_streak = [
+            "Üç gün üst üste! Bütçe disiplini DLC’si açıldı.",
+            "Sende bir ‘finans ninja’ enerjisi var.",
+            "Hedef serisi başladı: streak mode ON 🔥",
+            "Cüzdanın bugün sana gururla bakıyor.",
+            "Bütçe planı: ‘İşte aradığım insan!’",
+            "Üç gün… bu artık tesadüf değil, karakter gelişimi.",
+            "Tasarruf kasların şişiyor, devam!",
+            "Hedef tutturan insan aurası: %100 parlak.",
+            "Bütçe grafiği nihayet sakin bir diziye geçti.",
+            "Bu gidişle paran seni işe alacak.",
+            "Kontrol sende. Kart bile saygı duyuyor.",
+            "Disiplinin o kadar iyi ki Excel bile alkışlıyor.",
+            "Hedef serin ‘efsane’ kategorisine göz kırptı.",
+            "Üç gün üst üste: ‘Ben yaparım’ kanıtı.",
+            "Bütçenin direksiyonunda sen varsın. Korna çalma, ilerle.",
+            "Finansal zen: harcama dürtüsü sakinleştirildi.",
+            "Bugün de tutturduysan, artık ‘alışkanlık’ oldu bu.",
+            "Cüzdanın hafiflediği için değil—rahatladığı için.",
+            "Streak bozulmasın diye cüzdana nazar boncuğu takıyorum.",
+            "Tebrikler: ‘Hedef Tutarlı İnsan’ rozeti sende."
         ];
 
         let db, auth, currentUser = null;
@@ -811,6 +910,74 @@
         let currentExpenseDateOffset = 0;
         let editingCategoryIndex = -1; 
         let originalAdminUid = null;
+
+        // --- Custom App Alert Logic (Site adını gizlemek için) ---
+        function showAppAlert(message) {
+            document.getElementById('appAlertMsg').innerText = message;
+            const modal = document.getElementById('appAlertModal');
+            modal.classList.remove('hidden');
+        }
+        function closeAppAlert() {
+            document.getElementById('appAlertModal').classList.add('hidden');
+        }
+
+        // --- Special Day Modal Logic ---
+        function showSpecialDayModal(title, msg) {
+            // Check localStorage
+            const seen = localStorage.getItem('seenSpecialDay_' + title);
+            if(seen) return; // Zaten görmüşse çık
+            
+            document.getElementById('specialDayTitle').innerText = title;
+            document.getElementById('specialDayMsg').innerText = msg;
+            
+            const modal = document.getElementById('specialDayModal');
+            modal.classList.remove('hidden');
+            
+            // Konfeti (Basit JS)
+            runConfetti();
+        }
+        
+        function closeSpecialDayModal() {
+            const title = document.getElementById('specialDayTitle').innerText;
+            localStorage.setItem('seenSpecialDay_' + title, 'true');
+            document.getElementById('specialDayModal').classList.add('hidden');
+        }
+        
+        // Basit Konfeti Efekti
+        function runConfetti() {
+            const canvas = document.getElementById('confettiCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const particles = [];
+            const colors = ['#FFD700', '#FF0000', '#FFFFFF', '#00FF00', '#0000FF'];
+            
+            for(let i=0; i<100; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    size: Math.random() * 5 + 2,
+                    speed: Math.random() * 3 + 2,
+                    angle: Math.random() * 6.2
+                });
+            }
+            
+            function animate() {
+                if(document.getElementById('specialDayModal').classList.contains('hidden')) return;
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                particles.forEach(p => {
+                    p.y += p.speed;
+                    p.x += Math.sin(p.angle);
+                    if(p.y > canvas.height) p.y = -10;
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(p.x, p.y, p.size, p.size);
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
 
         // Custom Confirm Logic
         let pendingConfirmAction = null;
@@ -871,10 +1038,16 @@
                     if (user.email.toLowerCase() === 'buraksancak@msn.com') {
                         document.getElementById('btnAdmin').classList.remove('hidden');
                         document.getElementById('btnAdminSettings').classList.remove('hidden');
+                        loadAdminSystemMessages(); // Admin için mesajları yükle
+                        checkSpecialDayConfig();
                     } else {
                         document.getElementById('btnAdmin').classList.add('hidden');
                          document.getElementById('btnAdminSettings').classList.add('hidden');
+                         checkSpecialDayConfig(); // Normal kullanıcı için kontrol et
                     }
+                    
+                    // Sistem mesajlarını çek (Admin olmayanlar için de güncel liste)
+                    fetchSystemMessages();
 
                     try {
                         const userDoc = await db.collection("users").doc(user.uid).get();
@@ -907,6 +1080,174 @@
             document.getElementById('analysisScreen').classList.add('hidden');
         }
 
+        // --- RANDOM MESAJ SİSTEMİ ---
+        // Firestore'dan mesajları çekip değişkenleri günceller
+        async function fetchSystemMessages() {
+            try {
+                const doc = await db.collection('system_messages').doc('config').get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    if (data.highSpend && data.highSpend.length > 0) messages_highSpend = data.highSpend;
+                    if (data.lowSavings && data.lowSavings.length > 0) messages_lowSavings = data.lowSavings;
+                    if (data.streak && data.streak.length > 0) messages_streak = data.streak;
+                }
+            } catch(e) { console.log("Mesajlar çekilemedi, varsayılanlar kullanılıyor."); }
+        }
+
+        // Rastgele seçim + tekrar engelleme
+        function getRandomMessage(arr, type) { 
+            if(!arr || arr.length === 0) return "...";
+            
+            // Son gösterilen mesajı localStorage'dan al
+            const lastShown = localStorage.getItem('lastMsg_' + type);
+            let candidates = arr;
+            
+            // Eğer dizi 1 elemanlıysa mecburen onu seç
+            if (arr.length > 1 && lastShown) {
+                candidates = arr.filter(m => m !== lastShown);
+                // Eğer filtreleme sonucu boş kalırsa (nadir durum) yine tüm listeyi al
+                if (candidates.length === 0) candidates = arr;
+            }
+            
+            const selected = candidates[Math.floor(Math.random() * candidates.length)];
+            localStorage.setItem('lastMsg_' + type, selected);
+            return selected; 
+        }
+
+        // --- ÖZEL GÜN KONTROLÜ ---
+        async function checkSpecialDayConfig() {
+            try {
+                const doc = await db.collection('system_config').doc('special_day').get();
+                if(doc.exists) {
+                    const data = doc.data();
+                    // Tarih kontrolü (GG.AA.YYYY formatında bekleniyor)
+                    const today = new Date().toLocaleDateString('tr-TR'); // "16.02.2024" gibi
+                    if (data.date === today) {
+                        showSpecialDayModal(data.title, data.message);
+                    }
+                }
+            } catch(e) {}
+        }
+
+        // --- ADMIN FONKSİYONLARI ---
+        async function openAdminPanel() {
+            closeSettingsPanel(); // Eğer ayarlar açıksa kapat
+            document.getElementById('adminModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('adminModal').classList.add('open'), 10);
+            document.getElementById('overlay').classList.add('active');
+            // Default load users tab
+            switchAdminTab('users');
+        }
+
+        function closeAdminPanel() {
+            const modal = document.getElementById('adminModal');
+            modal.classList.remove('open');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            if(!originalAdminUid) document.getElementById('overlay').classList.remove('active'); 
+        }
+        
+        function switchAdminTab(tabName) {
+            const btnUsers = document.getElementById('tabAdminUsers');
+            const btnMsgs = document.getElementById('tabAdminMessages');
+            const btnSpecs = document.getElementById('tabAdminSpecials');
+            
+            const divUsers = document.getElementById('adminTabUsers');
+            const divMsgs = document.getElementById('adminTabMessages');
+            const divSpecs = document.getElementById('adminTabSpecials');
+
+            // Reset styles
+            [btnUsers, btnMsgs, btnSpecs].forEach(b => b.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all");
+            [divUsers, divMsgs, divSpecs].forEach(d => d.classList.add('hidden'));
+
+            if (tabName === 'users') {
+                btnUsers.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all";
+                divUsers.classList.remove('hidden');
+                loadAdminUsers();
+            } else if (tabName === 'messages') {
+                btnMsgs.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all";
+                divMsgs.classList.remove('hidden');
+                loadAdminMessages();
+            } else { // specials
+                btnSpecs.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all";
+                divSpecs.classList.remove('hidden');
+                loadAdminSystemMessagesListUI(); // Listeyi UI'a dök
+            }
+        }
+
+        // Admin: Sistem Mesajlarını Yönet
+        async function loadAdminSystemMessages() {
+            await fetchSystemMessages(); // Güncel veriyi al
+        }
+
+        function loadAdminSystemMessagesListUI() {
+            const cat = document.getElementById('adminMsgCat').value;
+            const listDiv = document.getElementById('adminSysMsgList');
+            let arr = [];
+            if (cat === 'highSpend') arr = messages_highSpend;
+            else if (cat === 'lowSavings') arr = messages_lowSavings;
+            else arr = messages_streak;
+
+            listDiv.innerHTML = arr.map((msg, i) => `
+                <div class="flex justify-between items-center bg-slate-700 p-2 rounded text-xs text-slate-300">
+                    <span>${msg}</span>
+                    <button onclick="deleteSystemMessage('${cat}', ${i})" class="text-red-400 hover:text-white"><i class="fas fa-trash"></i></button>
+                </div>
+            `).join('');
+        }
+
+        // Dropdown değişince listeyi yenile
+        document.getElementById('adminMsgCat').addEventListener('change', loadAdminSystemMessagesListUI);
+
+        async function addSystemMessage() {
+            const cat = document.getElementById('adminMsgCat').value;
+            const msg = document.getElementById('adminNewSysMsg').value.trim();
+            if(!msg) return;
+
+            if (cat === 'highSpend') messages_highSpend.push(msg);
+            else if (cat === 'lowSavings') messages_lowSavings.push(msg);
+            else messages_streak.push(msg);
+
+            // Firestore'a kaydet
+            await db.collection('system_messages').doc('config').set({
+                highSpend: messages_highSpend,
+                lowSavings: messages_lowSavings,
+                streak: messages_streak
+            }, { merge: true });
+
+            document.getElementById('adminNewSysMsg').value = '';
+            loadAdminSystemMessagesListUI();
+            alert("Mesaj eklendi.");
+        }
+
+        async function deleteSystemMessage(cat, idx) {
+            if(!confirm("Silinsin mi?")) return;
+            
+            if (cat === 'highSpend') messages_highSpend.splice(idx, 1);
+            else if (cat === 'lowSavings') messages_lowSavings.splice(idx, 1);
+            else messages_streak.splice(idx, 1);
+
+            await db.collection('system_messages').doc('config').set({
+                highSpend: messages_highSpend,
+                lowSavings: messages_lowSavings,
+                streak: messages_streak
+            }, { merge: true });
+
+            loadAdminSystemMessagesListUI();
+        }
+
+        async function saveSpecialDayConfig() {
+            const date = document.getElementById('adminSpecDate').value;
+            const title = document.getElementById('adminSpecTitle').value;
+            const msg = document.getElementById('adminSpecMsg').value;
+
+            if(!date || !title || !msg) return alert("Tüm alanları doldurun");
+
+            await db.collection('system_config').doc('special_day').set({
+                date, title, message: msg
+            });
+            alert("Özel gün kaydedildi!");
+        }
+
         // --- İLETİŞİM / MESAJLAŞMA ---
         function openContactModal() {
             document.getElementById('contactMsg').value = '';
@@ -928,7 +1269,7 @@
             const msg = document.getElementById('contactMsg').value.trim();
             const emailInp = document.getElementById('contactEmail').value.trim();
 
-            if (!msg) return alert("Lütfen bir mesaj yazın.");
+            if (!msg) return showAppAlert("Lütfen bir mesaj yazın.");
             
             let senderEmail = "-";
             
@@ -936,7 +1277,7 @@
                 senderEmail = currentUser.email;
             } else {
                 if (!emailInp || !emailInp.includes('@')) {
-                    return alert("Lütfen geri dönüş yapabilmemiz için geçerli bir e-posta adresi girin.");
+                    return showAppAlert("Lütfen geri dönüş yapabilmemiz için geçerli bir e-posta adresi girin.");
                 }
                 senderEmail = emailInp;
             }
@@ -966,51 +1307,13 @@
                     isRead: false
                 });
 
-                alert("Mesajınız iletildi! Teşekkürler.");
+                showAppAlert("Mesajınız iletildi! Teşekkürler.");
                 closeContactModal();
             } catch (e) {
-                alert("Hata: " + e.message);
+                showAppAlert("Hata: " + e.message);
             } finally {
                 btn.innerText = origText;
                 btn.disabled = false;
-            }
-        }
-
-        // --- ADMIN FONKSİYONLARI ---
-        async function openAdminPanel() {
-            closeSettingsPanel(); // Eğer ayarlar açıksa kapat
-            document.getElementById('adminModal').classList.remove('hidden');
-            setTimeout(() => document.getElementById('adminModal').classList.add('open'), 10);
-            document.getElementById('overlay').classList.add('active');
-            // Default load users tab
-            switchAdminTab('users');
-        }
-
-        function closeAdminPanel() {
-            const modal = document.getElementById('adminModal');
-            modal.classList.remove('open');
-            setTimeout(() => modal.classList.add('hidden'), 300);
-            if(!originalAdminUid) document.getElementById('overlay').classList.remove('active'); 
-        }
-        
-        function switchAdminTab(tabName) {
-            const btnUsers = document.getElementById('tabAdminUsers');
-            const btnMsgs = document.getElementById('tabAdminMessages');
-            const divUsers = document.getElementById('adminTabUsers');
-            const divMsgs = document.getElementById('adminTabMessages');
-
-            if (tabName === 'users') {
-                btnUsers.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all";
-                btnMsgs.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all";
-                divUsers.classList.remove('hidden');
-                divMsgs.classList.add('hidden');
-                loadAdminUsers();
-            } else {
-                btnMsgs.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all";
-                btnUsers.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all";
-                divMsgs.classList.remove('hidden');
-                divUsers.classList.add('hidden');
-                loadAdminMessages();
             }
         }
 
@@ -1059,10 +1362,10 @@
             showConfirm(name + " adlı kullanıcının tüm verileri silinecek?", async () => {
                 try {
                     await db.collection('users').doc(uid).delete();
-                    alert("Kullanıcı verisi silindi.");
+                    showAppAlert("Kullanıcı verisi silindi.");
                     loadAdminUsers(); // Refresh list
                 } catch(e) {
-                    alert("Hata: " + e.message);
+                    showAppAlert("Hata: " + e.message);
                 }
             });
         }
@@ -1127,7 +1430,7 @@
                     // Overlay'i kapat (Panel kapandı çünkü)
                     document.getElementById('overlay').classList.remove('active');
                 }
-            } catch(e) { alert("Hata: " + e.message); }
+            } catch(e) { showAppAlert("Hata: " + e.message); }
         }
 
         async function exitAdminInspect() {
@@ -1174,17 +1477,18 @@
             // Rotator yerine Gamification sistemi çalışacak
         }
 
-        function getRandomMessage(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-
+        // --- GELİŞMİŞ ESPRİLİ MESAJ MANTIĞI ---
         function checkGamificationStatus() {
             const todayStr = new Date().toLocaleDateString('tr-TR');
             const dailyLimit = state.manualDailyLimit || 0;
             const spentToday = state.expenses.filter(e => e.date === todayStr).reduce((s,e)=>s+e.amount,0);
             
+            // 1. Durum: Günlük Limit Aşıldı
             if (spentToday > dailyLimit && dailyLimit > 0) {
-                return getRandomMessage(messages_highSpend);
+                return getRandomMessage(messages_highSpend, 'highSpend');
             }
 
+            // 2. Durum: 3 Günlük Seri (Streak)
             let streak = 0;
             const now = new Date();
             for (let i = 1; i < 30; i++) {
@@ -1194,8 +1498,9 @@
                 if (spentThatDay <= dailyLimit) streak++;
                 else break; 
             }
-            if (streak >= 3) return getRandomMessage(messages_streak);
+            if (streak >= 3) return getRandomMessage(messages_streak, 'streak');
 
+            // 3. Durum: Hedef Uzak (Low Savings)
             const nowTime = new Date();
             let startCalc = new Date(state.registrationDate);
             if(isNaN(startCalc.getTime())) startCalc = new Date();
@@ -1225,7 +1530,7 @@
             const cumulative = (dailyLimit * daysPassed) - totalSpent;
             
             if (cumulative < -(dailyLimit * 2)) {
-                return getRandomMessage(messages_lowSavings);
+                return getRandomMessage(messages_lowSavings, 'lowSavings');
             }
 
             return "Finansal yolculuğunda başarılar dilerim! 🚀";
@@ -1307,7 +1612,7 @@
             if(!isFirebaseReady) return;
             const emailInp = document.getElementById('emailInput').value.trim();
             const pass = document.getElementById('passwordInput').value;
-            if(!emailInp || !pass) return alert("Alanları doldurun.");
+            if(!emailInp || !pass) return showAppAlert("Alanları doldurun.");
             const btn = document.getElementById('loginBtn');
             const orig = btn.innerHTML; btn.innerHTML = '<div class="loader"></div>';
             
@@ -1316,14 +1621,14 @@
                 if (!email.includes('@')) {
                     const s = await db.collection('users').where('username', '==', email.toLowerCase()).limit(1).get();
                     if (s.empty) {
-                        alert("Kullanıcı adı bulunamadı. Lütfen e-posta adresinizi deneyin veya kontrol edin.");
+                        showAppAlert("Kullanıcı adı bulunamadı. Lütfen e-posta adresinizi deneyin veya kontrol edin.");
                         btn.innerHTML = orig;
                         return;
                     }
                     email = s.docs[0].data().email;
                 }
                 await auth.signInWithEmailAndPassword(email, pass);
-            } catch (e) { alert("Hata: " + e.message); btn.innerHTML = orig; }
+            } catch (e) { showAppAlert("Hata: " + e.message); btn.innerHTML = orig; }
         }
 
         async function firebaseRegister() {
@@ -1336,8 +1641,8 @@
             const isQuickMode = !document.getElementById('regDailyLimit').classList.contains('hidden');
             const dailyLimitVal = parseFloat(document.getElementById('regDailyLimit').value);
 
-            if(!email.includes('@') || !user || !pass) return alert("Alanları doğru doldurun.");
-            if(isQuickMode && (!dailyLimitVal || dailyLimitVal <= 0)) return alert("Lütfen günlük harcama hedefinizi girin.");
+            if(!email.includes('@') || !user || !pass) return showAppAlert("Alanları doğru doldurun.");
+            if(isQuickMode && (!dailyLimitVal || dailyLimitVal <= 0)) return showAppAlert("Lütfen günlük harcama hedefinizi girin.");
             
             const btn = document.getElementById('registerBtn');
             btn.innerHTML = '<div class="loader"></div> Lütfen Bekleyin...';
@@ -1364,8 +1669,8 @@
                         let members = owner.data().familyMembers || [];
                         members.push({ uid: cred.user.uid, name: user, role: 'full' });
                         await db.collection('users').doc(owner.id).update({ familyMembers: members });
-                        alert("Davet kodunuz doğrulandı, plana eklendiniz.");
-                    } else alert("Geçersiz davet kodu, kendi yeni planınız oluşturuldu.");
+                        showAppAlert("Davet kodunuz doğrulandı, plana eklendiniz.");
+                    } else showAppAlert("Geçersiz davet kodu, kendi yeni planınız oluşturuldu.");
                 }
 
                 await db.collection("users").doc(cred.user.uid).set(initState);
@@ -1376,14 +1681,14 @@
                 if(userDoc.exists && userDoc.data().pendingInvites) window.userInvites = userDoc.data().pendingInvites;
                 await initUserPlan();
 
-            } catch (e) { isRegistering = false; alert("Hata: " + e.message); btn.innerHTML = "Üye Ol ve Katıl"; }
+            } catch (e) { isRegistering = false; showAppAlert("Hata: " + e.message); btn.innerHTML = "Üye Ol ve Katıl"; }
         }
 
         function registerFromWizard() {
             const u = document.getElementById('wizRegName').value.trim();
             const e = document.getElementById('wizRegEmail').value.trim();
             const p = document.getElementById('wizRegPass').value;
-            if(!u || !e || !p) return alert("Tüm alanları doldurun.");
+            if(!u || !e || !p) return showAppAlert("Tüm alanları doldurun.");
             document.getElementById('regUsernameInput').value = u;
             document.getElementById('emailInput').value = e;
             document.getElementById('passwordInput').value = p;
@@ -1393,8 +1698,8 @@
 
         function forgotPassword() {
             const email = document.getElementById('emailInput').value.trim();
-            if (!email || !email.includes('@')) return alert("Lütfen geçerli bir e-posta giriniz.");
-            auth.sendPasswordResetEmail(email).then(() => alert("Bağlantı gönderildi.")).catch(e => alert(e.message));
+            if (!email || !email.includes('@')) return showAppAlert("Lütfen geçerli bir e-posta giriniz.");
+            auth.sendPasswordResetEmail(email).then(() => showAppAlert("Bağlantı gönderildi.")).catch(e => showAppAlert(e.message));
         }
 
         function handleLogout() {
@@ -1432,9 +1737,9 @@
             const code = document.getElementById('settingsInviteCode').value.trim().toUpperCase();
             if(!code) return;
             const snap = await db.collection('users').where('inviteCode', '==', code).get();
-            if(snap.empty) return alert("Geçersiz davet kodu!");
+            if(snap.empty) return showAppAlert("Geçersiz davet kodu!");
             const ownerDoc = snap.docs[0];
-            if(ownerDoc.id === currentUser.uid) return alert("Kendi planınıza katılamazsınız.");
+            if(ownerDoc.id === currentUser.uid) return showAppAlert("Kendi planınıza katılamazsınız.");
             
             let members = ownerDoc.data().familyMembers || [];
             members = members.filter(m => m.uid !== currentUser.uid);
@@ -1442,7 +1747,8 @@
             await db.collection('users').doc(ownerDoc.id).update({ familyMembers: members });
             await db.collection('users').doc(currentUser.uid).update({ connectedPlanId: ownerDoc.id });
             
-            alert("Plana başarıyla katıldınız!"); window.location.reload();
+            showAppAlert("Plana başarıyla katıldınız!"); 
+            setTimeout(() => window.location.reload(), 1500);
         }
         async function leaveCurrentPlan() {
             showConfirm("Mevcut plandan ayrılmak istediğinize emin misiniz?", async () => {
@@ -1453,30 +1759,31 @@
                     await db.collection('users').doc(currentPlanId).update({ familyMembers: members });
                 }
                 await db.collection('users').doc(currentUser.uid).update({ connectedPlanId: null });
-                alert("Plandan ayrıldınız."); window.location.reload();
+                showAppAlert("Plandan ayrıldınız."); 
+                setTimeout(() => window.location.reload(), 1500);
             });
         }
 
         // --- AİLE YÖNETİMİ & DAVET SİSTEMİ ---
         function createInviteCode() {
-            if(currentUserRole !== 'owner' && currentUserRole !== 'full') return alert("Yetkiniz yok.");
+            if(currentUserRole !== 'owner' && currentUserRole !== 'full') return showAppAlert("Yetkiniz yok.");
             const code = Math.random().toString(36).substring(2, 7).toUpperCase();
             state.inviteCode = code; saveToCloud();
             document.getElementById('displayInviteCode').innerText = code;
         }
 
         async function addFamilyMember() {
-            if(currentUserRole !== 'owner' && currentUserRole !== 'full') return alert("Yetkiniz yok.");
+            if(currentUserRole !== 'owner' && currentUserRole !== 'full') return showAppAlert("Yetkiniz yok.");
             const input = document.getElementById('famInput').value.trim().toLowerCase();
             const role = document.getElementById('famRole').value;
             if(!input) return;
 
             let snap = await db.collection('users').where('username', '==', input).limit(1).get();
             if(snap.empty) snap = await db.collection('users').where('email', '==', input).limit(1).get();
-            if(snap.empty) return alert("Kullanıcı sistemde bulunamadı. Lütfen kayıtlı olduğuna emin olun.");
+            if(snap.empty) return showAppAlert("Kullanıcı sistemde bulunamadı. Lütfen kayıtlı olduğuna emin olun.");
             
             const target = snap.docs[0];
-            if(target.id === currentUser.uid) return alert("Kendinizi ekleyemezsiniz.");
+            if(target.id === currentUser.uid) return showAppAlert("Kendinizi ekleyemezsiniz.");
 
             // Davet Gönder
             await db.collection('users').doc(target.id).update({
@@ -1488,7 +1795,7 @@
             });
             
             document.getElementById('famInput').value = ''; 
-            alert(`Kullanıcıya davet gönderildi! Sisteme giriş yaptıklarında karşılarına çıkacaktır.`);
+            showAppAlert(`Kullanıcıya davet gönderildi! Sisteme giriş yaptıklarında karşılarına çıkacaktır.`);
         }
 
         async function acceptInvite() {
@@ -1723,6 +2030,7 @@
 
             document.getElementById('displayInviteCode').innerText = state.inviteCode || '-----';
             
+            // Esprili Mesajı Getir
             const motivationalMsg = checkGamificationStatus();
             document.getElementById('motivationText').innerText = motivationalMsg;
             document.getElementById('motivationArea').classList.remove('hidden');
@@ -1786,7 +2094,7 @@
                 currentExpenseDateOffset = diffDays;
                 updateExpenseDateLabel();
             } else {
-                alert("Geleceğe harcama giremezsiniz!");
+                showAppAlert("Geleceğe harcama giremezsiniz!");
                 currentExpenseDateOffset = 0;
                 updateExpenseDateLabel();
             }
@@ -1796,7 +2104,7 @@
         function renderCategoryOptions() {
             const sel = document.getElementById('expCat');
             if (!state.categories) {
-                state.categories = ["Market / Manav", "Kasap", "Akaryakıt", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"];
+                state.categories = ["Market / Manav", "Kasap", "Akaryakıt", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"];
             }
             
             sel.innerHTML = state.categories.map(c => `<option value="${c}">${c}</option>`).join('');
@@ -2118,7 +2426,7 @@
 
             if(editIndex > -1 && currentUserRole === 'limited') {
                 if(state.expenses[editIndex].addedBy !== myStr && state.expenses[editIndex].addedBy !== 'Ben') {
-                    return alert("Sadece kendi harcamalarınızı düzenleyebilirsiniz.");
+                    return showAppAlert("Sadece kendi harcamalarınızı düzenleyebilirsiniz.");
                 }
             }
 
@@ -2559,7 +2867,7 @@
             const debts = parseFloat(document.getElementById('histDebts').value);
             const rate = parseFloat(document.getElementById('histUSDRate').value);
 
-            if(!date) return alert("Tarih seçin");
+            if(!date) return showAppAlert("Tarih seçin");
             
             state.monthlyHistory.push({
                 date, 
@@ -2569,7 +2877,7 @@
             }); 
             
             saveToCloud(); 
-            alert("Kayıt Eklendi");
+            showAppAlert("Kayıt Eklendi");
             
             document.getElementById('histDate').value = '';
             document.getElementById('histAssets').value = '';
@@ -2739,7 +3047,29 @@
             if(!isEditMode) { state = JSON.parse(JSON.stringify(defaultState)); state.registrationDate = new Date().toISOString(); }
             state.step = 1; renderWizard();
         }
-        function wizardNext() { if (state.step === 8) { if(document.getElementById('wizRegEmail')) registerFromWizard(); else { saveState(); showDashboard(); } return; } state.step++; renderWizard(); }
+        
+        function wizardNext() { 
+            // Step 8 validation update (Alert Replacement)
+            if (state.step === 8) { 
+                if(document.getElementById('wizRegEmail')) {
+                    // Registration inside wizard
+                    const u = document.getElementById('wizRegName').value.trim();
+                    const e = document.getElementById('wizRegEmail').value.trim();
+                    const p = document.getElementById('wizRegPass').value;
+                    if(!u || !e || !p) {
+                         showAppAlert("Tüm alanları doldurun.");
+                         return;
+                    }
+                    registerFromWizard(); 
+                } else { 
+                    saveState(); 
+                    showDashboard(); 
+                } 
+                return; 
+            } 
+            state.step++; renderWizard(); 
+        }
+
         function wizardBack() { if (state.step > 1) { state.step--; renderWizard(); } else { if(currentUser) showDashboard(); else showLoginScreen(); } }
         
         function getStandardLoans() {
@@ -2984,6 +3314,7 @@
         function closeAllPopups() { 
             document.getElementById('overlay').classList.remove('active'); 
             document.querySelectorAll('.fixed.z-50').forEach(el => { if(el.id !== 'saveIndicator' && !el.classList.contains('bottom-nav')) el.classList.add('hidden'); }); 
+            document.querySelectorAll('.fixed.z-[70], .fixed.z-[80], .fixed.z-[90]').forEach(el => el.classList.add('hidden')); // Close custom alerts
             document.querySelectorAll('.side-panel').forEach(el => { el.classList.remove('open'); setTimeout(() => el.classList.add('hidden'), 300); });
         }
     </script>
