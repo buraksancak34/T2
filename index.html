@@ -5,10 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Birikim Koçum | Gelir-Gider Takip</title>
     
-    <!-- PWA ve Mobil Uygulama Ayarları -->
-    <link rel="manifest" href="manifest.json">
+    <!-- PWA ve Mobil Uygulama Ayarları - DİNAMİK MANİFEST EKLENTİSİ -->
+    <link id="dynamic-manifest" rel="manifest">
+    <script>
+        const manifestData = {
+            "name": "Birikim Koçum",
+            "short_name": "Birikim Koçum",
+            "start_url": window.location.pathname,
+            "display": "standalone",
+            "orientation": "portrait",
+            "background_color": "#f8fafc",
+            "theme_color": "#2563eb",
+            "icons": [{"src": "https://cdn-icons-png.flaticon.com/512/2382/2382461.png", "sizes": "512x512", "type": "image/png"}]
+        };
+        document.getElementById('dynamic-manifest').setAttribute('href', 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifestData)));
+    </script>
+    
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-touch-fullscreen" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#2563eb">
     <meta name="application-name" content="Birikim Koçum">
