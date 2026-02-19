@@ -302,20 +302,24 @@
         </div>
 
         <div id="addExpenseSection" class="glass-card p-5 rounded-[2rem] bg-white border border-gray-100 shadow-lg">
-            <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center justify-between mb-3">
                 <h3 class="font-black text-lg text-gray-800">Harcama Ekle</h3>
-                <div class="flex items-center gap-1 bg-red-50 p-1.5 rounded-xl border border-red-100 shadow-sm">
-                    <button onclick="changeExpenseDate(1)" class="w-7 h-7 flex items-center justify-center bg-white rounded-lg text-red-400 hover:text-red-600 shadow-sm transition-colors border border-red-50"><i class="fas fa-chevron-left text-xs"></i></button>
-                    <div class="relative text-center px-2">
-                        <span id="expenseDateLabel" class="text-[10px] font-black text-red-600 cursor-pointer hover:text-red-800 select-none" onclick="document.getElementById('expDateInputHidden').showPicker()">Bugün</span>
-                        <input type="date" id="expDateInputHidden" class="absolute inset-0 opacity-0 cursor-pointer" onchange="setSpecificDate(this.value)">
-                    </div>
-                    <button onclick="changeExpenseDate(-1)" class="w-7 h-7 flex items-center justify-center bg-white rounded-lg text-red-400 hover:text-red-600 shadow-sm transition-colors border border-red-50"><i class="fas fa-chevron-right text-xs"></i></button>
-                </div>
+                <span id="todayTotal" class="text-[9px] font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-md uppercase tracking-wide">Bugün: ₺0</span>
             </div>
 
-            <div class="text-right mb-3">
-                 <span id="todayTotal" class="text-[9px] font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-md uppercase tracking-wide">Bugün: ₺0</span>
+            <!-- TARİH SEÇİCİ (ORTALANMIŞ VE DETAYLI) -->
+            <div class="flex justify-center mb-4">
+                <div class="flex items-center gap-3 bg-red-50 p-2 rounded-2xl border border-red-100 shadow-sm w-full max-w-[250px]">
+                    <button onclick="changeExpenseDate(1)" class="w-8 h-8 shrink-0 flex items-center justify-center bg-white rounded-xl text-red-400 hover:text-red-600 shadow-sm transition-transform active:scale-95 border border-red-50"><i class="fas fa-chevron-left text-sm"></i></button>
+                    <div class="relative text-center flex-1">
+                        <div id="expenseDateLabel" class="cursor-pointer hover:text-red-800 select-none flex flex-col items-center justify-center" onclick="document.getElementById('expDateInputHidden').showPicker()">
+                            <span class="text-[12px] font-black text-red-600 block leading-tight">Bugün</span>
+                            <span class="text-[9px] font-bold text-red-400 block leading-tight mt-0.5">(...)</span>
+                        </div>
+                        <input type="date" id="expDateInputHidden" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onchange="setSpecificDate(this.value)">
+                    </div>
+                    <button onclick="changeExpenseDate(-1)" class="w-8 h-8 shrink-0 flex items-center justify-center bg-white rounded-xl text-red-400 hover:text-red-600 shadow-sm transition-transform active:scale-95 border border-red-50"><i class="fas fa-chevron-right text-sm"></i></button>
+                </div>
             </div>
             
             <div class="flex flex-col gap-3">
@@ -2164,15 +2168,27 @@
             const options = { day: 'numeric', month: 'long', weekday: 'long' };
             const formattedDate = d.toLocaleDateString('tr-TR', options);
             
+            let mainText = "";
+            let subText = "";
+            
             if (currentExpenseDateOffset === 0) {
-                lbl.innerText = `Bugün`;
+                mainText = `Bugün`;
+                subText = `(${formattedDate})`;
             } else if (currentExpenseDateOffset === 1) {
-                lbl.innerText = `Dün`;
+                mainText = `Dün`;
+                subText = `(${formattedDate})`;
             } else {
-                const day = String(d.getDate()).padStart(2, '0');
-                const month = String(d.getMonth() + 1).padStart(2, '0');
-                lbl.innerText = `${day}.${month}`;
+                const day = d.getDate();
+                const monthStr = d.toLocaleDateString('tr-TR', { month: 'long' });
+                const dayName = d.toLocaleDateString('tr-TR', { weekday: 'long' });
+                mainText = `${day} ${monthStr}`;
+                subText = `(${dayName})`;
             }
+            
+            lbl.innerHTML = `
+                <span class="text-[12px] font-black text-red-600 block leading-tight">${mainText}</span>
+                <span class="text-[9px] font-bold text-red-400 block leading-tight mt-0.5">${subText}</span>
+            `;
             
             const yyyy = d.getFullYear();
             const mm = String(d.getMonth() + 1).padStart(2, '0');
