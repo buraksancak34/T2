@@ -939,31 +939,31 @@
         let originalAdminUid = null;
 
         // --- GELİŞMİŞ GERİ TUŞU YÖNETİMİ ---
-        let popupStackCounter = 0;
-        let isProgrammaticPop = false;
+        let isPanelOpenInHistory = false;
+        let ignoreNextPop = false;
 
-        function setPopupState() {
-            history.pushState({ popup: true }, null, window.location.href);
-            popupStackCounter++;
+        function pushPanelHistory() {
+            if (!isPanelOpenInHistory) {
+                history.pushState({ panelOpen: true }, "", "");
+                isPanelOpenInHistory = true;
+            }
         }
 
-        function removePopupStateSafe() {
-            if (popupStackCounter > 0) {
-                popupStackCounter--;
-                isProgrammaticPop = true;
+        function popPanelHistory() {
+            if (isPanelOpenInHistory) {
+                isPanelOpenInHistory = false;
+                ignoreNextPop = true;
                 history.back();
             }
         }
 
-        window.addEventListener('popstate', function(event) {
-            if (isProgrammaticPop) {
-                isProgrammaticPop = false;
+        window.addEventListener('popstate', function(e) {
+            if (ignoreNextPop) {
+                ignoreNextPop = false;
                 return;
             }
-            if (popupStackCounter > 0) {
-                popupStackCounter = 0; // Tümü kapandığı için sıfırla
-                closeAllPopupsUIOnly();
-            }
+            isPanelOpenInHistory = false;
+            closeAllPopupsUIOnly();
         });
 
         function closeAllPopupsUIOnly() {
@@ -984,9 +984,7 @@
 
         function closeAllPopups() { 
             closeAllPopupsUIOnly();
-            while(popupStackCounter > 0) {
-                removePopupStateSafe();
-            }
+            popPanelHistory();
         }
         // -----------------------------------
 
@@ -1009,7 +1007,6 @@
             const modal = document.getElementById('specialDayModal');
             modal.classList.remove('hidden');
             
-            setPopupState();
             runConfetti();
         }
         
@@ -1017,7 +1014,6 @@
             const title = document.getElementById('specialDayTitle').innerText;
             localStorage.setItem('seenSpecialDay_' + title, 'true');
             document.getElementById('specialDayModal').classList.add('hidden');
-            removePopupStateSafe();
         }
         
         function runConfetti() {
@@ -1199,7 +1195,7 @@
             setTimeout(() => document.getElementById('adminModal').classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
             
-            setPopupState();
+            pushPanelHistory();
             switchAdminTab('users');
         }
 
@@ -1208,7 +1204,7 @@
             modal.classList.remove('open');
             setTimeout(() => modal.classList.add('hidden'), 300);
             if(!originalAdminUid) document.getElementById('overlay').classList.remove('active'); 
-            removePopupStateSafe();
+            popPanelHistory();
         }
         
         function switchAdminTab(tabName) {
@@ -1317,7 +1313,7 @@
             setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
             
-            setPopupState();
+            pushPanelHistory();
         }
 
         function closeContactModal() {
@@ -1325,7 +1321,7 @@
             modal.classList.remove('open');
             setTimeout(() => modal.classList.add('hidden'), 300);
             document.getElementById('overlay').classList.remove('active'); 
-            removePopupStateSafe();
+            popPanelHistory();
         }
 
         async function sendContactMessage() {
@@ -1769,12 +1765,14 @@
                 document.getElementById('deleteAccountPassword').value = '';
                 const modal = document.getElementById('deleteAccountModal');
                 modal.classList.remove('hidden');
+                pushPanelHistory();
             });
         }
 
         function closeDeleteAccountModal() {
             const modal = document.getElementById('deleteAccountModal');
             modal.classList.add('hidden');
+            popPanelHistory();
         }
 
         async function confirmDeleteAccount() {
@@ -1825,7 +1823,7 @@
             setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
             
-            setPopupState();
+            pushPanelHistory();
             renderFamilyList();
         }
         function closeSettingsPanel() { 
@@ -1833,7 +1831,7 @@
              modal.classList.remove('open');
              setTimeout(() => modal.classList.add('hidden'), 300);
              document.getElementById('overlay').classList.remove('active'); 
-             removePopupStateSafe();
+             popPanelHistory();
         }
         
         async function joinPlanByCode() {
@@ -2250,7 +2248,7 @@
             setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
             
-            setPopupState();
+            pushPanelHistory();
         }
 
         function closeCategoryModal() {
@@ -2260,7 +2258,7 @@
             setTimeout(() => modal.classList.add('hidden'), 300);
             document.getElementById('overlay').classList.remove('active');
             renderCategoryOptions(); 
-            removePopupStateSafe();
+            popPanelHistory();
         }
 
         function addNewCategory() {
@@ -2861,7 +2859,7 @@
             setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active'); 
             
-            setPopupState();
+            pushPanelHistory();
         }
         
         function calcEditLoan() {
@@ -2923,7 +2921,7 @@
             modal.classList.remove('open');
             setTimeout(() => modal.classList.add('hidden'), 300);
             document.getElementById('overlay').classList.remove('active'); 
-            removePopupStateSafe();
+            popPanelHistory();
         }
         function deleteHealthItem(type, idx) { 
             showConfirm('Bu kalemi tamamen silmek istediğinize emin misiniz?', () => { 
@@ -3175,7 +3173,7 @@
             setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
             
-            setPopupState();
+            pushPanelHistory();
         }
 
         function closeLoanPlanModal() {
@@ -3183,7 +3181,7 @@
             modal.classList.remove('open');
             setTimeout(() => modal.classList.add('hidden'), 300);
             document.getElementById('overlay').classList.remove('active'); 
-            removePopupStateSafe();
+            popPanelHistory();
         }
 
         function openBalanceModal() {
@@ -3281,7 +3279,7 @@
             setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
             
-            setPopupState();
+            pushPanelHistory();
         }
 
         function closeBalanceModal() {
@@ -3289,7 +3287,7 @@
             modal.classList.remove('open');
             setTimeout(() => modal.classList.add('hidden'), 300);
             document.getElementById('overlay').classList.remove('active'); 
-            removePopupStateSafe();
+            popPanelHistory();
         }
 
         function startWizard(isEditMode) {
@@ -3589,14 +3587,14 @@
             setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active'); 
             
-            setPopupState();
+            pushPanelHistory();
         }
         function closeCalcModal() { 
             const modal = document.getElementById('calcModal');
             modal.classList.remove('open');
             setTimeout(() => modal.classList.add('hidden'), 300);
             document.getElementById('overlay').classList.remove('active'); 
-            removePopupStateSafe();
+            popPanelHistory();
         }
 
         // --- AYLIK OTOMATİK RAPORLAMA SİSTEMİ ---
@@ -3750,12 +3748,12 @@
             document.getElementById('reportContent').innerHTML = html;
             document.getElementById('monthlyReportModal').classList.remove('hidden');
             
-            setPopupState();
+            pushPanelHistory();
         }
         
         function closeMonthlyReport() {
             document.getElementById('monthlyReportModal').classList.add('hidden');
-            removePopupStateSafe();
+            popPanelHistory();
         }
 
         function openReportForSelectedMonth() {
