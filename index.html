@@ -359,11 +359,19 @@
                                 <button onclick="openBalanceModal()" class="text-blue-300 hover:text-white text-[9px] font-bold underline decoration-dashed underline-offset-2 transition-colors cursor-pointer relative z-20">Nasıl Hesaplandı?</button>
                             </div>
                             <h2 id="displayCumulativeLimit" onclick="openBalanceModal()" class="text-5xl font-black tracking-tighter leading-none cursor-pointer">₺0</h2>
+                            
+                            <!-- YENİ: Hesaplama Yöntemi Butonları -->
+                            <div class="flex gap-1 mt-2">
+                                <button onclick="setBalanceMethod('salary')" id="btnCalcSalary" class="text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10">Gelir Günü</button>
+                                <button onclick="setBalanceMethod('register')" id="btnCalcRegister" class="text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10">Kayıt Günü</button>
+                                <button onclick="setBalanceMethod('today')" id="btnCalcToday" class="text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10">Bugün</button>
+                            </div>
+
                         </div>
                         <div class="text-right">
                              <div class="flex items-center justify-end gap-2 mb-1">
                                 <p class="text-blue-400 text-[10px] font-bold uppercase tracking-widest opacity-80">Bugünün Limiti</p>
-                                <button onclick="openCalcModal()" class="text-blue-300 hover:text-white text-[9px] font-bold underline decoration-dashed underline-offset-2 transition-colors cursor-pointer relative z-20">?</button>
+                                <button onclick="openCalcModal()" class="text-blue-300 hover:text-white text-[9px] font-bold underline decoration-dashed underline-offset-2 transition-colors cursor-pointer relative z-20">Nasıl Hesaplandı?</button>
                             </div>
                             <h4 id="displayDailyLimit" class="text-3xl font-black text-white tracking-tight">₺0</h4>
                         </div>
@@ -1096,6 +1104,7 @@
         const defaultState = {
             step: 1, salaryDay: 15,
             registrationDate: new Date().toISOString(),
+            balanceCalcMethod: 'register', // YENİ: Hesaplama yöntemi (register, salary, today)
             incomes: [{ name: 'Maaş', val: null }], 
             bills: [
                 { name: 'Kira', val: null }, { name: 'Aidat', val: null }, { name: 'Elektrik', val: null },
@@ -2009,30 +2018,44 @@
             }
 
             const now = new Date(); const todayStr = now.toLocaleDateString('tr-TR');
-            let startCalc = new Date(state.registrationDate);
-            if(isNaN(startCalc.getTime())) startCalc = new Date();
             
-            if (state.expenses.length > 0) {
-                let minExpDate = new Date(); 
-                
-                state.expenses.forEach(e => {
-                    let dParts = e.date.split('.');
-                    if(dParts.length === 3) {
-                        let d = new Date(dParts[2], dParts[1]-1, dParts[0]);
-                        if (d < minExpDate) minExpDate = d;
-                    }
-                });
-                
-                if (minExpDate.getTime() < startCalc.getTime() - (1000 * 60 * 60 * 24)) {
-                    const salaryDay = state.salaryDay || 15;
-                    let lastSalaryDate = new Date(now.getFullYear(), now.getMonth(), salaryDay);
-                    if (now.getDate() < salaryDay) {
-                        lastSalaryDate.setMonth(lastSalaryDate.getMonth() - 1);
-                    }
-                    startCalc = lastSalaryDate;
+            // YENİ: Başlangıç Tarihi Hesaplama Mantığı
+            let startCalc;
+            const calcMethod = state.balanceCalcMethod || 'register';
+            
+            // Buton durumlarını güncelle
+            const btnSalary = document.getElementById('btnCalcSalary');
+            const btnRegister = document.getElementById('btnCalcRegister');
+            const btnToday = document.getElementById('btnCalcToday');
+            
+            // Tüm butonları resetle
+            [btnSalary, btnRegister, btnToday].forEach(btn => {
+                btn.className = "text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10";
+            });
+            
+            // Aktif butonu yeşil yap
+            const activeBtnClass = "text-[9px] font-bold px-2 py-1 rounded bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
+            if (calcMethod === 'salary') {
+                btnSalary.className = activeBtnClass;
+                // Maaş Günü mantığı
+                const salaryDay = state.salaryDay || 15;
+                let lastSalaryDate = new Date(now.getFullYear(), now.getMonth(), salaryDay);
+                if (now.getDate() < salaryDay) {
+                    lastSalaryDate.setMonth(lastSalaryDate.getMonth() - 1);
                 }
+                startCalc = lastSalaryDate;
+            } else if (calcMethod === 'today') {
+                btnToday.className = activeBtnClass;
+                // Bugün mantığı
+                startCalc = new Date();
+                startCalc.setHours(0,0,0,0);
+            } else {
+                btnRegister.className = activeBtnClass;
+                // Kayıt Günü mantığı (Varsayılan)
+                startCalc = new Date(state.registrationDate);
+                if(isNaN(startCalc.getTime())) startCalc = new Date();
             }
-            
+
             const daysPassed = Math.max(1, Math.ceil(Math.abs(now - startCalc) / (1000 * 60 * 60 * 24))); 
             
             const spentToday = state.expenses.filter(e => e.date === todayStr).reduce((s,e)=>s+e.amount,0);
@@ -2134,6 +2157,13 @@
             
             updateExpenseDateLabel();
             renderCategoryOptions(); 
+        }
+        
+        // YENİ: Bakiye Hesaplama Yöntemi Değiştirme
+        function setBalanceMethod(method) {
+            state.balanceCalcMethod = method;
+            saveToCloud();
+            updateDashboardUI();
         }
 
         // --- TARİH NAVİGASYON MANTIĞI ---
@@ -2556,6 +2586,19 @@
                     date: finalDate, 
                     addedBy: myStr, ts: Date.now()
                 });
+
+                // Auto-switch balance method if past expense is added
+                const now = new Date();
+                const expDate = new Date(d); // Using 'd' from above calculation
+                const regDate = new Date(state.registrationDate);
+
+                // Simple check: If expense date is older than registration date by more than a day
+                // This assumes registration date is accurate.
+                // We use 'salary' method if we detect 'past' data effectively.
+                if (expDate < regDate && state.balanceCalcMethod !== 'salary') {
+                    setBalanceMethod('salary');
+                    showAppAlert("Geçmiş tarihli işlem girildiği için hesaplama 'Gelir Günü' moduna alındı.");
+                }
             }
             
             amtInp.value = ''; descInp.value = ''; 
@@ -3166,34 +3209,58 @@
         // --- GERÇEK BAKİYE MODALI ---
         function openBalanceModal() {
             const now = new Date(); const todayStr = now.toLocaleDateString('tr-TR');
-            let startCalc = new Date(state.registrationDate);
-            if(isNaN(startCalc.getTime())) startCalc = new Date();
             
-            let isSalaryBased = false;
-            if (state.expenses.length > 0) {
-                let minExpDate = new Date();
-                state.expenses.forEach(e => {
-                    let dParts = e.date.split('.');
-                    if(dParts.length === 3) {
-                        let d = new Date(dParts[2], dParts[1]-1, dParts[0]);
-                        if (d < minExpDate) minExpDate = d;
-                    }
-                });
-                if (minExpDate.getTime() < startCalc.getTime() - (1000 * 60 * 60 * 24)) {
-                    const salaryDay = state.salaryDay || 15;
-                    let lastSalaryDate = new Date(now.getFullYear(), now.getMonth(), salaryDay);
-                    if (now.getDate() < salaryDay) {
-                        lastSalaryDate.setMonth(lastSalaryDate.getMonth() - 1);
-                    }
-                    startCalc = lastSalaryDate;
-                    isSalaryBased = true;
+            // YENİ: Başlangıç Tarihi Hesaplama Mantığı
+            let startCalc;
+            const calcMethod = state.balanceCalcMethod || 'register';
+            
+            // Buton durumlarını güncelle
+            const btnSalary = document.getElementById('btnCalcSalary');
+            const btnRegister = document.getElementById('btnCalcRegister');
+            const btnToday = document.getElementById('btnCalcToday');
+            
+            // Tüm butonları resetle
+            [btnSalary, btnRegister, btnToday].forEach(btn => {
+                btn.className = "text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10";
+            });
+            
+            // Aktif butonu yeşil yap
+            const activeBtnClass = "text-[9px] font-bold px-2 py-1 rounded bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
+            if (calcMethod === 'salary') {
+                btnSalary.className = activeBtnClass;
+                // Maaş Günü mantığı
+                const salaryDay = state.salaryDay || 15;
+                let lastSalaryDate = new Date(now.getFullYear(), now.getMonth(), salaryDay);
+                if (now.getDate() < salaryDay) {
+                    lastSalaryDate.setMonth(lastSalaryDate.getMonth() - 1);
                 }
+                startCalc = lastSalaryDate;
+            } else if (calcMethod === 'today') {
+                btnToday.className = activeBtnClass;
+                // Bugün mantığı
+                startCalc = new Date();
+                startCalc.setHours(0,0,0,0);
+            } else {
+                btnRegister.className = activeBtnClass;
+                // Kayıt Günü mantığı (Varsayılan)
+                startCalc = new Date(state.registrationDate);
+                if(isNaN(startCalc.getTime())) startCalc = new Date();
             }
-            
+
             const daysPassed = Math.max(1, Math.ceil(Math.abs(now - startCalc) / (1000 * 60 * 60 * 24))); 
+            
+            const spentToday = state.expenses.filter(e => e.date === todayStr).reduce((s,e)=>s+e.amount,0);
+            const totalSpent = state.expenses.reduce((s,e)=>s+e.amount,0);
+            const cumulative = ((state.manualDailyLimit||0) * daysPassed) - totalSpent;
+
+            // Bu fonksiyon genellikle sadece dashboard güncelleme sırasında çağrılıyordu ama artık modal da açacak
+            // O yüzden hesaplamalar dashboard'da yapılıyor, burası sadece modal içeriğini göstermeli.
+            // Fakat hesaplamalar dinamik olduğu için burada tekrar yapıyoruz.
+
+            let isSalaryBased = (calcMethod === 'salary');
+
             const dailyLimit = state.manualDailyLimit || 0;
             const accumulatedLimit = dailyLimit * daysPassed;
-            const totalSpent = state.expenses.reduce((s,e)=>s+e.amount,0);
             const balance = accumulatedLimit - totalSpent;
 
             const html = `
@@ -3206,7 +3273,7 @@
                     <div class="space-y-3 pt-2">
                         <div class="flex justify-between items-center text-xs font-bold text-gray-600 border-b border-gray-100 pb-2">
                             <span>Hesap Başlangıcı</span>
-                            <span class="text-gray-800">${startCalc.toLocaleDateString('tr-TR')} ${isSalaryBased ? '<span class="text-[9px] bg-yellow-100 text-yellow-700 px-1 rounded ml-1">Maaş Günü</span>' : '<span class="text-[9px] bg-gray-100 text-gray-500 px-1 rounded ml-1">Kayıt Tarihi</span>'}</span>
+                            <span class="text-gray-800">${startCalc.toLocaleDateString('tr-TR')} ${isSalaryBased ? '<span class="text-[9px] bg-yellow-100 text-yellow-700 px-1 rounded ml-1">Maaş Günü</span>' : (calcMethod === 'today' ? '<span class="text-[9px] bg-purple-100 text-purple-700 px-1 rounded ml-1">Bugün</span>' : '<span class="text-[9px] bg-gray-100 text-gray-500 px-1 rounded ml-1">Kayıt Tarihi</span>')}</span>
                         </div>
                         <div class="flex justify-between items-center text-xs font-bold text-gray-600 border-b border-gray-100 pb-2">
                             <span>Geçen Gün</span>
