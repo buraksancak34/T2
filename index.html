@@ -2019,7 +2019,7 @@
 
             const now = new Date(); const todayStr = now.toLocaleDateString('tr-TR');
             
-            // YENİ: Başlangıç Tarihi Hesaplama Mantığı
+            // YENİ: Başlangıç Tarihi Hesaplama Mantığı (Akıllı Filtreleme)
             let startCalc;
             const calcMethod = state.balanceCalcMethod || 'register';
             
@@ -2044,6 +2044,7 @@
                     lastSalaryDate.setMonth(lastSalaryDate.getMonth() - 1);
                 }
                 startCalc = lastSalaryDate;
+                startCalc.setHours(0,0,0,0);
             } else if (calcMethod === 'today') {
                 btnToday.className = activeBtnClass;
                 // Bugün mantığı
@@ -2054,12 +2055,27 @@
                 // Kayıt Günü mantığı (Varsayılan)
                 startCalc = new Date(state.registrationDate);
                 if(isNaN(startCalc.getTime())) startCalc = new Date();
+                startCalc.setHours(0,0,0,0);
             }
 
             const daysPassed = Math.max(1, Math.ceil(Math.abs(now - startCalc) / (1000 * 60 * 60 * 24))); 
             
+            // Akıllı Filtreleme: Sadece startCalc tarihinden sonraki harcamaları topla
+            let totalSpent = 0;
             const spentToday = state.expenses.filter(e => e.date === todayStr).reduce((s,e)=>s+e.amount,0);
-            const totalSpent = state.expenses.reduce((s,e)=>s+e.amount,0);
+            
+            state.expenses.forEach(e => {
+                const dParts = e.date.split('.');
+                if(dParts.length === 3) {
+                    const d = new Date(dParts[2], dParts[1]-1, dParts[0]);
+                    d.setHours(0,0,0,0);
+                    // Sadece seçilen başlangıç tarihinden itibaren olan harcamaları dahil et
+                    if (d >= startCalc) {
+                        totalSpent += e.amount;
+                    }
+                }
+            });
+
             const cumulative = ((state.manualDailyLimit||0) * daysPassed) - totalSpent;
             
             document.getElementById('displayDailyLimit').innerText = `₺${Math.floor((state.manualDailyLimit||0) - spentToday).toLocaleString()}`;
@@ -2590,7 +2606,10 @@
                 // Auto-switch balance method if past expense is added
                 const now = new Date();
                 const expDate = new Date(d); // Using 'd' from above calculation
+                // Ensure compare against midnight
+                expDate.setHours(0,0,0,0);
                 const regDate = new Date(state.registrationDate);
+                regDate.setHours(0,0,0,0);
 
                 // Simple check: If expense date is older than registration date by more than a day
                 // This assumes registration date is accurate.
@@ -3249,8 +3268,21 @@
 
             const daysPassed = Math.max(1, Math.ceil(Math.abs(now - startCalc) / (1000 * 60 * 60 * 24))); 
             
+            // Calculate total spent based on the chosen period
+            let totalSpent = 0;
             const spentToday = state.expenses.filter(e => e.date === todayStr).reduce((s,e)=>s+e.amount,0);
-            const totalSpent = state.expenses.reduce((s,e)=>s+e.amount,0);
+            
+            state.expenses.forEach(e => {
+                const dParts = e.date.split('.');
+                if(dParts.length === 3) {
+                    const d = new Date(dParts[2], dParts[1]-1, dParts[0]);
+                    d.setHours(0,0,0,0);
+                    if (d >= startCalc) {
+                        totalSpent += e.amount;
+                    }
+                }
+            });
+
             const cumulative = ((state.manualDailyLimit||0) * daysPassed) - totalSpent;
 
             // Bu fonksiyon genellikle sadece dashboard güncelleme sırasında çağrılıyordu ama artık modal da açacak
