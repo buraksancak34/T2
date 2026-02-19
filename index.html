@@ -740,14 +740,50 @@
             <div class="flex-1 overflow-y-auto custom-scrollbar pb-10">
                 <div class="space-y-4">
                     <input type="text" id="editItemName" class="w-full p-4 bg-gray-50 rounded-xl font-bold text-sm border border-gray-100" placeholder="İsim">
-                    <input type="number" id="editItemVal" class="w-full p-4 bg-gray-50 rounded-xl font-bold text-sm border border-gray-100" placeholder="Toplam Tutar">
+                    
+                    <!-- KREDİ DETAYLARI (Sadece Krediler için görünür) -->
+                    <div id="editLoanContainer" class="hidden space-y-3 bg-red-50 p-3 rounded-xl border border-red-100">
+                        <div class="flex gap-2">
+                            <div class="flex-1">
+                                <label class="text-[9px] font-bold text-gray-500 uppercase">Aylık Taksit</label>
+                                <input type="number" id="editLoanMonthly" class="w-full p-2 bg-white rounded-lg text-xs font-bold border border-red-100 outline-none" oninput="calcEditLoan()">
+                            </div>
+                            <div class="flex-1">
+                                <label class="text-[9px] font-bold text-gray-500 uppercase">Kalan Ay</label>
+                                <input type="number" id="editLoanMonths" class="w-full p-2 bg-white rounded-lg text-xs font-bold border border-red-100 outline-none" oninput="calcEditLoan()">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-bold text-gray-500 uppercase">Sonraki Taksit Tarihi</label>
+                            <input type="date" id="editLoanDate" class="w-full p-2 bg-white rounded-lg text-xs font-bold border border-red-100 outline-none">
+                        </div>
+                    </div>
+
+                    <!-- KREDİ KARTI LİMİT DETAYLARI (Sadece Limit Moduyla Eklenen Kartlar için) -->
+                    <div id="editCCLimitContainer" class="hidden space-y-3 bg-purple-50 p-3 rounded-xl border border-purple-100">
+                         <div class="flex gap-2">
+                            <div class="flex-1">
+                                <label class="text-[9px] font-bold text-gray-500 uppercase">Kart Limiti</label>
+                                <input type="number" id="editCCLimit" class="w-full p-2 bg-white rounded-lg text-xs font-bold border border-purple-100 outline-none" oninput="calcEditCC()">
+                            </div>
+                            <div class="flex-1">
+                                <label class="text-[9px] font-bold text-gray-500 uppercase">Kullanılabilir</label>
+                                <input type="number" id="editCCAvail" class="w-full p-2 bg-white rounded-lg text-xs font-bold border border-purple-100 outline-none" oninput="calcEditCC()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                         <label class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Toplam Tutar</label>
+                         <input type="number" id="editItemVal" class="w-full p-4 bg-gray-50 rounded-xl font-bold text-sm border border-gray-100" placeholder="Toplam Tutar">
+                    </div>
                     
                     <div class="p-4 bg-blue-50 rounded-xl border border-blue-100 flex items-center gap-3">
                          <input type="checkbox" id="editExcludeNetWorth" class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500">
                          <label for="editExcludeNetWorth" class="text-xs font-bold text-gray-600">Net Varlık Hesabına Katma</label>
                     </div>
                     
-                    <!-- YENİ: KREDİYE ÖZEL BÜTÇE AYARI (DÜZENLEME MODU) -->
+                    <!-- KREDİYE ÖZEL BÜTÇE AYARI (DÜZENLEME MODU) -->
                     <div id="editLoanSpecificContainer" class="hidden mt-2 p-4 bg-red-50 rounded-xl border border-red-100 flex items-center gap-3">
                          <input type="checkbox" id="editExcludeBudget" class="w-5 h-5 rounded text-red-600 focus:ring-red-500">
                          <label for="editExcludeBudget" class="text-xs font-bold text-gray-600">Aylık Bütçeye (Gidere) Katma</label>
@@ -2763,17 +2799,50 @@
             
             // YENİ: Krediler için "Bütçeye Katma" seçeneği
             const loanSpecificContainer = document.getElementById('editLoanSpecificContainer');
+            // YENİ: Kredi Detayları (Aylık, Kalan, Tarih)
+            const loanContainer = document.getElementById('editLoanContainer');
+            // YENİ: Kredi Kartı Limit Detayları
+            const ccContainer = document.getElementById('editCCLimitContainer');
+            
+            // Reset visibility
+            loanSpecificContainer.classList.add('hidden');
+            loanContainer.classList.add('hidden');
+            ccContainer.classList.add('hidden');
+
             if (type === 'loans') {
                 loanSpecificContainer.classList.remove('hidden');
                 document.getElementById('editExcludeBudget').checked = item.excludeFromBudget || false;
-            } else {
-                loanSpecificContainer.classList.add('hidden');
+                
+                // Show Loan Details
+                loanContainer.classList.remove('hidden');
+                document.getElementById('editLoanMonthly').value = item.monthly || 0;
+                document.getElementById('editLoanMonths').value = item.totalMonths || 0;
+                document.getElementById('editLoanDate').value = item.startDate || '';
+            } 
+            else if (type === 'debts' && item.calcMode) {
+                // Show CC Limit Details
+                ccContainer.classList.remove('hidden');
+                document.getElementById('editCCLimit').value = item.limit || 0;
+                document.getElementById('editCCAvail').value = item.avail || 0;
             }
             
             const modal = document.getElementById('editItemModal');
             modal.classList.remove('hidden');
             setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active'); 
+        }
+        
+        // YENİ: Real-time hesaplama fonksiyonları
+        function calcEditLoan() {
+            const m = parseFloat(document.getElementById('editLoanMonthly').value) || 0;
+            const c = parseFloat(document.getElementById('editLoanMonths').value) || 0;
+            document.getElementById('editItemVal').value = m * c;
+        }
+        
+        function calcEditCC() {
+            const l = parseFloat(document.getElementById('editCCLimit').value) || 0;
+            const a = parseFloat(document.getElementById('editCCAvail').value) || 0;
+            document.getElementById('editItemVal').value = Math.max(0, l - a);
         }
         
         function saveEditedItem() { 
@@ -2785,16 +2854,31 @@
 
             if(state[type][idx]) { 
                 state[type][idx].name = name; 
+                
                 if(type === 'loans') {
+                    // Update main loan values
                     state[type][idx].totalDebt = val; 
                     state[type][idx].excludeFromDebt = excluded;
-                    // YENİ: Bütçe ayarını kaydet
                     state[type][idx].excludeFromBudget = document.getElementById('editExcludeBudget').checked;
+                    
+                    // Update details from new inputs
+                    state[type][idx].monthly = parseFloat(document.getElementById('editLoanMonthly').value) || 0;
+                    state[type][idx].totalMonths = parseFloat(document.getElementById('editLoanMonths').value) || 0;
+                    state[type][idx].startDate = document.getElementById('editLoanDate').value;
+                } else if (type === 'debts') {
+                    state[type][idx].val = val;
+                    state[type][idx].excludeFromNetWorth = excluded;
+                    
+                    // If it was in calcMode, update limit details
+                    if (state[type][idx].calcMode) {
+                        state[type][idx].limit = parseFloat(document.getElementById('editCCLimit').value) || 0;
+                        state[type][idx].avail = parseFloat(document.getElementById('editCCAvail').value) || 0;
+                    }
                 } else { 
                     state[type][idx].val = val; 
                     state[type][idx].excludeFromNetWorth = excluded;
-                    if (type === 'debts' && state[type][idx].calcMode) state[type][idx].calcMode = false; 
                 }
+                
                 saveToCloud(); updateDashboardUI(); closeEditModal(); 
             } 
         }
