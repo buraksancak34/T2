@@ -109,7 +109,7 @@
             <p id="customConfirmMsg" class="text-xs text-gray-500 font-bold mb-6 leading-relaxed">Bu işlem geri alınamaz.</p>
             <div class="flex gap-3">
                 <button onclick="closeCustomConfirm()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-black rounded-xl text-xs hover:bg-gray-200 transition-colors">Vazgeç</button>
-                <button id="customConfirmBtn" class="flex-1 py-3 bg-red-500 text-white font-black rounded-xl text-xs hover:bg-red-600 shadow-lg shadow-red-200 transition-colors">Evet, Sil</button>
+                <button id="customConfirmBtn" class="flex-1 py-3 bg-red-500 text-white font-black rounded-xl text-xs hover:bg-red-600 shadow-lg shadow-red-200 transition-colors">Evet</button>
             </div>
         </div>
     </div>
@@ -122,6 +122,21 @@
             <h3 class="text-lg font-black text-gray-800 mb-2 tracking-tight">Bilgi</h3>
             <p id="appAlertMsg" class="text-xs text-gray-500 font-bold mb-6 leading-relaxed">...</p>
             <button onclick="closeAppAlert()" class="w-full py-3 bg-blue-600 text-white font-black rounded-xl text-xs hover:bg-blue-700 shadow-lg shadow-blue-200 transition-colors">Tamam</button>
+        </div>
+    </div>
+    
+    <!-- HESAP SİLME PAROLA MODALI -->
+    <div id="deleteAccountModal" class="fixed inset-0 z-[80] hidden flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeDeleteAccountModal()"></div>
+        <div class="bg-white rounded-3xl p-6 w-[85%] max-w-sm relative z-10 shadow-2xl animate-fade-in text-center border-2 border-red-100">
+            <div class="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner"><i class="fas fa-exclamation-triangle text-xl"></i></div>
+            <h3 class="text-lg font-black text-gray-800 mb-2 tracking-tight">Güvenlik Onayı</h3>
+            <p class="text-xs text-gray-500 font-bold mb-4 leading-relaxed">Tüm verilerinizi silmek için lütfen parolanızı girin.</p>
+            <input type="password" id="deleteAccountPassword" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-red-100 outline-none font-bold text-gray-700 transition-all text-xs mb-4" placeholder="Parolanız">
+            <div class="flex gap-2">
+                <button onclick="closeDeleteAccountModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-black rounded-xl text-xs hover:bg-gray-200 transition-colors">İptal</button>
+                <button onclick="confirmDeleteAccount()" id="confirmDeleteBtn" class="flex-1 py-3 bg-red-600 text-white font-black rounded-xl text-xs hover:bg-red-700 shadow-lg shadow-red-200 transition-colors">Kalıcı Olarak Sil</button>
+            </div>
         </div>
     </div>
 
@@ -401,9 +416,12 @@
                     </div>
                 </div>
                 <div id="fixedExpensesSection" class="w-full pt-2"></div>
-                <div class="text-center mt-4 pt-4 border-t border-gray-100/50">
+                <div class="text-center mt-4 pt-4 border-t border-gray-100/50 flex flex-col items-center gap-3">
                     <button onclick="openContactModal()" class="text-[10px] font-bold text-gray-400 hover:text-blue-500 transition-colors">
                         <i class="fas fa-comment-alt mr-1"></i> Görüş ve Öneri Bildir
+                    </button>
+                    <button onclick="initiateDeleteAccount()" class="text-[10px] font-bold text-red-400 hover:text-red-600 transition-colors">
+                        <i class="fas fa-trash-alt mr-1"></i> Tüm Verilerimi ve Hesabımı Sil
                     </button>
                 </div>
             </div>
@@ -936,6 +954,7 @@
             document.getElementById('appAlertModal').classList.add('hidden');
             document.getElementById('specialDayModal').classList.add('hidden');
             document.getElementById('monthlyReportModal').classList.add('hidden');
+            document.getElementById('deleteAccountModal').classList.add('hidden');
             
             document.querySelectorAll('.side-panel').forEach(el => { 
                 el.classList.remove('open'); 
@@ -1720,8 +1739,64 @@
         }
 
         function handleLogout() {
-            if(auth.currentUser) auth.signOut().then(() => window.location.reload());
-            else window.location.reload();
+            if(auth.currentUser) {
+                showConfirm("Hesabınızdan çıkış yapmak istediğinize emin misiniz?", () => {
+                    auth.signOut().then(() => window.location.reload());
+                });
+            } else {
+                window.location.reload();
+            }
+        }
+
+        function initiateDeleteAccount() {
+            if(currentUserRole !== 'owner') {
+                return showAppAlert("Sadece plan yöneticisi kendi hesabını ve planını silebilir.");
+            }
+            showConfirm("Hesabınızı ve tüm verilerinizi KALICI OLARAK silmek istediğinize emin misiniz? Bu işlem geri alınamaz!", () => {
+                document.getElementById('deleteAccountPassword').value = '';
+                const modal = document.getElementById('deleteAccountModal');
+                modal.classList.remove('hidden');
+                setPopupState();
+            });
+        }
+
+        function closeDeleteAccountModal() {
+            const modal = document.getElementById('deleteAccountModal');
+            modal.classList.add('hidden');
+            removePopupStateSafe();
+        }
+
+        async function confirmDeleteAccount() {
+            if(!currentUser) return;
+            const pass = document.getElementById('deleteAccountPassword').value;
+            if(!pass) return showAppAlert("Lütfen parolanızı girin.");
+            
+            const btn = document.getElementById('confirmDeleteBtn');
+            const origTxt = btn.innerText;
+            btn.innerText = "Siliniyor...";
+            btn.disabled = true;
+
+            try {
+                const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, pass);
+                await currentUser.reauthenticateWithCredential(credential);
+                
+                await db.collection('users').doc(currentUser.uid).delete();
+                await currentUser.delete();
+                
+                showAppAlert("Hesabınız ve tüm verileriniz başarıyla silindi.");
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+
+            } catch(error) {
+                btn.innerText = origTxt;
+                btn.disabled = false;
+                if(error.code === 'auth/wrong-password') {
+                    showAppAlert("Hatalı parola girdiniz.");
+                } else {
+                    showAppAlert("Hata: " + error.message);
+                }
+            }
         }
 
         function openSettingsPanel() {
