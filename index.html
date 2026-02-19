@@ -902,17 +902,68 @@
         let editingCategoryIndex = -1; 
         let originalAdminUid = null;
 
-        // --- Custom App Alert Logic (Site adını gizlemek için) ---
+        // --- GELİŞMİŞ GERİ TUŞU YÖNETİMİ ---
+        let popupStackCounter = 0;
+        let isProgrammaticPop = false;
+
+        function setPopupState() {
+            history.pushState({ popup: true }, null, window.location.href);
+            popupStackCounter++;
+        }
+
+        function removePopupStateSafe() {
+            if (popupStackCounter > 0) {
+                popupStackCounter--;
+                isProgrammaticPop = true;
+                history.back();
+            }
+        }
+
+        window.addEventListener('popstate', function(event) {
+            if (isProgrammaticPop) {
+                isProgrammaticPop = false;
+                return;
+            }
+            if (popupStackCounter > 0) {
+                popupStackCounter = 0; // Tümü kapandığı için sıfırla
+                closeAllPopupsUIOnly();
+            }
+        });
+
+        function closeAllPopupsUIOnly() {
+            document.getElementById('overlay').classList.remove('active'); 
+            document.getElementById('customConfirmModal').classList.add('hidden');
+            document.getElementById('appAlertModal').classList.add('hidden');
+            document.getElementById('specialDayModal').classList.add('hidden');
+            document.getElementById('monthlyReportModal').classList.add('hidden');
+            
+            document.querySelectorAll('.side-panel').forEach(el => { 
+                el.classList.remove('open'); 
+                setTimeout(() => el.classList.add('hidden'), 300); 
+            });
+            
+            editingCategoryIndex = -1;
+        }
+
+        function closeAllPopups() { 
+            closeAllPopupsUIOnly();
+            while(popupStackCounter > 0) {
+                removePopupStateSafe();
+            }
+        }
+        // -----------------------------------
+
         function showAppAlert(message) {
             document.getElementById('appAlertMsg').innerText = message;
             const modal = document.getElementById('appAlertModal');
             modal.classList.remove('hidden');
+            setPopupState();
         }
         function closeAppAlert() {
             document.getElementById('appAlertModal').classList.add('hidden');
+            removePopupStateSafe();
         }
 
-        // --- Special Day Modal Logic ---
         function showSpecialDayModal(title, msg) {
             const seen = localStorage.getItem('seenSpecialDay_' + title);
             if(seen) return; 
@@ -923,11 +974,7 @@
             const modal = document.getElementById('specialDayModal');
             modal.classList.remove('hidden');
             
-            // Paneli geçmişe ekle
-            if (!history.state || !history.state.popup) {
-                history.pushState({ popup: true }, null, "");
-            }
-            
+            setPopupState();
             runConfetti();
         }
         
@@ -935,6 +982,7 @@
             const title = document.getElementById('specialDayTitle').innerText;
             localStorage.setItem('seenSpecialDay_' + title, 'true');
             document.getElementById('specialDayModal').classList.add('hidden');
+            removePopupStateSafe();
         }
         
         function runConfetti() {
@@ -972,7 +1020,6 @@
             animate();
         }
 
-        // Custom Confirm Logic
         let pendingConfirmAction = null;
 
         function showConfirm(message, callback) {
@@ -981,10 +1028,7 @@
             const modal = document.getElementById('customConfirmModal');
             modal.classList.remove('hidden');
             
-            // Paneli geçmişe ekle
-            if (!history.state || !history.state.popup) {
-                history.pushState({ popup: true }, null, "");
-            }
+            setPopupState();
 
             const btn = document.getElementById('customConfirmBtn');
             const newBtn = btn.cloneNode(true);
@@ -999,6 +1043,7 @@
         function closeCustomConfirm() {
             document.getElementById('customConfirmModal').classList.add('hidden');
             pendingConfirmAction = null;
+            removePopupStateSafe();
         }
 
         const defaultState = {
@@ -1122,11 +1167,7 @@
             setTimeout(() => document.getElementById('adminModal').classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
             
-            // Paneli geçmişe ekle
-            if (!history.state || !history.state.popup) {
-                history.pushState({ popup: true }, null, "");
-            }
-            
+            setPopupState();
             switchAdminTab('users');
         }
 
@@ -1135,6 +1176,7 @@
             modal.classList.remove('open');
             setTimeout(() => modal.classList.add('hidden'), 300);
             if(!originalAdminUid) document.getElementById('overlay').classList.remove('active'); 
+            removePopupStateSafe();
         }
         
         function switchAdminTab(tabName) {
@@ -1243,10 +1285,7 @@
             setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
             
-            // Paneli geçmişe ekle
-            if (!history.state || !history.state.popup) {
-                history.pushState({ popup: true }, null, "");
-            }
+            setPopupState();
         }
 
         function closeContactModal() {
@@ -1254,6 +1293,7 @@
             modal.classList.remove('open');
             setTimeout(() => modal.classList.add('hidden'), 300);
             document.getElementById('overlay').classList.remove('active'); 
+            removePopupStateSafe();
         }
 
         async function sendContactMessage() {
@@ -1699,11 +1739,7 @@
             setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
             
-            // Paneli geçmişe ekle
-            if (!history.state || !history.state.popup) {
-                history.pushState({ popup: true }, null, "");
-            }
-
+            setPopupState();
             renderFamilyList();
         }
         function closeSettingsPanel() { 
@@ -1711,6 +1747,7 @@
              modal.classList.remove('open');
              setTimeout(() => modal.classList.add('hidden'), 300);
              document.getElementById('overlay').classList.remove('active'); 
+             removePopupStateSafe();
         }
         
         async function joinPlanByCode() {
@@ -2125,10 +2162,7 @@
             setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
             
-            // Paneli geçmişe ekle
-            if (!history.state || !history.state.popup) {
-                history.pushState({ popup: true }, null, "");
-            }
+            setPopupState();
         }
 
         function closeCategoryModal() {
@@ -2138,6 +2172,7 @@
             setTimeout(() => modal.classList.add('hidden'), 300);
             document.getElementById('overlay').classList.remove('active');
             renderCategoryOptions(); 
+            removePopupStateSafe();
         }
 
         function addNewCategory() {
@@ -2738,10 +2773,7 @@
             setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active'); 
             
-            // Paneli geçmişe ekle
-            if (!history.state || !history.state.popup) {
-                history.pushState({ popup: true }, null, "");
-            }
+            setPopupState();
         }
         
         function calcEditLoan() {
@@ -2803,6 +2835,7 @@
             modal.classList.remove('open');
             setTimeout(() => modal.classList.add('hidden'), 300);
             document.getElementById('overlay').classList.remove('active'); 
+            removePopupStateSafe();
         }
         function deleteHealthItem(type, idx) { 
             showConfirm('Bu kalemi tamamen silmek istediğinize emin misiniz?', () => { 
@@ -3054,10 +3087,7 @@
             setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
             
-            // Paneli geçmişe ekle
-            if (!history.state || !history.state.popup) {
-                history.pushState({ popup: true }, null, "");
-            }
+            setPopupState();
         }
 
         function closeLoanPlanModal() {
@@ -3065,6 +3095,7 @@
             modal.classList.remove('open');
             setTimeout(() => modal.classList.add('hidden'), 300);
             document.getElementById('overlay').classList.remove('active'); 
+            removePopupStateSafe();
         }
 
         function openBalanceModal() {
@@ -3162,10 +3193,7 @@
             setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
             
-            // Paneli geçmişe ekle
-            if (!history.state || !history.state.popup) {
-                history.pushState({ popup: true }, null, "");
-            }
+            setPopupState();
         }
 
         function closeBalanceModal() {
@@ -3173,6 +3201,7 @@
             modal.classList.remove('open');
             setTimeout(() => modal.classList.add('hidden'), 300);
             document.getElementById('overlay').classList.remove('active'); 
+            removePopupStateSafe();
         }
 
         function startWizard(isEditMode) {
@@ -3470,25 +3499,16 @@
             const modal = document.getElementById('calcModal');
             modal.classList.remove('hidden');
             setTimeout(() => modal.classList.add('open'), 10);
-            document.getElementById('overlay').classList.add('active');
+            document.getElementById('overlay').classList.add('active'); 
             
-            // Paneli geçmişe ekle
-            if (!history.state || !history.state.popup) {
-                history.pushState({ popup: true }, null, "");
-            }
+            setPopupState();
         }
         function closeCalcModal() { 
             const modal = document.getElementById('calcModal');
             modal.classList.remove('open');
             setTimeout(() => modal.classList.add('hidden'), 300);
             document.getElementById('overlay').classList.remove('active'); 
-        }
-        function closeAllPopups() { 
-            document.getElementById('overlay').classList.remove('active'); 
-            document.querySelectorAll('.fixed.z-50').forEach(el => { if(el.id !== 'saveIndicator' && !el.classList.contains('bottom-nav')) el.classList.add('hidden'); }); 
-            document.querySelectorAll('.fixed.z-[70], .fixed.z-[80], .fixed.z-[90]').forEach(el => el.classList.add('hidden')); 
-            document.querySelectorAll('.side-panel').forEach(el => { el.classList.remove('open'); setTimeout(() => el.classList.add('hidden'), 300); });
-            closeMonthlyReport(); 
+            removePopupStateSafe();
         }
 
         // --- AYLIK OTOMATİK RAPORLAMA SİSTEMİ ---
@@ -3642,14 +3662,12 @@
             document.getElementById('reportContent').innerHTML = html;
             document.getElementById('monthlyReportModal').classList.remove('hidden');
             
-            // Paneli geçmişe ekle
-            if (!history.state || !history.state.popup) {
-                history.pushState({ popup: true }, null, "");
-            }
+            setPopupState();
         }
         
         function closeMonthlyReport() {
             document.getElementById('monthlyReportModal').classList.add('hidden');
+            removePopupStateSafe();
         }
 
         function openReportForSelectedMonth() {
@@ -3662,18 +3680,6 @@
                 showAppAlert("Seçtiğiniz bu döneme ait henüz oluşturulmuş bir özet rapor bulunmuyor.");
             }
         }
-
-        // --- GERİ TUŞU YÖNETİMİ ---
-        window.addEventListener('popstate', function(event) {
-            // Geri tuşuna basılınca tüm açık panelleri kapat
-            closeAllPopups();
-            // Ekstra güvenlik için diğer modalları da manuel gizle
-            document.getElementById('monthlyReportModal').classList.add('hidden');
-            document.getElementById('specialDayModal').classList.add('hidden');
-            document.getElementById('appAlertModal').classList.add('hidden');
-            document.getElementById('customConfirmModal').classList.add('hidden');
-        });
-
     </script>
 </body>
 </html>
