@@ -25,29 +25,18 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
         
-        /* 1. KÜÇÜLTME AYARI: Tüm rem birimleri buna göre ölçeklenir */
-        :root {
-            font-size: 14px; /* Bilgisayar için standart */
-        }
-        @media (max-width: 768px) {
-            :root {
-                font-size: 12px; /* Mobil için %15-20 küçültme */
-            }
-        }
+        :root { font-size: 14px; }
+        @media (max-width: 768px) { :root { font-size: 12px; } }
 
-        /* Mobil Uygulama Hissi İçin Seçim Engelleme ve Kaydırma Düzeni */
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: #f8fafc; 
             color: #1e293b;
             -webkit-tap-highlight-color: transparent;
-            user-select: none; /* Metin seçimini engelle */
-            -webkit-user-select: none;
-            overflow-x: hidden;
-            padding-bottom: 80px; /* Alt bar için boşluk */
+            user-select: none; -webkit-user-select: none;
+            overflow-x: hidden; padding-bottom: 80px; 
         }
         
-        /* İnput alanlarında seçime izin ver */
         input, textarea { user-select: text; -webkit-user-select: text; }
 
         .glass-card { background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1); backdrop-filter: blur(10px); }
@@ -70,89 +59,28 @@
         .fade-text { animation: textFade 0.5s ease-in-out; }
         @keyframes textFade { 0% { opacity: 0; } 100% { opacity: 1; } }
 
-        /* Yanıp Sönme Efektleri */
         @keyframes pulse-red { 0%, 100% { color: #ef4444; text-shadow: 0 0 5px rgba(239, 68, 68, 0.2); } 50% { color: #fca5a5; text-shadow: 0 0 15px rgba(239, 68, 68, 0.6); } }
         @keyframes pulse-green { 0%, 100% { color: #22c55e; text-shadow: 0 0 5px rgba(34, 197, 94, 0.2); } 50% { color: #86efac; text-shadow: 0 0 15px rgba(34, 197, 94, 0.6); } }
         .animate-pulse-red { animation: pulse-red 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         .animate-pulse-green { animation: pulse-green 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 
-        /* YENİ: Harcama Inputu İçin Yumuşak Yanıp Sönme */
-        @keyframes softPulse {
-            0% { background-color: #f9fafb; border-color: #e5e7eb; }
-            50% { background-color: #eff6ff; border-color: #bfdbfe; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
-            100% { background-color: #f9fafb; border-color: #e5e7eb; }
-        }
-        .animate-soft-pulse {
-            animation: softPulse 3s infinite ease-in-out;
-        }
+        @keyframes softPulse { 0% { background-color: #f9fafb; border-color: #e5e7eb; } 50% { background-color: #eff6ff; border-color: #bfdbfe; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); } 100% { background-color: #f9fafb; border-color: #e5e7eb; } }
+        .animate-soft-pulse { animation: softPulse 3s infinite ease-in-out; }
 
-        /* Side Panel Animasyonları - GÖLGE DÜZELTMESİ */
-        .side-panel {
-            position: fixed; top: 0; right: 0; height: 100%; width: 100%; max-width: 28rem; 
-            background: white; z-index: 60; box-shadow: -10px 0 30px rgba(0,0,0,0.1);
-            transform: translateX(100%); 
-            /* GÖLGE DÜZELTMESİ: Kapalıyken visibility hidden yaparak gölgeyi yok ediyoruz */
-            visibility: hidden;
-            transition: transform 0.3s ease-in-out, visibility 0s linear 0.3s; /* Kapanırken visibility gecikmeli */
-            display: flex; flex-direction: column;
-        }
-        .side-panel.open { 
-            transform: translateX(0); 
-            visibility: visible;
-            transition: transform 0.3s ease-in-out, visibility 0s linear 0s; /* Açılırken visibility anında */
-        }
+        .side-panel { position: fixed; top: 0; right: 0; height: 100%; width: 100%; max-width: 28rem; background: white; z-index: 60; box-shadow: -10px 0 30px rgba(0,0,0,0.1); transform: translateX(100%); visibility: hidden; transition: transform 0.3s ease-in-out, visibility 0s linear 0.3s; display: flex; flex-direction: column; }
+        .side-panel.open { transform: translateX(0); visibility: visible; transition: transform 0.3s ease-in-out, visibility 0s linear 0s; }
 
-        /* Bottom Nav Bar */
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 70px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid #e2e8f0;
-            display: flex; justify-content: space-around; items-center;
-            z-index: 50;
-            padding-bottom: env(safe-area-inset-bottom);
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
-        }
-        .nav-item {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: #64748b; font-size: 0.7rem; font-weight: 700;
-            gap: 4px; padding: 5px; width: 20%;
-        }
-        .nav-item i { font-size: 1.3rem; margin-bottom: 2px; } /* İkon boyutu biraz arttı */
-        .nav-center-btn {
-            background: #2563eb; color: white;
-            width: 50px; height: 50px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            margin-top: -30px; border: 4px solid #f8fafc;
-            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
-        }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-top: 1px solid #e2e8f0; display: flex; justify-content: space-around; items-center; z-index: 50; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -5px 20px rgba(0,0,0,0.05); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #64748b; font-size: 0.7rem; font-weight: 700; gap: 4px; padding: 5px; width: 20%; }
+        .nav-item i { font-size: 1.3rem; margin-bottom: 2px; }
+        .nav-center-btn { background: #2563eb; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: -30px; border: 4px solid #f8fafc; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
         .nav-center-btn i { font-size: 1.5rem; margin: 0; }
 
-        /* Heartbeat Animation Background */
-        .heartbeat-bg {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-repeat: repeat-x;
-            background-position: 0 center;
-            background-size: 50% 100%; /* Çizgi sıklığı */
-            opacity: 0.15; /* Görünürlük */
-            pointer-events: none;
-            z-index: 0;
-        }
-        /* SVG Data URI for Heartbeat Line - Reddish */
-        .heartbeat-red {
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='0,50 50,50 60,20 70,80 80,50 200,50' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3C/svg%3E");
-            animation: scrollHeartbeat 3s linear infinite;
-        }
-        /* SVG Data URI for Heartbeat Line - Greenish */
-        .heartbeat-green {
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='0,50 50,50 60,20 70,80 80,50 200,50' fill='none' stroke='%2322c55e' stroke-width='2'/%3E%3C/svg%3E");
-            animation: scrollHeartbeat 1.5s linear infinite; /* Daha hızlı/canlı */
-        }
-        @keyframes scrollHeartbeat {
-            from { background-position: 0 center; }
-            to { background-position: -200px center; }
-        }
-        /* Renkli Gradient Textler için */
+        .heartbeat-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-repeat: repeat-x; background-position: 0 center; background-size: 50% 100%; opacity: 0.15; pointer-events: none; z-index: 0; }
+        .heartbeat-red { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='0,50 50,50 60,20 70,80 80,50 200,50' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3C/svg%3E"); animation: scrollHeartbeat 3s linear infinite; }
+        .heartbeat-green { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='0,50 50,50 60,20 70,80 80,50 200,50' fill='none' stroke='%2322c55e' stroke-width='2'/%3E%3C/svg%3E"); animation: scrollHeartbeat 1.5s linear infinite; }
+        @keyframes scrollHeartbeat { from { background-position: 0 center; } to { background-position: -200px center; } }
+        
         .gradient-text-family { background: linear-gradient(to right, #f97316, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .gradient-text-analysis { background: linear-gradient(to right, #3b82f6, #8b5cf6, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .gradient-text-plan { background: linear-gradient(to right, #22c55e, #14b8a6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -166,15 +94,11 @@
         <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> Kaydedildi
     </div>
 
-    <!-- ÖZEL ONAY KUTUSU (CUSTOM CONFIRM MODAL) -->
+    <!-- ÖZEL ONAY KUTUSU -->
     <div id="customConfirmModal" class="fixed inset-0 z-[70] hidden flex items-center justify-center">
-        <!-- Backdrop -->
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeCustomConfirm()"></div>
-        <!-- Modal Content -->
         <div class="bg-white rounded-3xl p-6 w-[85%] max-w-sm relative z-10 shadow-2xl animate-fade-in text-center border-2 border-white">
-            <div class="w-14 h-14 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
-                <i class="fas fa-exclamation-triangle text-2xl"></i>
-            </div>
+            <div class="w-14 h-14 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner"><i class="fas fa-exclamation-triangle text-2xl"></i></div>
             <h3 class="text-xl font-black text-gray-800 mb-2 tracking-tight">Emin misiniz?</h3>
             <p id="customConfirmMsg" class="text-xs text-gray-500 font-bold mb-6 leading-relaxed">Bu işlem geri alınamaz.</p>
             <div class="flex gap-3">
@@ -184,29 +108,23 @@
         </div>
     </div>
 
-    <!-- YENİ: APP UYARI MODALI (ALERT YERİNE) -->
+    <!-- APP UYARI MODALI -->
     <div id="appAlertModal" class="fixed inset-0 z-[80] hidden flex items-center justify-center">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeAppAlert()"></div>
         <div class="bg-white rounded-3xl p-6 w-[85%] max-w-sm relative z-10 shadow-2xl animate-fade-in text-center border-2 border-white">
-            <div class="w-12 h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
-                <i class="fas fa-info text-xl"></i>
-            </div>
+            <div class="w-12 h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner"><i class="fas fa-info text-xl"></i></div>
             <h3 class="text-lg font-black text-gray-800 mb-2 tracking-tight">Bilgi</h3>
             <p id="appAlertMsg" class="text-xs text-gray-500 font-bold mb-6 leading-relaxed">...</p>
             <button onclick="closeAppAlert()" class="w-full py-3 bg-blue-600 text-white font-black rounded-xl text-xs hover:bg-blue-700 shadow-lg shadow-blue-200 transition-colors">Tamam</button>
         </div>
     </div>
 
-    <!-- YENİ: ÖZEL GÜN MODALI (TAM EKRAN KUTLAMA) -->
+    <!-- ÖZEL GÜN MODALI -->
     <div id="specialDayModal" class="fixed inset-0 z-[90] hidden flex items-center justify-center">
-        <!-- Konfeti Efekti -->
         <canvas id="confettiCanvas" class="absolute inset-0 pointer-events-none z-0"></canvas>
         <div class="absolute inset-0 bg-gradient-to-br from-red-600/90 to-red-900/95 backdrop-blur-md"></div>
-        
         <div class="relative z-10 w-full max-w-md p-8 text-center text-white animate-fade-in">
-             <div class="mb-6 animate-bounce">
-                <i class="fas fa-star text-5xl text-yellow-300 drop-shadow-lg"></i>
-             </div>
+             <div class="mb-6 animate-bounce"><i class="fas fa-star text-5xl text-yellow-300 drop-shadow-lg"></i></div>
              <h2 id="specialDayTitle" class="text-3xl font-black mb-4 drop-shadow-md tracking-tight leading-tight">...</h2>
              <p id="specialDayMsg" class="text-base font-bold text-red-50 mb-8 leading-relaxed opacity-90">...</p>
              <button onclick="closeSpecialDayModal()" class="bg-white text-red-600 font-black py-4 px-10 rounded-full shadow-2xl hover:bg-gray-100 transition-transform active:scale-95 text-sm uppercase tracking-widest">Harika!</button>
@@ -216,12 +134,9 @@
     <!-- 1. GİRİŞ EKRANI -->
     <div id="loginScreen" class="max-w-md w-full glass-card p-6 rounded-[2rem] shadow-2xl space-y-6 my-auto relative overflow-hidden animate-fade-in">
         <div class="text-center">
-            <!-- LOGO ALANI -->
             <div class="mx-auto mb-6 w-full max-w-[150px] h-auto hover:scale-105 transition-transform duration-300">
-                <img src="logo.png" alt="Birikim Koçum Logo" class="w-full h-full object-contain drop-shadow-xl" 
-                      onerror="this.src='https://cdn-icons-png.flaticon.com/512/2382/2382461.png'; this.parentElement.classList.add('opacity-80');">
+                <img src="logo.png" alt="Birikim Koçum Logo" class="w-full h-full object-contain drop-shadow-xl" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2382/2382461.png'; this.parentElement.classList.add('opacity-80');">
             </div>
-            
             <h1 class="text-2xl font-black text-gray-900 tracking-tight mb-1" id="loginTitle">Birikim Koçum</h1>
             <p class="text-blue-500 text-[10px] font-bold uppercase tracking-widest" id="loginSubtitle">Gelir - Gider Takip Asistanı</p>
         </div>
@@ -232,24 +147,14 @@
                 <input type="text" id="regInviteCode" class="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-xs" placeholder="Davet Kodu (Varsa)">
                 <input type="number" id="regDailyLimit" class="w-full p-3 bg-blue-50 border border-blue-200 rounded-xl focus:ring-4 focus:ring-blue-100 outline-none font-black text-blue-700 transition-all text-xs hidden placeholder-blue-400" placeholder="Günlük Harcama Hedefiniz (TL)">
             </div>
-            
-            <!-- DEĞİŞİKLİK 1: Placeholder sadece "E-posta" yapıldı -->
             <input type="text" id="emailInput" class="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-xs" placeholder="E-posta">
             <input type="password" id="passwordInput" class="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-xs" placeholder="Şifre">
             
-            <button id="loginBtn" onclick="firebaseLogin()" class="w-full bg-blue-600 text-white font-black py-3 rounded-xl shadow-xl shadow-blue-200 active:scale-95 transition-all hover:bg-blue-700 flex justify-center items-center gap-2 text-sm">
-                <span>Giriş Yap</span>
-            </button>
-            
-            <button id="registerBtn" onclick="firebaseRegister()" class="w-full bg-indigo-600 text-white font-black py-3 rounded-xl shadow-xl hidden active:scale-95 transition-all hover:bg-indigo-700 flex justify-center items-center gap-2 text-sm">
-                <span>Üye Ol ve Katıl</span>
-            </button>
+            <button id="loginBtn" onclick="firebaseLogin()" class="w-full bg-blue-600 text-white font-black py-3 rounded-xl shadow-xl shadow-blue-200 active:scale-95 transition-all hover:bg-blue-700 flex justify-center items-center gap-2 text-sm"><span>Giriş Yap</span></button>
+            <button id="registerBtn" onclick="firebaseRegister()" class="w-full bg-indigo-600 text-white font-black py-3 rounded-xl shadow-xl hidden active:scale-95 transition-all hover:bg-indigo-700 flex justify-center items-center gap-2 text-sm"><span>Üye Ol ve Katıl</span></button>
             
             <p id="forgotPassText" class="text-center text-[10px] font-bold text-blue-400 cursor-pointer hover:text-blue-600 pt-2" onclick="forgotPassword()">Şifremi Unuttum?</p>
-
-            <p id="backToLoginText" class="text-center text-[10px] font-bold text-gray-400 cursor-pointer hover:text-blue-500 hidden pt-2" onclick="showLoginMode()">
-                <i class="fas fa-arrow-left mr-1"></i> Giriş ekranına dön
-            </p>
+            <p id="backToLoginText" class="text-center text-[10px] font-bold text-gray-400 cursor-pointer hover:text-blue-500 hidden pt-2" onclick="showLoginMode()"><i class="fas fa-arrow-left mr-1"></i> Giriş ekranına dön</p>
         </div>
         
         <div class="relative py-3">
@@ -258,25 +163,14 @@
         </div>
 
         <div class="space-y-3" id="actionButtons">
-            <button onclick="startWizard(false)" class="w-full bg-green-500 text-white font-black py-3 rounded-xl shadow-lg shadow-green-100 active:scale-95 transition-all hover:bg-green-600 flex items-center justify-center gap-2 text-sm">
-                <i class="fas fa-magic"></i> <span>Plana Başla</span>
-            </button>
-            
-            <button onclick="showQuickRegisterMode()" class="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-xl active:scale-95 transition-all hover:bg-slate-900 shadow-md flex items-center justify-center gap-3 text-[10px] leading-tight">
-                <i class="fas fa-bolt text-yellow-400 text-base"></i> <span class="text-left">Veri girmek istemiyorum,<br>sadece günlük harcama hesaplayacağım</span>
-            </button>
-
+            <button onclick="startWizard(false)" class="w-full bg-green-500 text-white font-black py-3 rounded-xl shadow-lg shadow-green-100 active:scale-95 transition-all hover:bg-green-600 flex items-center justify-center gap-2 text-sm"><i class="fas fa-magic"></i> <span>Plana Başla</span></button>
+            <button onclick="showQuickRegisterMode()" class="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-xl active:scale-95 transition-all hover:bg-slate-900 shadow-md flex items-center justify-center gap-3 text-[10px] leading-tight"><i class="fas fa-bolt text-yellow-400 text-base"></i> <span class="text-left">Veri girmek istemiyorum,<br>sadece günlük harcama hesaplayacağım</span></button>
             <p class="text-[9px] text-center text-gray-400 px-4 mt-2">Bütçeni oluşturmaya başla, en son adımda kaydedip üye ol.</p>
-            <button onclick="showRegisterMode()" class="w-full bg-white border-2 border-gray-100 text-gray-600 font-bold py-2 rounded-xl active:scale-95 transition-all hover:border-indigo-200 hover:text-indigo-600 mt-2 text-xs">
-                Bir Plana Dahil Ol
-            </button>
+            <button onclick="showRegisterMode()" class="w-full bg-white border-2 border-gray-100 text-gray-600 font-bold py-2 rounded-xl active:scale-95 transition-all hover:border-indigo-200 hover:text-indigo-600 mt-2 text-xs">Bir Plana Dahil Ol</button>
         </div>
 
-        <!-- GİRİŞ EKRANI BİZE ULAŞIN -->
         <div class="mt-6 text-center pt-3 border-t border-gray-100">
-            <button onclick="openContactModal()" class="text-[10px] font-bold text-gray-400 hover:text-blue-500 transition-colors">
-                <i class="fas fa-envelope mr-1"></i> Bize Ulaşın
-            </button>
+            <button onclick="openContactModal()" class="text-[10px] font-bold text-gray-400 hover:text-blue-500 transition-colors"><i class="fas fa-envelope mr-1"></i> Bize Ulaşın</button>
         </div>
     </div>
 
@@ -296,7 +190,6 @@
     <!-- 3. DASHBOARD -->
     <div id="dashboardScreen" class="max-w-4xl w-full hidden space-y-4 pb-20 animate-fade-in">
         
-        <!-- Esprili Mesaj Alanı -->
         <div id="motivationArea" class="hidden w-full p-3 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white shadow-lg animate-fade-in">
             <div class="flex items-start gap-3">
                 <div class="text-xl mt-1">🤖</div>
@@ -307,7 +200,6 @@
             </div>
         </div>
 
-        <!-- Davet Bildirim Afişi -->
         <div id="inviteBanner" class="hidden bg-indigo-600 text-white p-3 rounded-2xl shadow-lg flex flex-col sm:flex-row justify-between items-center gap-3">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center"><i class="fas fa-envelope-open-text text-sm"></i></div>
@@ -322,7 +214,6 @@
             </div>
         </div>
 
-        <!-- ADMIN MOD UYARISI -->
         <div id="adminModeBanner" class="hidden bg-red-600 text-white p-3 rounded-xl shadow-lg mb-4 flex justify-between items-center animate-fade-in">
              <div class="flex items-center gap-2">
                  <i class="fas fa-user-secret text-lg"></i>
@@ -341,7 +232,7 @@
                     <span id="roleBadge" class="text-[9px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded uppercase tracking-wide">Yönetici</span>
                 </div>
             </div>
-            <div class="flex gap-2 hidden md:flex"> <!-- Masaüstü Butonları (Mobilde gizli) -->
+            <div class="flex gap-2 hidden md:flex"> 
                 <button onclick="openAdminPanel()" id="btnAdmin" class="hidden text-[10px] font-black bg-red-500 text-white border border-red-600 px-4 py-2 rounded-full uppercase tracking-widest shadow-sm hover:bg-red-600"><i class="fas fa-shield-alt"></i> Admin</button>
                 <button onclick="showAnalysisScreen()" id="btnAnalysis" class="text-[10px] font-black bg-white text-indigo-500 border border-indigo-200 px-4 py-2 rounded-full uppercase tracking-widest shadow-sm hover:bg-indigo-50"><i class="fas fa-chart-pie"></i></button>
                 <button onclick="openSettingsPanel()" class="text-[10px] font-black bg-white text-gray-500 border border-gray-200 px-4 py-2 rounded-full uppercase tracking-widest shadow-sm hover:bg-gray-50"><i class="fas fa-cog"></i></button>
@@ -361,13 +252,11 @@
                             </div>
                             <h2 id="displayCumulativeLimit" onclick="openBalanceModal()" class="text-5xl font-black tracking-tighter leading-none cursor-pointer">₺0</h2>
                             
-                            <!-- YENİ: Hesaplama Yöntemi Butonları -->
                             <div class="flex gap-1 mt-2">
                                 <button onclick="setBalanceMethod('salary')" id="btnCalcSalary" class="text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10">Gelir Günü</button>
                                 <button onclick="setBalanceMethod('register')" id="btnCalcRegister" class="text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10">Kayıt Günü</button>
                                 <button onclick="setBalanceMethod('today')" id="btnCalcToday" class="text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10">Bugün</button>
                             </div>
-
                         </div>
                         <div class="text-right">
                              <div class="flex items-center justify-end gap-2 mb-1">
@@ -391,13 +280,9 @@
             </div>
         </div>
 
-        <!-- 4- DÜZENLEME: Harcama Ekle Kısmı (Alt Alta Sıralı) -->
         <div id="addExpenseSection" class="glass-card p-5 rounded-[2rem] bg-white border border-gray-100 shadow-lg">
-            <!-- BAŞLIK VE TARİH SEÇİCİ BİR ARADA -->
             <div class="flex items-center justify-between mb-2">
                 <h3 class="font-black text-lg text-gray-800">Harcama Ekle</h3>
-                
-                <!-- Hızlı Tarih Seçici (Buraya Taşındı ve Kızıl Yapıldı) -->
                 <div class="flex items-center gap-1 bg-red-50 p-1.5 rounded-xl border border-red-100 shadow-sm">
                     <button onclick="changeExpenseDate(1)" class="w-7 h-7 flex items-center justify-center bg-white rounded-lg text-red-400 hover:text-red-600 shadow-sm transition-colors border border-red-50"><i class="fas fa-chevron-left text-xs"></i></button>
                     <div class="relative text-center px-2">
@@ -408,13 +293,11 @@
                 </div>
             </div>
 
-            <!-- Toplam Bilgisi -->
             <div class="text-right mb-3">
                  <span id="todayTotal" class="text-[9px] font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-md uppercase tracking-wide">Bugün: ₺0</span>
             </div>
             
             <div class="flex flex-col gap-3">
-                <!-- 1. Kategori (En üstte) -->
                 <div class="w-full relative">
                     <select id="expCat" class="w-full p-3 bg-gray-50 rounded-xl font-bold text-xs text-gray-700 outline-none focus:ring-2 focus:ring-blue-100 transition-all border border-gray-200 appearance-none">
                         <!-- Categories will be injected here -->
@@ -427,12 +310,10 @@
                     </div>
                 </div>
 
-                <!-- 2. Tutar (Ortada) - YENİ EFEKT (animate-soft-pulse) EKLENDİ -->
                  <div class="flex gap-2 items-center">
                       <input type="number" id="expAmt" placeholder="Tutar (₺)" onkeyup="if(event.key === 'Enter') document.getElementById('expDesc').focus()" class="w-full p-4 bg-gray-50 rounded-xl font-black text-xl outline-none focus:ring-4 focus:ring-blue-100 transition-all text-center placeholder-gray-300 animate-soft-pulse">
                  </div>
 
-                <!-- 3. Açıklama ve Ekle Butonu (En altta) -->
                 <div class="flex gap-2 items-center">
                     <input type="text" id="expDesc" value="" placeholder="Açıklama (Opsiyonel)" onkeyup="if(event.key === 'Enter') addExpense()" class="flex-1 p-3 bg-gray-50 rounded-xl font-bold text-gray-600 outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs">
                     <input type="hidden" id="editExpIndex" value="-1">
@@ -446,11 +327,8 @@
             <div id="historyList" class="pb-2"></div>
         </div>
 
-        <!-- 1- DÜZENLEME: Finansal Sağlık Bölümü ve Hareketli Arka Plan -->
         <div id="financialHealthSection" class="glass-card p-6 rounded-[2rem] space-y-6 bg-white border border-blue-50 shadow-xl mb-12 relative overflow-hidden transition-colors duration-500">
-            <!-- Arka Plan Animasyonu (JS ile dinamik eklenir) -->
             <div id="healthHeartbeatBg" class="heartbeat-bg"></div>
-            
             <div class="relative z-10">
                 <div class="flex flex-col items-center border-b border-gray-200/50 pb-6">
                     <h3 class="font-black text-2xl text-gray-800 mb-2">Finansal Sağlık</h3>
@@ -458,21 +336,18 @@
                     <div id="netStatusBadge" class="text-3xl font-black text-gray-800 px-6 py-3 bg-white/80 backdrop-blur rounded-[1.5rem] transition-colors shadow-sm">
                         <span id="netStatusVal">₺0</span>
                     </div>
-                    
                     <div class="flex items-center justify-center mt-4">
                         <div class="text-center"><span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Aylık Sabit Gider</span><br><span id="sumGiderTotalHealth" class="text-lg font-black text-red-600">₺0</span></div>
                     </div>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                    <!-- BORÇLAR -->
                     <div class="space-y-3">
                         <div class="flex items-center gap-2 mb-2 pb-2 border-b border-red-100">
                             <div class="w-2 h-2 bg-red-500 rounded-full"></div>
                             <span class="text-[10px] font-black text-red-600 uppercase tracking-widest">Borçlar & Krediler</span>
                         </div>
                         <div id="detailedDebtsList" class="space-y-2 min-h-[50px]"></div>
-                        
                         <div class="mt-3">
                             <button id="btnShowdashDebtForm" onclick="toggleInlineAdd('dashDebt')" class="w-full py-2 text-[10px] font-bold text-gray-400 hover:text-gray-600 border border-dashed border-gray-300 rounded-lg transition-colors bg-white/50">+ Yeni Borç Ekle</button>
                             <div id="inlineAdddashDebtContainer" class="hidden mt-2 p-3 border border-red-100 bg-red-50/50 rounded-xl space-y-2 shadow-inner">
@@ -494,14 +369,12 @@
                         </div>
                     </div>
 
-                    <!-- VARLIKLAR -->
                     <div class="space-y-3">
                         <div class="flex items-center gap-2 mb-2 pb-2 border-b border-green-100">
                             <div class="w-2 h-2 bg-green-500 rounded-full"></div>
                             <span class="text-[10px] font-black text-green-600 uppercase tracking-widest">Varlıklar & Birikim</span>
                         </div>
                         <div id="detailedAssetsList" class="space-y-2 min-h-[50px]"></div>
-
                         <div class="mt-3">
                             <button id="btnShowdashAssetForm" onclick="toggleInlineAdd('dashAsset')" class="w-full py-2 text-[10px] font-bold text-gray-400 hover:text-gray-600 border border-dashed border-gray-300 rounded-lg transition-colors bg-white/50">+ Yeni Varlık Ekle</button>
                             <div id="inlineAdddashAssetContainer" class="hidden mt-2 p-3 border border-green-100 bg-green-50/50 rounded-xl space-y-2 shadow-inner">
@@ -521,10 +394,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- SABİT GİDERLER AKORDİYONU -->
                 <div id="fixedExpensesSection" class="w-full pt-2"></div>
-                
-                <!-- DASHBOARD BİZE ULAŞIN -->
                 <div class="text-center mt-4 pt-4 border-t border-gray-100/50">
                     <button onclick="openContactModal()" class="text-[10px] font-bold text-gray-400 hover:text-blue-500 transition-colors">
                         <i class="fas fa-comment-alt mr-1"></i> Görüş ve Öneri Bildir
@@ -545,7 +415,12 @@
                 </div>
                 <p id="analysisPeriodLabel" class="text-[9px] text-blue-500 font-bold mt-1"></p>
             </div>
-            <button onclick="showDashboard()" class="text-[9px] font-black bg-gray-100 text-gray-600 border border-gray-200 px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm hover:bg-gray-200">Geri Dön</button>
+            <div class="flex flex-col gap-2 items-end">
+                <button onclick="openReportForSelectedMonth()" class="text-[9px] font-black bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm hover:bg-indigo-200 flex items-center gap-1 transition-colors">
+                    <i class="fas fa-file-invoice"></i> Raporu Oku
+                </button>
+                <button onclick="showDashboard()" class="text-[9px] font-black bg-gray-100 text-gray-600 border border-gray-200 px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm hover:bg-gray-200">Geri Dön</button>
+            </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="glass-card p-4 rounded-[2rem] bg-white border border-gray-100 shadow-lg"><h3 class="font-black text-sm text-gray-800 mb-2 text-center">Varlık vs Borç</h3><div class="h-56"><canvas id="assetsChart"></canvas></div></div>
@@ -556,7 +431,6 @@
              <div class="flex flex-col sm:flex-row justify-between items-center mb-2 gap-2">
                  <h3 class="font-black text-sm text-gray-800 text-center flex-1">Net Durum Değişimi (Trend)</h3>
                  
-                 <!-- YENİ: FİLTRE BUTONLARI -->
                  <div class="flex gap-1 bg-gray-50 p-1 rounded-lg">
                     <button onclick="switchChartRange('6')" id="btnRange6" class="text-[9px] font-bold px-2 py-1 rounded hover:bg-white hover:shadow-sm text-gray-500 transition-all">6 Ay</button>
                     <button onclick="switchChartRange('12')" id="btnRange12" class="text-[9px] font-bold px-2 py-1 rounded hover:bg-white hover:shadow-sm text-gray-500 transition-all">1 Yıl</button>
@@ -601,7 +475,6 @@
         </div>
     </div>
 
-    <!-- 2- DÜZENLEME: Renkli İkonlu Alt Navigasyon Bar -->
     <nav id="bottomNav" class="bottom-nav hidden">
         <div class="nav-item gradient-text-family" onclick="openSettingsPanel()">
             <i class="fas fa-users"></i>
@@ -626,7 +499,6 @@
         </div>
     </nav>
 
-    <!-- AYARLAR & AİLE PANELİ (Side Panel Olarak Değiştirildi) -->
     <div id="settingsModal" class="side-panel">
         <div class="p-6 h-full flex flex-col">
             <div class="flex justify-between items-center mb-6 pb-4 border-b">
@@ -635,7 +507,6 @@
             </div>
 
             <div class="flex-1 overflow-y-auto custom-scrollbar pb-10 space-y-6">
-                <!-- AİLE SİSTEMİ BURAYA TAŞINDI -->
                 <div id="familyPanel" class="p-4 rounded-3xl flex flex-col bg-white border border-blue-100 shadow-sm">
                     <div class="flex justify-between items-center mb-3 border-b pb-3">
                         <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Aile Sistemi</h4>
@@ -654,7 +525,6 @@
                     <div id="familyList" class="space-y-2 max-h-[150px] overflow-y-auto custom-scrollbar pr-1 mt-2"></div>
                 </div>
 
-                <!-- Diğer Ayarlar -->
                 <div class="p-4 bg-gray-50 rounded-xl border border-gray-100 text-center">
                     <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Mevcut Plan Statüsü</p>
                     <p class="font-black text-blue-600 text-xs" id="settingsCurrentPlanLabel">Kendi Planınız (Yönetici)</p>
@@ -667,13 +537,11 @@
                     <button onclick="joinPlanByCode()" class="w-full bg-blue-600 text-white font-black py-3 rounded-xl shadow-lg hover:bg-blue-700 active:scale-95 transition-all text-xs">Katıl</button>
                 </div>
                 
-                <!-- Admin Butonu (Ayarlarda da görünsün) -->
                  <button onclick="openAdminPanel()" id="btnAdminSettings" class="hidden w-full text-xs font-black bg-red-500 text-white border border-red-600 px-4 py-3 rounded-xl uppercase tracking-widest shadow-sm hover:bg-red-600 mt-4"><i class="fas fa-shield-alt"></i> Admin Paneli</button>
             </div>
         </div>
     </div>
 
-    <!-- ADMIN PANELI (YAN PANEL) -->
     <div id="adminModal" class="side-panel">
         <div class="p-6 h-full flex flex-col bg-slate-900 text-white">
             <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-700">
@@ -682,14 +550,12 @@
                 <button onclick="loadAdminUsers()" class="text-slate-400 hover:text-white ml-2"><i class="fas fa-sync-alt"></i></button>
             </div>
             
-            <!-- ADMIN TABS -->
             <div class="flex gap-2 mb-4 bg-slate-800 p-1 rounded-xl">
                 <button onclick="switchAdminTab('users')" id="tabAdminUsers" class="flex-1 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all">Kullanıcılar</button>
                 <button onclick="switchAdminTab('messages')" id="tabAdminMessages" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all">Mesajlar</button>
                 <button onclick="switchAdminTab('specials')" id="tabAdminSpecials" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all">Özel Gün</button>
             </div>
 
-            <!-- TAB: KULLANICILAR -->
             <div id="adminTabUsers" class="flex-1 flex flex-col min-h-0">
                 <div class="grid grid-cols-2 gap-4 mb-6">
                     <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
@@ -712,16 +578,13 @@
                 </div>
             </div>
 
-            <!-- TAB: MESAJLAR (SOHBET/İLETİŞİM) -->
             <div id="adminTabMessages" class="hidden flex-1 flex flex-col min-h-0">
                  <div class="flex-1 overflow-y-auto custom-scrollbar pb-10 space-y-3" id="adminMessageList"></div>
             </div>
 
-            <!-- TAB: SİSTEM MESAJLARI VE ÖZEL GÜNLER (YENİ) -->
             <div id="adminTabSpecials" class="hidden flex-1 flex flex-col min-h-0 space-y-4">
                 <div class="bg-slate-800 p-3 rounded-xl border border-slate-700">
                      <p class="text-[10px] font-bold uppercase text-slate-400 mb-2">Özel Gün Mesajı Ayarla</p>
-                     <!-- Tarih formatı standardı için type="date" yapıldı -->
                      <input type="date" id="adminSpecDate" class="w-full p-2 bg-slate-700 text-white rounded mb-2 text-xs font-bold border-none outline-none">
                      <input type="text" id="adminSpecTitle" placeholder="Başlık (Örn: 29 Ekim)" class="w-full p-2 bg-slate-700 text-white rounded mb-2 text-xs font-bold border-none outline-none">
                      <textarea id="adminSpecMsg" rows="3" placeholder="Kutlama Mesajı..." class="w-full p-2 bg-slate-700 text-white rounded mb-2 text-xs font-bold border-none outline-none resize-none"></textarea>
@@ -747,7 +610,6 @@
         </div>
     </div>
 
-    <!-- DÜZENLEME MODALI (YAN PANEL) -->
     <div id="editItemModal" class="side-panel">
         <div class="p-6 h-full flex flex-col">
             <div class="flex justify-between items-center mb-6 pb-4 border-b">
@@ -758,7 +620,6 @@
                 <div class="space-y-4">
                     <input type="text" id="editItemName" class="w-full p-4 bg-gray-50 rounded-xl font-bold text-sm border border-gray-100" placeholder="İsim">
                     
-                    <!-- KREDİ DETAYLARI (Sadece Krediler için görünür) -->
                     <div id="editLoanContainer" class="hidden space-y-3 bg-red-50 p-3 rounded-xl border border-red-100">
                         <div class="flex gap-2">
                             <div class="flex-1">
@@ -776,7 +637,6 @@
                         </div>
                     </div>
 
-                    <!-- KREDİ KARTI LİMİT DETAYLARI (Sadece Limit Moduyla Eklenen Kartlar için) -->
                     <div id="editCCLimitContainer" class="hidden space-y-3 bg-purple-50 p-3 rounded-xl border border-purple-100">
                          <div class="flex gap-2">
                             <div class="flex-1">
@@ -800,7 +660,6 @@
                          <label for="editExcludeNetWorth" class="text-xs font-bold text-gray-600">Net Varlık Hesabına Katma</label>
                     </div>
                     
-                    <!-- KREDİYE ÖZEL BÜTÇE AYARI (DÜZENLEME MODU) -->
                     <div id="editLoanSpecificContainer" class="hidden mt-2 p-4 bg-red-50 rounded-xl border border-red-100 flex items-center gap-3">
                          <input type="checkbox" id="editExcludeBudget" class="w-5 h-5 rounded text-red-600 focus:ring-red-500">
                          <label for="editExcludeBudget" class="text-xs font-bold text-gray-600">Aylık Bütçeye (Gidere) Katma</label>
@@ -816,7 +675,6 @@
         </div>
     </div>
     
-    <!-- HESAPLAMA DETAY YAN PANELİ -->
     <div id="calcModal" class="side-panel">
         <div class="p-6 h-full flex flex-col">
             <div class="flex justify-between items-center mb-6 pb-4 border-b">
@@ -827,7 +685,6 @@
         </div>
     </div>
 
-    <!-- GERÇEK BAKİYE DETAY YAN PANELİ -->
     <div id="balanceModal" class="side-panel">
         <div class="p-6 h-full flex flex-col">
             <div class="flex justify-between items-center mb-6 pb-4 border-b">
@@ -838,7 +695,6 @@
         </div>
     </div>
 
-    <!-- KREDİ ÖDEME PLANI YAN PANELİ -->
     <div id="loanPlanModal" class="side-panel">
         <div class="p-6 h-full flex flex-col">
             <div class="flex justify-between items-center mb-6 pb-4 border-b">
@@ -857,7 +713,6 @@
         </div>
     </div>
 
-    <!-- KATEGORİ DÜZENLEME PANELİ -->
     <div id="categoryModal" class="side-panel">
         <div class="p-6 h-full flex flex-col">
              <div class="flex justify-between items-center mb-6 pb-4 border-b">
@@ -874,7 +729,6 @@
         </div>
     </div>
 
-    <!-- İLETİŞİM MODALI (MESAJ GÖNDERME) -->
     <div id="contactModal" class="side-panel">
         <div class="p-6 h-full flex flex-col">
             <div class="flex justify-between items-center mb-6 pb-4 border-b">
@@ -883,11 +737,39 @@
             </div>
             <div class="flex-1 flex flex-col gap-4">
                 <p class="text-sm text-gray-500">Görüş, öneri veya şikayetlerinizi bizimle paylaşın. Size en kısa sürede dönüş yapacağız.</p>
-                <!-- YENİ: E-POSTA ALANI -->
                 <input type="email" id="contactEmail" class="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 outline-none focus:ring-4 focus:ring-blue-100 transition-all" placeholder="E-posta Adresiniz (Giriş yapmadıysanız zorunlu)">
-                
                 <textarea id="contactMsg" rows="6" class="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold text-gray-700 outline-none focus:ring-4 focus:ring-blue-100 transition-all resize-none" placeholder="Mesajınız..."></textarea>
                 <button onclick="sendContactMessage()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all hover:bg-blue-700">GÖNDER</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AYLIK RAPOR MODALI -->
+    <div id="monthlyReportModal" class="fixed inset-0 z-[85] hidden flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeMonthlyReport()"></div>
+        <div class="bg-white rounded-[2rem] p-6 w-[90%] max-w-md relative z-10 shadow-2xl animate-fade-in max-h-[85vh] flex flex-col border border-indigo-100">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <div class="w-16 h-16 bg-gradient-to-tr from-indigo-500 to-purple-500 text-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg shadow-indigo-200 animate-bounce-slow">
+                    <i class="fas fa-bullhorn text-2xl"></i>
+                </div>
+                <h3 class="text-2xl font-black text-gray-800 tracking-tight">Aylık Özet Raporun</h3>
+                <p id="reportPeriodText" class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">...</p>
+            </div>
+            
+            <!-- Scrollable Content -->
+            <div id="reportContent" class="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-4 text-sm text-gray-700 font-medium pb-2">
+                <!-- Dinamik içerik JS ile buraya gelecek -->
+            </div>
+            
+            <!-- Footer / Action -->
+            <div class="mt-4 pt-4 border-t border-gray-100 space-y-2 shrink-0">
+                <button onclick="closeMonthlyReport(); startWizard(true);" class="w-full py-3.5 bg-indigo-600 text-white font-black rounded-xl text-xs hover:bg-indigo-700 shadow-xl shadow-indigo-200 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <i class="fas fa-edit text-sm"></i> Yeni Hedef Belirle (Planı Güncelle)
+                </button>
+                <button onclick="closeMonthlyReport()" class="w-full py-2.5 bg-gray-50 text-gray-500 font-bold rounded-xl text-[10px] hover:bg-gray-100 transition-colors uppercase tracking-wider">
+                    Geçen Ayki Hedefle Devam Et
+                </button>
             </div>
         </div>
     </div>
@@ -1006,7 +888,7 @@
         let expensesChartInstance = null;
         let trendChartInstance = null;
         let trendMode = 'TL';
-        let trendRange = 'all'; // YENİ: Trend aralığı (all, 6, 12)
+        let trendRange = 'all'; 
         let adviceInterval = null;
         window.userInvites = [];
         window.currentHistoryDateIndex = 0;
@@ -1026,9 +908,8 @@
 
         // --- Special Day Modal Logic ---
         function showSpecialDayModal(title, msg) {
-            // Check localStorage
             const seen = localStorage.getItem('seenSpecialDay_' + title);
-            if(seen) return; // Zaten görmüşse çık
+            if(seen) return; 
             
             document.getElementById('specialDayTitle').innerText = title;
             document.getElementById('specialDayMsg').innerText = msg;
@@ -1036,7 +917,6 @@
             const modal = document.getElementById('specialDayModal');
             modal.classList.remove('hidden');
             
-            // Konfeti (Basit JS)
             runConfetti();
         }
         
@@ -1046,7 +926,6 @@
             document.getElementById('specialDayModal').classList.add('hidden');
         }
         
-        // Basit Konfeti Efekti
         function runConfetti() {
             const canvas = document.getElementById('confettiCanvas');
             const ctx = canvas.getContext('2d');
@@ -1090,9 +969,7 @@
             pendingConfirmAction = callback;
             const modal = document.getElementById('customConfirmModal');
             modal.classList.remove('hidden');
-            // Butona click eventini temizleyip yenisini ekleyelim
             const btn = document.getElementById('customConfirmBtn');
-            // Clone node to remove all event listeners
             const newBtn = btn.cloneNode(true);
             btn.parentNode.replaceChild(newBtn, btn);
             
@@ -1110,7 +987,7 @@
         const defaultState = {
             step: 1, salaryDay: 15,
             registrationDate: new Date().toISOString(),
-            balanceCalcMethod: 'register', // YENİ: Hesaplama yöntemi (register, salary, today)
+            balanceCalcMethod: 'register', 
             incomes: [{ name: 'Maaş', val: null }], 
             bills: [
                 { name: 'Kira', val: null }, { name: 'Aidat', val: null }, { name: 'Elektrik', val: null },
@@ -1123,7 +1000,7 @@
                 { name: 'Bankadaki Para', val: null }, { name: 'Cepteki Para', val: null }, { name: 'Bireysel Emeklilik (Toplam)', val: null }
             ],
             categories: ["Market / Manav", "Kasap", "Akaryakıt", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"],
-            manualDailyLimit: null, expenses: [], monthlyHistory: [], familyMembers: [], inviteCode: null
+            manualDailyLimit: null, expenses: [], monthlyHistory: [], familyMembers: [], inviteCode: null, reports: {}
         };
         let state = JSON.parse(JSON.stringify(defaultState));
 
@@ -1142,15 +1019,14 @@
                     if (user.email.toLowerCase() === 'buraksancak@msn.com') {
                         document.getElementById('btnAdmin').classList.remove('hidden');
                         document.getElementById('btnAdminSettings').classList.remove('hidden');
-                        loadAdminSystemMessages(); // Admin için mesajları yükle
+                        loadAdminSystemMessages(); 
                         checkSpecialDayConfig();
                     } else {
                         document.getElementById('btnAdmin').classList.add('hidden');
                          document.getElementById('btnAdminSettings').classList.add('hidden');
-                        checkSpecialDayConfig(); // Normal kullanıcı için kontrol et
+                        checkSpecialDayConfig(); 
                     }
                     
-                    // Sistem mesajlarını çek (Admin olmayanlar için de güncel liste)
                     fetchSystemMessages();
 
                     try {
@@ -1163,7 +1039,6 @@
                     if (!originalAdminUid) await initUserPlan(); 
                     startAdviceRotator();
                     
-                    // Navigasyon Barını Göster
                     document.getElementById('bottomNav').classList.remove('hidden');
                     
                 } else {
@@ -1171,7 +1046,6 @@
                     clearInterval(adviceInterval);
                     showLoginScreen();
                     
-                    // Navigasyon Barını Gizle
                     document.getElementById('bottomNav').classList.add('hidden');
                 }
             });
@@ -1184,8 +1058,6 @@
             document.getElementById('analysisScreen').classList.add('hidden');
         }
 
-        // --- RANDOM MESAJ SİSTEMİ ---
-        // Firestore'dan mesajları çekip değişkenleri günceller
         async function fetchSystemMessages() {
             try {
                 const doc = await db.collection('system_messages').doc('config').get();
@@ -1198,18 +1070,14 @@
             } catch(e) { console.log("Mesajlar çekilemedi, varsayılanlar kullanılıyor."); }
         }
 
-        // Rastgele seçim + tekrar engelleme
         function getRandomMessage(arr, type) { 
             if(!arr || arr.length === 0) return "...";
             
-            // Son gösterilen mesajı localStorage'dan al
             const lastShown = localStorage.getItem('lastMsg_' + type);
             let candidates = arr;
             
-            // Eğer dizi 1 elemanlıysa mecburen onu seç
             if (arr.length > 1 && lastShown) {
                 candidates = arr.filter(m => m !== lastShown);
-                // Eğer filtreleme sonucu boş kalırsa (nadir durum) yine tüm listeyi al
                 if (candidates.length === 0) candidates = arr;
             }
             
@@ -1218,14 +1086,12 @@
             return selected; 
         }
 
-        // --- ÖZEL GÜN KONTROLÜ ---
         async function checkSpecialDayConfig() {
             try {
                 const doc = await db.collection('system_config').doc('special_day').get();
                 if(doc.exists) {
                     const data = doc.data();
-                    // Tarih kontrolü (YYYY-MM-DD standart formatta bekleniyor)
-                    const today = new Date().toISOString().split('T')[0]; // "2024-02-17" gibi
+                    const today = new Date().toISOString().split('T')[0]; 
                     if (data.date === today) {
                         showSpecialDayModal(data.title, data.message);
                     }
@@ -1233,13 +1099,11 @@
             } catch(e) {}
         }
 
-        // --- ADMIN FONKSİYONLARI ---
         async function openAdminPanel() {
-            closeSettingsPanel(); // Eğer ayarlar açıksa kapat
+            closeSettingsPanel(); 
             document.getElementById('adminModal').classList.remove('hidden');
             setTimeout(() => document.getElementById('adminModal').classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
-            // Default load users tab
             switchAdminTab('users');
         }
 
@@ -1259,7 +1123,6 @@
             const divMsgs = document.getElementById('adminTabMessages');
             const divSpecs = document.getElementById('adminTabSpecials');
 
-            // Reset styles
             [btnUsers, btnMsgs, btnSpecs].forEach(b => b.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all");
             [divUsers, divMsgs, divSpecs].forEach(d => d.classList.add('hidden'));
 
@@ -1271,16 +1134,15 @@
                 btnMsgs.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all";
                 divMsgs.classList.remove('hidden');
                 loadAdminMessages();
-            } else { // specials
+            } else { 
                 btnSpecs.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm transition-all";
                 divSpecs.classList.remove('hidden');
-                loadAdminSystemMessagesListUI(); // Listeyi UI'a dök
+                loadAdminSystemMessagesListUI(); 
             }
         }
 
-        // Admin: Sistem Mesajlarını Yönet
         async function loadAdminSystemMessages() {
-            await fetchSystemMessages(); // Güncel veriyi al
+            await fetchSystemMessages(); 
         }
 
         function loadAdminSystemMessagesListUI() {
@@ -1299,7 +1161,6 @@
             `).join('');
         }
 
-        // Dropdown değişince listeyi yenile
         document.getElementById('adminMsgCat').addEventListener('change', loadAdminSystemMessagesListUI);
 
         async function addSystemMessage() {
@@ -1311,7 +1172,6 @@
             else if (cat === 'lowSavings') messages_lowSavings.push(msg);
             else messages_streak.push(msg);
 
-            // Firestore'a kaydet
             await db.collection('system_messages').doc('config').set({
                 highSpend: messages_highSpend,
                 lowSavings: messages_lowSavings,
@@ -1352,10 +1212,9 @@
             showAppAlert("Özel gün kaydedildi!");
         }
 
-        // --- İLETİŞİM / MESAJLAŞMA ---
         function openContactModal() {
             document.getElementById('contactMsg').value = '';
-            document.getElementById('contactEmail').value = currentUser ? currentUser.email : ''; // Varsa doldur
+            document.getElementById('contactEmail').value = currentUser ? currentUser.email : ''; 
             const modal = document.getElementById('contactModal');
             modal.classList.remove('hidden');
             setTimeout(() => modal.classList.add('open'), 10);
@@ -1399,7 +1258,7 @@
                     sender = currentUser.displayName || "Kullanıcı";
                     uid = currentUser.uid;
                 } else {
-                    sender = senderEmail.split('@')[0]; // E-postadan geçici isim türet
+                    sender = senderEmail.split('@')[0]; 
                 }
 
                 await db.collection('messages').add({
@@ -1467,7 +1326,7 @@
                 try {
                     await db.collection('users').doc(uid).delete();
                     showAppAlert("Kullanıcı verisi silindi.");
-                    loadAdminUsers(); // Refresh list
+                    loadAdminUsers(); 
                 } catch(e) {
                     showAppAlert("Hata: " + e.message);
                 }
@@ -1510,35 +1369,28 @@
         }
 
         async function inspectUser(targetUid, targetName) {
-            // Adminin kendi ID'sini sakla (geri dönmek için)
             if (!originalAdminUid) originalAdminUid = currentUser.uid;
             
-            // Hedef kullanıcı verisini çek
             try {
                 const doc = await db.collection("users").doc(targetUid).get();
                 if (doc.exists) {
                     state = doc.data();
-                    currentPlanId = targetUid; // Hedefin plan ID'si
-                    currentUserRole = 'owner'; // Tam yetkiyle gör
+                    currentPlanId = targetUid; 
+                    currentUserRole = 'owner'; 
                     
-                    // Admin panelini kapat
                     closeAdminPanel();
                     
-                    // Dashboard'ı güncelle
                     updateDashboardUI();
                     
-                    // Uyarı bandını göster
                     document.getElementById('adminModeBanner').classList.remove('hidden');
                     document.getElementById('adminInspectName').innerText = targetName;
                     
-                    // Overlay'i kapat (Panel kapandı çünkü)
                     document.getElementById('overlay').classList.remove('active');
                 }
             } catch(e) { showAppAlert("Hata: " + e.message); }
         }
 
         async function exitAdminInspect() {
-            // Admin verisine geri dön
             if (originalAdminUid) {
                 const doc = await db.collection("users").doc(originalAdminUid).get();
                 state = doc.data();
@@ -1556,15 +1408,14 @@
             hideAll(); 
             document.getElementById('analysisScreen').classList.remove('hidden'); 
             
-            // Set default date for analysis filter to current month
             const today = new Date();
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
             document.getElementById('analysisDateFilter').value = `${yyyy}-${mm}`;
             
             renderCharts(); 
-            renderHistoryTable(); // YENİ: Tabloyu yükle
-            renderTrendChart();   // YENİ: Trend grafiği
+            renderHistoryTable(); 
+            renderTrendChart();   
         }
 
         function scrollToAddExpense() {
@@ -1572,27 +1423,22 @@
             const el = document.getElementById('addExpenseSection');
             if(el) {
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                // Inputa odaklan (mobilde klavye açabilir, dikkat)
                 setTimeout(() => document.getElementById('expAmt').focus(), 500);
             }
         }
 
         function startAdviceRotator() {
-            // Rotator yerine Gamification sistemi çalışacak
         }
 
-        // --- GELİŞMİŞ ESPRİLİ MESAJ MANTIĞI ---
         function checkGamificationStatus() {
             const todayStr = new Date().toLocaleDateString('tr-TR');
             const dailyLimit = state.manualDailyLimit || 0;
             const spentToday = state.expenses.filter(e => e.date === todayStr).reduce((s,e)=>s+e.amount,0);
             
-            // 1. Durum: Günlük Limit Aşıldı
             if (spentToday > dailyLimit && dailyLimit > 0) {
                 return getRandomMessage(messages_highSpend, 'highSpend');
             }
 
-            // 2. Durum: 3 Günlük Seri (Streak)
             let streak = 0;
             const now = new Date();
             for (let i = 1; i < 30; i++) {
@@ -1604,7 +1450,6 @@
             }
             if (streak >= 3) return getRandomMessage(messages_streak, 'streak');
 
-            // 3. Durum: Hedef Uzak (Low Savings)
             const nowTime = new Date();
             let startCalc = new Date(state.registrationDate);
             if(isNaN(startCalc.getTime())) startCalc = new Date();
@@ -1637,7 +1482,6 @@
                 return getRandomMessage(messages_lowSavings, 'lowSavings');
             }
 
-            // HİÇBİR EKSTREM DURUM YOKSA RASTGELE MOTİVASYON MESAJI
             return getRandomMessage(messages_general, 'general');
         }
 
@@ -1812,7 +1656,6 @@
             else window.location.reload();
         }
 
-        // --- AYARLAR MODALI (Side Panel Olarak) ---
         function openSettingsPanel() {
             if(currentUserRole === 'owner') {
                 document.getElementById('settingsCurrentPlanLabel').innerText = "Kendi Planınız (Yönetici)";
@@ -1828,7 +1671,6 @@
             setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
             
-            // Aile listesini buraya render et
             renderFamilyList();
         }
         function closeSettingsPanel() { 
@@ -1869,7 +1711,6 @@
             });
         }
 
-        // --- AİLE YÖNETİMİ & DAVET SİSTEMİ ---
         function createInviteCode() {
             if(currentUserRole !== 'owner' && currentUserRole !== 'full') return showAppAlert("Yetkiniz yok.");
             const code = Math.random().toString(36).substring(2, 7).toUpperCase();
@@ -1890,7 +1731,6 @@
             const target = snap.docs[0];
             if(target.id === currentUser.uid) return showAppAlert("Kendinizi ekleyemezsiniz.");
 
-            // Davet Gönder
             await db.collection('users').doc(target.id).update({
                 pendingInvites: firebase.firestore.FieldValue.arrayUnion({
                     planId: currentUser.uid,
@@ -1967,7 +1807,6 @@
              });
         }
 
-        // --- BULUT İŞLEMLERİ ---
         function loadFromCloud() {
             if(!currentUser || !currentPlanId) return;
             db.collection("users").doc(currentPlanId).get().then((doc) => {
@@ -1982,6 +1821,7 @@
                     if(!state.expenses) state.expenses = [];
                     if(!state.monthlyHistory) state.monthlyHistory = [];
                     if(!state.familyMembers) state.familyMembers = [];
+                    if(!state.reports) state.reports = {}; // Ensure reports object exists
                     
                     if(!state.categories || state.categories.length === 0) {
                         state.categories = ["Market / Manav", "Kasap", "Akaryakıt", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"];
@@ -2001,7 +1841,6 @@
         }
         function saveState() { if(currentUser && !isRegistering) saveToCloud(); }
 
-        // --- DASHBOARD GÜNCELLEME ---
         function applyPermissions() {
             const lbl = currentUserRole === 'owner' ? 'Plan Sahibi' : currentUserRole === 'full' ? 'Tam Yetki' : 'Sınırlı Yetki';
             document.getElementById('roleBadge').innerText = lbl;
@@ -2009,7 +1848,6 @@
             const dis = (currentUserRole === 'limited');
             document.getElementById('financialHealthSection').classList.toggle('hidden', dis);
             document.getElementById('btnAnalysis').classList.toggle('hidden', dis);
-            // document.getElementById('familyPanel') artık dashboard'da yok, Settings'de.
         }
 
         function updateDashboardUI() {
@@ -2025,25 +1863,20 @@
 
             const now = new Date(); const todayStr = now.toLocaleDateString('tr-TR');
             
-            // YENİ: Başlangıç Tarihi Hesaplama Mantığı (Akıllı Filtreleme)
             let startCalc;
             const calcMethod = state.balanceCalcMethod || 'register';
             
-            // Buton durumlarını güncelle
             const btnSalary = document.getElementById('btnCalcSalary');
             const btnRegister = document.getElementById('btnCalcRegister');
             const btnToday = document.getElementById('btnCalcToday');
             
-            // Tüm butonları resetle
             [btnSalary, btnRegister, btnToday].forEach(btn => {
                 btn.className = "text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10";
             });
             
-            // Aktif butonu yeşil yap
             const activeBtnClass = "text-[9px] font-bold px-2 py-1 rounded bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
             if (calcMethod === 'salary') {
                 btnSalary.className = activeBtnClass;
-                // Maaş Günü mantığı
                 const salaryDay = state.salaryDay || 15;
                 let lastSalaryDate = new Date(now.getFullYear(), now.getMonth(), salaryDay);
                 if (now.getDate() < salaryDay) {
@@ -2053,12 +1886,10 @@
                 startCalc.setHours(0,0,0,0);
             } else if (calcMethod === 'today') {
                 btnToday.className = activeBtnClass;
-                // Bugün mantığı
                 startCalc = new Date();
                 startCalc.setHours(0,0,0,0);
             } else {
                 btnRegister.className = activeBtnClass;
-                // Kayıt Günü mantığı (Varsayılan)
                 startCalc = new Date(state.registrationDate);
                 if(isNaN(startCalc.getTime())) startCalc = new Date();
                 startCalc.setHours(0,0,0,0);
@@ -2066,7 +1897,6 @@
 
             const daysPassed = Math.max(1, Math.ceil(Math.abs(now - startCalc) / (1000 * 60 * 60 * 24))); 
             
-            // Akıllı Filtreleme: Sadece startCalc tarihinden sonraki harcamaları topla
             let totalSpent = 0;
             const spentToday = state.expenses.filter(e => e.date === todayStr).reduce((s,e)=>s+e.amount,0);
             
@@ -2075,7 +1905,6 @@
                 if(dParts.length === 3) {
                     const d = new Date(dParts[2], dParts[1]-1, dParts[0]);
                     d.setHours(0,0,0,0);
-                    // Sadece seçilen başlangıç tarihinden itibaren olan harcamaları dahil et
                     if (d >= startCalc) {
                         totalSpent += e.amount;
                     }
@@ -2128,49 +1957,34 @@
             document.getElementById('sumGiderTotalHealth').innerText = `₺${Math.floor(totalMonthlyOutflow).toLocaleString()}`;
             document.getElementById('netStatusVal').innerText = `${net>=0?'+':'-'}₺${Math.abs(Math.floor(net)).toLocaleString()}`;
             
-            // 3- DÜZENLEME: NET STATUS VE KALP ATIŞI EFEKTİ
             const healthSection = document.getElementById('financialHealthSection');
             let bgDiv = document.getElementById('healthHeartbeatBg');
             
-            // Eğer bgDiv yoksa (ilk yükleme gibi durumlarda) oluştur
             if (!bgDiv) {
                 bgDiv = document.createElement('div');
                 bgDiv.id = 'healthHeartbeatBg';
-                bgDiv.className = 'heartbeat-bg'; // Base class
-                // İçeriklerin üstüne gelmemesi için ilk child olarak ekle
+                bgDiv.className = 'heartbeat-bg'; 
                 healthSection.insertBefore(bgDiv, healthSection.firstChild);
             }
 
             if (net < 0) {
-                // NEGATİF DURUM (Kırmızımsı)
                 document.getElementById('netStatusBadge').className = `text-3xl font-black text-red-600 px-6 py-3 bg-white/90 backdrop-blur rounded-[1.5rem] transition-colors shadow-sm border border-red-100`;
-                
-                // Arka plan stilleri
                 healthSection.classList.remove('bg-white', 'border-blue-50', 'bg-green-50/30', 'border-green-100');
                 healthSection.classList.add('bg-red-50/30', 'border-red-100');
-                
-                // Animasyon sınıfı
                 bgDiv.className = 'heartbeat-bg heartbeat-red';
             } else {
-                // POZİTİF DURUM (Yeşilimsi)
                 document.getElementById('netStatusBadge').className = `text-3xl font-black text-green-600 px-6 py-3 bg-white/90 backdrop-blur rounded-[1.5rem] transition-colors shadow-sm border border-green-100`;
-                
-                // Arka plan stilleri
                 healthSection.classList.remove('bg-white', 'border-blue-50', 'bg-red-50/30', 'border-red-100');
                 healthSection.classList.add('bg-green-50/30', 'border-green-100');
-                
-                // Animasyon sınıfı
                 bgDiv.className = 'heartbeat-bg heartbeat-green';
             }
 
             document.getElementById('displayInviteCode').innerText = state.inviteCode || '-----';
             
-            // Esprili Mesajı Getir
             const motivationalMsg = checkGamificationStatus();
             document.getElementById('motivationText').innerText = motivationalMsg;
             document.getElementById('motivationArea').classList.remove('hidden');
 
-            // Family listesini Settings içinde render et
             renderFamilyList();
             renderDetailedHealthLists();
             
@@ -2179,19 +1993,18 @@
             
             updateExpenseDateLabel();
             renderCategoryOptions(); 
+
+            // Otomatik Aylık Rapor Kontrolü
+            checkMonthlyReport();
         }
         
-        // YENİ: Bakiye Hesaplama Yöntemi Değiştirme
         function setBalanceMethod(method) {
             state.balanceCalcMethod = method;
             saveToCloud();
             updateDashboardUI();
         }
 
-        // --- TARİH NAVİGASYON MANTIĞI ---
         function changeExpenseDate(delta) {
-            // DEĞİŞİKLİK 3: delta +1 (Sol buton) artık offset'i arttırarak geçmişe götürür.
-            // delta -1 (Sağ buton) artık offset'i azaltarak bugüne yaklaştırır.
             currentExpenseDateOffset += delta;
             
             if (currentExpenseDateOffset < 0) currentExpenseDateOffset = 0;
@@ -2242,7 +2055,6 @@
             }
         }
 
-        // --- KATEGORİ YÖNETİMİ ---
         function renderCategoryOptions() {
             const sel = document.getElementById('expCat');
             if (!state.categories) {
@@ -2342,7 +2154,6 @@
             });
         }
 
-        // --- SATIR İÇİ (INLINE) EKLEME SİSTEMİ ---
         const subTypes = {
             'Altın': ['Gr. (24 Ayar)', 'Gr & Ajda (22 Ayar)', 'Çeyrek', 'Yarım', 'Tam'],
             'Döviz': ['Dolar', 'Euro', 'GBP', 'İsviçre Frangı'],
@@ -2391,7 +2202,6 @@
                         </div>
                         <input type="number" id="${prefix}_total" placeholder="Toplam Borç" class="${cmnCls} mb-2">
                         
-                        <!-- Restored Options -->
                         <div class="space-y-2 bg-red-50 p-2 rounded-lg border border-red-100">
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" id="${prefix}_incDebt" checked class="w-4 h-4 text-red-600 rounded focus:ring-red-500">
@@ -2521,7 +2331,6 @@
                 finalVal = parseFloat(document.getElementById(`${prefix}_total`).value) || (monthly * months);
                 const lDate = document.getElementById(`${prefix}_date`).value || new Date().toISOString().slice(0,10);
                 
-                // Read checkboxes (if they exist, otherwise default to true/false logic)
                 const incDebtEl = document.getElementById(`${prefix}_incDebt`);
                 const incBudgetEl = document.getElementById(`${prefix}_incBudget`);
                 
@@ -2562,7 +2371,6 @@
             else renderWizardLists();
         }
 
-        // --- HARCAMA İŞLEMLERİ ---
         function addExpense() {
             const amtInp = document.getElementById('expAmt');
             const descInp = document.getElementById('expDesc');
@@ -2609,17 +2417,12 @@
                     addedBy: myStr, ts: Date.now()
                 });
 
-                // Auto-switch balance method if past expense is added
                 const now = new Date();
-                const expDate = new Date(d); // Using 'd' from above calculation
-                // Ensure compare against midnight
+                const expDate = new Date(d); 
                 expDate.setHours(0,0,0,0);
                 const regDate = new Date(state.registrationDate);
                 regDate.setHours(0,0,0,0);
 
-                // Simple check: If expense date is older than registration date by more than a day
-                // This assumes registration date is accurate.
-                // We use 'salary' method if we detect 'past' data effectively.
                 if (expDate < regDate && state.balanceCalcMethod !== 'salary') {
                     setBalanceMethod('salary');
                     showAppAlert("Geçmiş tarihli işlem girildiği için hesaplama 'Gelir Günü' moduna alındı.");
@@ -2666,8 +2469,6 @@
         function renderHistoryList() {
             const list = document.getElementById('historyList');
             if(!list) return;
-            // DEĞİŞİKLİK 2: Veri yoksa bile "Bugün"ü gösterelim
-            // if(state.expenses.length === 0) { list.innerHTML = '<div class="text-center text-gray-400 text-xs py-4">Harcama yok.</div>'; return; }
             
             const myName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Ben';
             
@@ -2679,19 +2480,12 @@
                 grouped[e.date].push({ ...e, originalIndex: origIdx });
             });
 
-            // DEĞİŞİKLİK 2: Bugün tarihini mutlaka listenin en başına ekle
             const todayStr = new Date().toLocaleDateString('tr-TR');
             let sortedDates = [...new Set(sortedExpenses.map(e => e.date))];
             
             if (sortedDates.length === 0 || sortedDates[0] !== todayStr) {
-                // Eğer bugün harcama yoksa, manuel olarak ekle
                 if (!sortedDates.includes(todayStr)) {
                     sortedDates.unshift(todayStr);
-                } else {
-                    // Bugün listede var ama başta değilse (bu teknik olarak imkansız çünkü tarih sırasına göre ama yine de)
-                    // sortedDates'in zaten string compare ile sıralanmadığını, harcama eklenme sırasına göre olduğunu unutma.
-                    // En yeni harcama en üstte olduğu için, bugün harcama yaptıysak zaten en üstte olur.
-                    // Yapmadıysak sortedDates içinde yoktur.
                 }
             }
 
@@ -2745,9 +2539,7 @@
         }
 
         function renderDetailedHealthLists() { 
-            // DÜZENLEME 2: SOLUK (SİLİK) GÖRÜNÜM İÇİN LOGIC
             const createRow = (name, amount, type, idx, extraClass='', clickAction='', isExcluded=false) => {
-                // Eğer tutar 0 veya null ise silik yap
                 const isFaded = (!amount || amount === 0);
                 const fadeClass = isFaded ? 'opacity-40 grayscale hover:opacity-100 hover:grayscale-0 transition-all' : '';
                 
@@ -2764,7 +2556,6 @@
                 </div>`; 
             };
             
-            // SABİT GİDERLER (BILLS)
             const activeBills = state.bills; 
             const totalBills = activeBills.reduce((s, b) => s + (b.val||0), 0);
             const billsHTML = activeBills.map((b) => createRow(b.name, b.val||0, 'bills', state.bills.indexOf(b), 'bg-white')).join('');
@@ -2788,10 +2579,8 @@
             </div>`;
             document.getElementById('fixedExpensesSection').innerHTML = billsAccordion;
 
-            // BORÇLAR BÖLÜMÜ
             let debtHTML = ''; 
             
-            // 1. Krediler
             const activeLoans = state.loans;
             const totalLoanDebt = activeLoans.reduce((s,l) => s + (l.excludeFromDebt ? 0 : (l.totalDebt||0)), 0);
             
@@ -2819,7 +2608,6 @@
                 </div>`;
             }
 
-            // 2. Kredi Kartları
             const activeCards = state.debts;
             const totalCardDebt = activeCards.reduce((s,d) => s + (d.excludeFromNetWorth ? 0 : (d.val||0)), 0);
             
@@ -2844,7 +2632,6 @@
                 </div>`;
             }
 
-            // 3. Diğer Borçlar
             const sortedOtherDebts = [...state.otherDebts].sort((a,b) => (b.val||0) - (a.val||0));
             sortedOtherDebts.forEach((d) => {
                  const originalIndex = state.otherDebts.indexOf(d);
@@ -2853,7 +2640,6 @@
             
             document.getElementById('detailedDebtsList').innerHTML = debtHTML || '<span class="text-gray-300 text-[10px]">Kayıtlı borç yok</span>'; 
             
-            // VARLIKLAR
             const sortedAssets = [...state.assets].sort((a,b) => (b.val||0) - (a.val||0));
             let assetHTML = sortedAssets.map((a) => {
                 const originalIndex = state.assets.indexOf(a);
@@ -2882,19 +2668,14 @@
             document.getElementById('editItemType').value = type; 
             document.getElementById('editItemIndex').value = index; 
             
-            // Exclude from Debt / NetWorth Checkbox
             const chk = document.getElementById('editExcludeNetWorth');
             if (type === 'loans') chk.checked = item.excludeFromDebt || false;
             else chk.checked = item.excludeFromNetWorth || false;
             
-            // YENİ: Krediler için "Bütçeye Katma" seçeneği
             const loanSpecificContainer = document.getElementById('editLoanSpecificContainer');
-            // YENİ: Kredi Detayları (Aylık, Kalan, Tarih)
             const loanContainer = document.getElementById('editLoanContainer');
-            // YENİ: Kredi Kartı Limit Detayları
             const ccContainer = document.getElementById('editCCLimitContainer');
             
-            // Reset visibility
             loanSpecificContainer.classList.add('hidden');
             loanContainer.classList.add('hidden');
             ccContainer.classList.add('hidden');
@@ -2903,14 +2684,12 @@
                 loanSpecificContainer.classList.remove('hidden');
                 document.getElementById('editExcludeBudget').checked = item.excludeFromBudget || false;
                 
-                // Show Loan Details
                 loanContainer.classList.remove('hidden');
                 document.getElementById('editLoanMonthly').value = item.monthly || 0;
                 document.getElementById('editLoanMonths').value = item.totalMonths || 0;
                 document.getElementById('editLoanDate').value = item.startDate || '';
             } 
             else if (type === 'debts' && item.calcMode) {
-                // Show CC Limit Details
                 ccContainer.classList.remove('hidden');
                 document.getElementById('editCCLimit').value = item.limit || 0;
                 document.getElementById('editCCAvail').value = item.avail || 0;
@@ -2922,7 +2701,6 @@
             document.getElementById('overlay').classList.add('active'); 
         }
         
-        // YENİ: Real-time hesaplama fonksiyonları
         function calcEditLoan() {
             const m = parseFloat(document.getElementById('editLoanMonthly').value) || 0;
             const c = parseFloat(document.getElementById('editLoanMonths').value) || 0;
@@ -2946,12 +2724,10 @@
                 state[type][idx].name = name; 
                 
                 if(type === 'loans') {
-                    // Update main loan values
                     state[type][idx].totalDebt = val; 
                     state[type][idx].excludeFromDebt = excluded;
                     state[type][idx].excludeFromBudget = document.getElementById('editExcludeBudget').checked;
                     
-                    // Update details from new inputs
                     state[type][idx].monthly = parseFloat(document.getElementById('editLoanMonthly').value) || 0;
                     state[type][idx].totalMonths = parseFloat(document.getElementById('editLoanMonths').value) || 0;
                     state[type][idx].startDate = document.getElementById('editLoanDate').value;
@@ -2959,7 +2735,6 @@
                     state[type][idx].val = val;
                     state[type][idx].excludeFromNetWorth = excluded;
                     
-                    // If it was in calcMode, update limit details
                     if (state[type][idx].calcMode) {
                         state[type][idx].limit = parseFloat(document.getElementById('editCCLimit').value) || 0;
                         state[type][idx].avail = parseFloat(document.getElementById('editCCAvail').value) || 0;
@@ -2971,7 +2746,6 @@
                 
                 saveToCloud(); 
                 
-                // Eğer wizard ekranı açıksa orayı güncelle, değilse dashboard'u güncelle
                 if (!document.getElementById('wizardScreen').classList.contains('hidden')) {
                     renderWizardLists();
                 } else {
@@ -3001,8 +2775,7 @@
             if(assetsChartInstance) assetsChartInstance.destroy();
             if(expensesChartInstance) expensesChartInstance.destroy();
             
-            // DÖNEMLİK ANALİZ MANTIĞI
-            const filterVal = document.getElementById('analysisDateFilter').value; // YYYY-MM
+            const filterVal = document.getElementById('analysisDateFilter').value; 
             let filteredExpenses = state.expenses;
             
             if (filterVal) {
@@ -3057,7 +2830,6 @@
             });
         }
 
-        // --- TREND GRAFİĞİ ---
         function switchChartMode(mode) {
             trendMode = mode;
             const btnTL = document.getElementById('btnChartTL');
@@ -3073,7 +2845,6 @@
             renderTrendChart();
         }
 
-        // YENİ: TREND ARALIĞI FONKSİYONU
         function switchChartRange(range) {
             trendRange = range;
             document.getElementById('btnRange6').className = "text-[9px] font-bold px-2 py-1 rounded hover:bg-white hover:shadow-sm text-gray-500 transition-all " + (range === '6' ? 'bg-white shadow-sm text-gray-800 border border-gray-100' : '');
@@ -3091,7 +2862,6 @@
                 return a.date.localeCompare(b.date);
             });
 
-            // Aralığa göre filtrele (6 Ay / 12 Ay)
             if (trendRange === '6') {
                 sortedHistory = sortedHistory.slice(-6);
             } else if (trendRange === '12') {
@@ -3208,7 +2978,6 @@
             });
         }
 
-        // --- KREDİ PLAN MODALI (SIDE PANEL) ---
         function openLoanPlanModal(loanIndex) {
             const loan = state.loans[loanIndex];
             if (!loan) return;
@@ -3250,29 +3019,23 @@
             document.getElementById('overlay').classList.remove('active'); 
         }
 
-        // --- GERÇEK BAKİYE MODALI ---
         function openBalanceModal() {
             const now = new Date(); const todayStr = now.toLocaleDateString('tr-TR');
             
-            // YENİ: Başlangıç Tarihi Hesaplama Mantığı
             let startCalc;
             const calcMethod = state.balanceCalcMethod || 'register';
             
-            // Buton durumlarını güncelle
             const btnSalary = document.getElementById('btnCalcSalary');
             const btnRegister = document.getElementById('btnCalcRegister');
             const btnToday = document.getElementById('btnCalcToday');
             
-            // Tüm butonları resetle
             [btnSalary, btnRegister, btnToday].forEach(btn => {
                 btn.className = "text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10";
             });
             
-            // Aktif butonu yeşil yap
             const activeBtnClass = "text-[9px] font-bold px-2 py-1 rounded bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
             if (calcMethod === 'salary') {
                 btnSalary.className = activeBtnClass;
-                // Maaş Günü mantığı
                 const salaryDay = state.salaryDay || 15;
                 let lastSalaryDate = new Date(now.getFullYear(), now.getMonth(), salaryDay);
                 if (now.getDate() < salaryDay) {
@@ -3281,19 +3044,16 @@
                 startCalc = lastSalaryDate;
             } else if (calcMethod === 'today') {
                 btnToday.className = activeBtnClass;
-                // Bugün mantığı
                 startCalc = new Date();
                 startCalc.setHours(0,0,0,0);
             } else {
                 btnRegister.className = activeBtnClass;
-                // Kayıt Günü mantığı (Varsayılan)
                 startCalc = new Date(state.registrationDate);
                 if(isNaN(startCalc.getTime())) startCalc = new Date();
             }
 
             const daysPassed = Math.max(1, Math.ceil(Math.abs(now - startCalc) / (1000 * 60 * 60 * 24))); 
             
-            // Calculate total spent based on the chosen period
             let totalSpent = 0;
             const spentToday = state.expenses.filter(e => e.date === todayStr).reduce((s,e)=>s+e.amount,0);
             
@@ -3307,12 +3067,6 @@
                     }
                 }
             });
-
-            const cumulative = ((state.manualDailyLimit||0) * daysPassed) - totalSpent;
-
-            // Bu fonksiyon genellikle sadece dashboard güncelleme sırasında çağrılıyordu ama artık modal da açacak
-            // O yüzden hesaplamalar dashboard'da yapılıyor, burası sadece modal içeriğini göstermeli.
-            // Fakat hesaplamalar dinamik olduğu için burada tekrar yapıyoruz.
 
             let isSalaryBased = (calcMethod === 'salary');
 
@@ -3368,7 +3122,6 @@
             document.getElementById('overlay').classList.remove('active'); 
         }
 
-        // --- SİHİRBAZ MANTIĞI ---
         function startWizard(isEditMode) {
             hideAll(); document.getElementById('wizardScreen').classList.remove('hidden');
             if(!isEditMode) { state = JSON.parse(JSON.stringify(defaultState)); state.registrationDate = new Date().toISOString(); }
@@ -3376,10 +3129,8 @@
         }
         
         function wizardNext() { 
-            // Step 8 validation update (Alert Replacement)
             if (state.step === 8) { 
                 if(document.getElementById('wizRegEmail')) {
-                    // Registration inside wizard
                     const u = document.getElementById('wizRegName').value.trim();
                     const e = document.getElementById('wizRegEmail').value.trim();
                     const p = document.getElementById('wizRegPass').value;
@@ -3395,7 +3146,7 @@
                 return; 
             } 
             state.step++; renderWizard(); 
-        }
+        } 
 
         function wizardBack() { if (state.step > 1) { state.step--; renderWizard(); } else { if(currentUser) showDashboard(); else showLoginScreen(); } }
         
@@ -3403,12 +3154,10 @@
              return state.loans.filter(l => !l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
         }
 
-        // EKSİK FONKSİYON 1: LİSTELERİ RENDER ETME
         function renderWizardLists() {
-            // Step 1: Incomes, 2: Bills, 3: Loans, 4: Debts (Cards), 5: Other Debts, 6: Assets
             const keys = ["", "incomes", "bills", "loans", "debts", "otherDebts", "assets"];
             const key = keys[state.step];
-            if (!key) return; // Steps 7 & 8 don't use lists
+            if (!key) return; 
 
             const container = document.getElementById(`wiz_${key}_list`);
             if (!container) return;
@@ -3423,8 +3172,7 @@
                 let valDisplay = '';
                 let inputHtml = '';
 
-                // SİLİK (SOLUK) GÖRÜNÜM MANTIĞI:
-                const isFaded = !item.val && item.val !== 0; // Değeri null veya undefined ise silik olsun
+                const isFaded = !item.val && item.val !== 0; 
                 const fadeClass = isFaded ? 'opacity-40 grayscale' : '';
 
                 if (key === 'loans') {
@@ -3437,7 +3185,6 @@
                         <input type="number" id="wiz_loan_t_${i}" value="${Math.ceil(item.totalDebt)}" onchange="updateLoanData(${i}, 'totalDebt', this.value)" class="w-20 p-2 bg-white border rounded-lg text-xs font-bold text-right outline-none">
                     `;
                 } else if (key === 'debts') {
-                    // Credit Cards
                     valDisplay = `₺${Math.floor(item.val).toLocaleString()}`;
                     inputHtml = `
                         <div class="flex-1">
@@ -3447,7 +3194,6 @@
                         <input type="number" value="${item.val}" onchange="state.debts[${i}].val=parseFloat(this.value)||0; saveState();" class="w-20 p-2 bg-white border rounded-lg text-xs font-bold text-right outline-none">
                     `;
                 } else {
-                    // Standard
                     valDisplay = `₺${Math.floor(item.val).toLocaleString()}`;
                     inputHtml = `
                         <input type="text" value="${item.name}" placeholder="Kalem İsmi" onchange="state.${key}[${i}].name=this.value; saveState();" class="flex-1 p-2 bg-white border rounded-lg text-xs font-bold outline-none mr-2">
@@ -3467,9 +3213,7 @@
             container.innerHTML = html;
         }
 
-        // DÜZENLEME 1: BASİT KALEM EKLEME (İSİM SORMADAN)
         function addSimpleWizItem(key, listId) {
-            // İsim sormadan boş ekle
             state[key].push({ name: '', val: null }); 
             saveState();
             renderWizardLists();
@@ -3684,33 +3428,177 @@
         function closeAllPopups() { 
             document.getElementById('overlay').classList.remove('active'); 
             document.querySelectorAll('.fixed.z-50').forEach(el => { if(el.id !== 'saveIndicator' && !el.classList.contains('bottom-nav')) el.classList.add('hidden'); }); 
-            document.querySelectorAll('.fixed.z-[70], .fixed.z-[80], .fixed.z-[90]').forEach(el => el.classList.add('hidden')); // Close custom alerts
+            document.querySelectorAll('.fixed.z-[70], .fixed.z-[80], .fixed.z-[90]').forEach(el => el.classList.add('hidden')); 
             document.querySelectorAll('.side-panel').forEach(el => { el.classList.remove('open'); setTimeout(() => el.classList.add('hidden'), 300); });
+            closeMonthlyReport(); 
         }
-        function updateExpenseDateLabel() {
-            const lbl = document.getElementById('expenseDateLabel');
-            const d = new Date();
-            d.setDate(d.getDate() - currentExpenseDateOffset);
+
+        // --- AYLIK OTOMATİK RAPORLAMA SİSTEMİ ---
+        
+        function checkMonthlyReport() {
+            if (!state.registrationDate || !currentUser) return;
             
-            const options = { day: 'numeric', month: 'long', weekday: 'long' };
-            const formattedDate = d.toLocaleDateString('tr-TR', options);
+            const now = new Date();
+            const salaryDay = state.salaryDay || 15;
             
-            if (currentExpenseDateOffset === 0) {
-                lbl.innerText = `Bugün`;
-            } else if (currentExpenseDateOffset === 1) {
-                lbl.innerText = `Dün`;
+            let currentPeriodStart = new Date(now.getFullYear(), now.getMonth(), salaryDay);
+            if (now.getDate() < salaryDay) {
+                currentPeriodStart.setMonth(currentPeriodStart.getMonth() - 1);
+            }
+            currentPeriodStart.setHours(0,0,0,0);
+            
+            let prevPeriodStart = new Date(currentPeriodStart);
+            prevPeriodStart.setMonth(prevPeriodStart.getMonth() - 1);
+            let prevPeriodEnd = new Date(currentPeriodStart);
+            
+            const yyyy = prevPeriodStart.getFullYear();
+            const mm = String(prevPeriodStart.getMonth() + 1).padStart(2, '0');
+            const reportKey = `${yyyy}-${mm}`;
+            
+            if (!state.reports) state.reports = {};
+            
+            const regDate = new Date(state.registrationDate);
+            if (!state.reports[reportKey] && regDate < prevPeriodEnd) {
+                generateAndSaveReport(reportKey, prevPeriodStart, prevPeriodEnd);
+            }
+        }
+
+        function generateAndSaveReport(reportKey, startDate, endDate) {
+            const periodExpenses = state.expenses.filter(e => {
+                const parts = e.date.split('.');
+                if(parts.length === 3) {
+                    const d = new Date(parts[2], parts[1]-1, parts[0]);
+                    d.setHours(0,0,0,0);
+                    return d >= startDate && d < endDate;
+                }
+                return false;
+            });
+            
+            const daysTotal = Math.round((endDate - startDate) / (1000*60*60*24));
+            const uniqueDates = new Set(periodExpenses.map(e => e.date));
+            const daysEntered = uniqueDates.size;
+            
+            const totalSpent = periodExpenses.reduce((sum, e) => sum + e.amount, 0);
+            
+            const catTotals = {};
+            periodExpenses.forEach(e => {
+                let cat = e.category && e.category !== 'Diğer' ? e.category : 'Diğer / Özel';
+                catTotals[cat] = (catTotals[cat] || 0) + e.amount;
+            });
+            
+            const topCategories = Object.entries(catTotals)
+                .sort((a,b) => b[1] - a[1])
+                .slice(0, 3)
+                .map(([name, amt]) => {
+                    const pct = totalSpent > 0 ? Math.round((amt / totalSpent) * 100) : 0;
+                    return { name, pct };
+                });
+            
+            const dailyLimit = state.manualDailyLimit || 0;
+            const averageDaily = daysTotal > 0 ? (totalSpent / daysTotal) : 0;
+            
+            const limitTotal = dailyLimit * daysTotal;
+            const diff = limitTotal - totalSpent; 
+            
+            const totalInc = (state.incomes||[]).reduce((s, i) => s + (i.val||0), 0); 
+            const normalBills = (state.bills||[]).reduce((s, b) => s + (b.val||0), 0);
+            const loansTreatedAsBills = (state.loans||[]).filter(l => l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
+            const totalFix = normalBills + loansTreatedAsBills;
+            const targetSavings = Math.max(0, (totalInc - totalFix) - (dailyLimit * 30)); 
+            
+            const actualSavings = targetSavings + diff;
+            
+            const startStr = startDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' });
+            const endStr = new Date(endDate - 1).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+            
+            const reportData = {
+                periodLabel: `${startStr} - ${endStr}`,
+                daysTotal, daysEntered, topCategories, dailyLimit, averageDaily, diff, targetSavings, actualSavings, totalSpent
+            };
+            
+            state.reports[reportKey] = reportData;
+            saveToCloud();
+            
+            displayReportModal(reportData);
+        }
+
+        function displayReportModal(data) {
+            document.getElementById('reportPeriodText').innerText = data.periodLabel;
+            
+            let catHtml = '';
+            if (data.topCategories.length > 0) {
+                catHtml = data.topCategories.map(c => `<li class="flex justify-between items-center bg-gray-50 p-2.5 rounded-lg border border-gray-100"><span class="font-bold">${c.name}</span><span class="font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">%${c.pct}</span></li>`).join('');
+                catHtml = `<ul class="space-y-1.5 mb-2 mt-3">${catHtml}</ul>`;
             } else {
-                const day = String(d.getDate()).padStart(2, '0');
-                const month = String(d.getMonth() + 1).padStart(2, '0');
-                lbl.innerText = `${day}.${month}`;
+                catHtml = '<p class="text-xs text-gray-400 italic mt-3 bg-gray-50 p-2 rounded text-center">Bu dönemde hiç harcama kaydı girmedin.</p>';
             }
             
-            const yyyy = d.getFullYear();
-            const mm = String(d.getMonth() + 1).padStart(2, '0');
-            const dd = String(d.getDate()).padStart(2, '0');
-            document.getElementById('expDateInputHidden').value = `${yyyy}-${mm}-${dd}`;
+            let diffHtml = '';
+            if (data.diff >= 0) {
+                diffHtml = `<div class="bg-green-50 text-green-800 p-4 rounded-xl border border-green-200 text-center">
+                    <p class="font-black text-green-600 mb-1"><i class="fas fa-trophy text-lg"></i> Hedef Tutturuldu!</p>
+                    <p class="text-xs">Günlük hedefine uydun ve bu ay toplamda <strong class="text-base bg-green-200 px-1 rounded">₺${Math.floor(data.diff).toLocaleString()}</strong> fazladan bakiye (kâr) yarattın.</p>
+                </div>`;
+            } else {
+                diffHtml = `<div class="bg-red-50 text-red-800 p-4 rounded-xl border border-red-200 text-center">
+                    <p class="font-black text-red-600 mb-1"><i class="fas fa-exclamation-triangle text-lg"></i> Hedefi Aştık</p>
+                    <p class="text-xs">Maalesef bu ayki toplam harcama hedefini <strong class="text-base bg-red-200 px-1 rounded">₺${Math.floor(Math.abs(data.diff)).toLocaleString()}</strong> kadar ıskaladın.</p>
+                </div>`;
+            }
+
+            const html = `
+                <div class="text-center bg-gradient-to-r from-blue-50 to-indigo-50 text-indigo-800 p-3 rounded-xl border border-indigo-100 shadow-sm">
+                    Bu ay tam <span class="text-indigo-600 font-black text-lg mx-1">${data.daysTotal}</span> gündür beraberdik. Toplam <span class="text-indigo-600 font-black text-lg mx-1">${data.daysEntered}</span> gün uygulamaya veri girdin.
+                </div>
+                
+                <div>
+                    <p class="font-black text-gray-800 text-sm border-b pb-1">Harcamalarının Yıldızları (İlk 3)</p>
+                    ${catHtml}
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3 text-center mt-2">
+                    <div class="bg-white shadow-sm p-3 rounded-xl border border-gray-100">
+                        <p class="text-[9px] text-gray-400 uppercase tracking-widest font-black mb-1">Günlük Hedefin</p>
+                        <p class="text-lg font-black text-blue-600">₺${Math.floor(data.dailyLimit).toLocaleString()}</p>
+                    </div>
+                    <div class="bg-white shadow-sm p-3 rounded-xl border border-gray-100">
+                        <p class="text-[9px] text-gray-400 uppercase tracking-widest font-black mb-1">Gerçekleşen Ort.</p>
+                        <p class="text-lg font-black text-gray-800">₺${Math.floor(data.averageDaily).toLocaleString()}</p>
+                    </div>
+                </div>
+                
+                ${diffHtml}
+                
+                <div class="bg-slate-800 text-white p-4 rounded-xl shadow-inner mt-2">
+                    <div class="flex justify-between items-center border-b border-slate-600 pb-2 mb-2">
+                        <span class="text-xs text-slate-300">Birikim Hedefin:</span>
+                        <span class="font-bold">₺${Math.floor(data.targetSavings).toLocaleString()}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-slate-100 font-bold">Yapabildiğin Birikim:</span>
+                        <span class="font-black text-xl text-green-400">₺${Math.floor(data.actualSavings).toLocaleString()}</span>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('reportContent').innerHTML = html;
+            document.getElementById('monthlyReportModal').classList.remove('hidden');
+        }
+        
+        function closeMonthlyReport() {
+            document.getElementById('monthlyReportModal').classList.add('hidden');
+        }
+
+        function openReportForSelectedMonth() {
+            const filterVal = document.getElementById('analysisDateFilter').value; 
+            if (!filterVal) return showAppAlert("Lütfen önce bir dönem seçin.");
+            
+            if (state.reports && state.reports[filterVal]) {
+                displayReportModal(state.reports[filterVal]);
+            } else {
+                showAppAlert("Seçtiğiniz bu döneme ait henüz oluşturulmuş bir özet rapor bulunmuyor.");
+            }
         }
     </script>
 </body>
 </html>
-
