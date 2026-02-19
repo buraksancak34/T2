@@ -72,7 +72,7 @@
 
         /* Yanıp Sönme Efektleri */
         @keyframes pulse-red { 0%, 100% { color: #ef4444; text-shadow: 0 0 5px rgba(239, 68, 68, 0.2); } 50% { color: #fca5a5; text-shadow: 0 0 15px rgba(239, 68, 68, 0.6); } }
-        @keyframes pulse-green { 0%, 100% { color: #16a34a; text-shadow: 0 0 5px rgba(22, 163, 74, 0.2); } 50% { color: #86efac; text-shadow: 0 0 15px rgba(22, 163, 74, 0.6); } }
+        @keyframes pulse-green { 0%, 100% { color: #22c55e; text-shadow: 0 0 5px rgba(34, 197, 94, 0.2); } 50% { color: #86efac; text-shadow: 0 0 15px rgba(34, 197, 94, 0.6); } }
         .animate-pulse-red { animation: pulse-red 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         .animate-pulse-green { animation: pulse-green 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 
@@ -355,14 +355,17 @@
                     <div class="flex justify-between items-start mb-4">
                         <div>
                             <div class="flex items-center gap-2 mb-1">
-                                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest opacity-80">Bugünün Limiti</p>
-                                <button onclick="openCalcModal()" class="text-blue-300 hover:text-white text-[9px] font-bold underline decoration-dashed underline-offset-2 transition-colors cursor-pointer relative z-20">Nasıl Hesaplandı?</button>
+                                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest opacity-80">Gerçek Bakiye</p>
+                                
                             </div>
-                            <h2 id="displayDailyLimit" class="text-5xl font-black tracking-tighter leading-none">₺0</h2>
+                            <h2 id="displayCumulativeLimit" onclick="openBalanceModal()" class="text-5xl font-black tracking-tighter leading-none cursor-pointer">₺0</h2>
                         </div>
                         <div class="text-right">
-                            <p onclick="openBalanceModal()" class="text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-1 underline decoration-dashed underline-offset-4 cursor-pointer hover:text-blue-200 transition-colors" title="Detay için tıkla">Gerçek Bakiye</p>
-                            <h4 id="displayCumulativeLimit" onclick="openBalanceModal()" class="text-3xl font-black text-white tracking-tight cursor-pointer">₺0</h4>
+                             <div class="flex items-center justify-end gap-2 mb-1">
+                                <p class="text-blue-400 text-[10px] font-bold uppercase tracking-widest opacity-80">Bugünün Limiti</p>
+                                <button onclick="openCalcModal()" class="text-blue-300 hover:text-white text-[9px] font-bold underline decoration-dashed underline-offset-2 transition-colors cursor-pointer relative z-20">?</button>
+                            </div>
+                            <h4 id="displayDailyLimit" class="text-3xl font-black text-white tracking-tight">₺0</h4>
                         </div>
                     </div>
                     <div class="flex items-center gap-2 mt-6 pt-4 border-t border-white/10">
@@ -2042,7 +2045,7 @@
             
             cumEl.classList.remove('animate-pulse-red', 'animate-pulse-green');
             if (cumulative < 0) cumEl.classList.add('animate-pulse-red');
-            else if (cumulative > (state.manualDailyLimit||0)) cumEl.classList.add('animate-pulse-green');
+            else if (cumulative > 0) cumEl.classList.add('animate-pulse-green');
 
             document.getElementById('todayTotal').innerText = `Bugün: ₺${Math.floor(spentToday).toLocaleString()}`;
             
@@ -2879,7 +2882,16 @@
                     state[type][idx].excludeFromNetWorth = excluded;
                 }
                 
-                saveToCloud(); updateDashboardUI(); closeEditModal(); 
+                saveToCloud(); 
+                
+                // Eğer wizard ekranı açıksa orayı güncelle, değilse dashboard'u güncelle
+                if (!document.getElementById('wizardScreen').classList.contains('hidden')) {
+                    renderWizardLists();
+                } else {
+                    updateDashboardUI();
+                }
+                
+                closeEditModal(); 
             } 
         }
         function closeEditModal() { 
@@ -3322,6 +3334,7 @@
                 html += `
                     <div class="flex items-center gap-2 mb-2 bg-gray-50 p-2 rounded-xl border border-gray-100 ${fadeClass} hover:opacity-100 hover:grayscale-0 transition-all">
                         ${inputHtml}
+                        <button onclick="openEditModal('${key}', ${i})" class="w-8 h-8 flex items-center justify-center bg-blue-50 text-blue-500 rounded-lg hover:bg-blue-100 transition-colors mr-1"><i class="fas fa-pen text-xs"></i></button>
                         <button onclick="removeItem('${key}', ${i})" class="w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors"><i class="fas fa-trash text-xs"></i></button>
                     </div>
                 `;
