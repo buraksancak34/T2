@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" class="overflow-x-hidden">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -28,13 +28,19 @@
         :root { font-size: 14px; }
         @media (max-width: 768px) { :root { font-size: 12px; } }
 
+        html, body {
+            overflow-x: hidden; /* Yatay kaymayı engeller */
+            width: 100%;
+            position: relative;
+        }
+
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: #f8fafc; 
             color: #1e293b;
             -webkit-tap-highlight-color: transparent;
             user-select: none; -webkit-user-select: none;
-            overflow-x: hidden; padding-bottom: 80px; 
+            padding-bottom: 80px; 
         }
         
         input, textarea { user-select: text; -webkit-user-select: text; }
@@ -747,7 +753,7 @@
     <!-- AYLIK RAPOR MODALI -->
     <div id="monthlyReportModal" class="fixed inset-0 z-[85] hidden flex items-center justify-center">
         <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeMonthlyReport()"></div>
-        <div class="bg-white rounded-[2rem] p-6 w-[90%] max-w-md relative z-10 shadow-2xl animate-fade-in max-h-[85vh] flex flex-col border border-indigo-100">
+        <div class="bg-white rounded-[2rem] p-5 w-[90%] max-w-sm relative z-10 shadow-2xl animate-fade-in max-h-[80vh] flex flex-col border border-indigo-100 mb-20">
             <!-- Header -->
             <div class="text-center mb-4">
                 <div class="w-16 h-16 bg-gradient-to-tr from-indigo-500 to-purple-500 text-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg shadow-indigo-200 animate-bounce-slow">
@@ -3042,6 +3048,7 @@
                     lastSalaryDate.setMonth(lastSalaryDate.getMonth() - 1);
                 }
                 startCalc = lastSalaryDate;
+                startCalc.setHours(0,0,0,0);
             } else if (calcMethod === 'today') {
                 btnToday.className = activeBtnClass;
                 startCalc = new Date();
