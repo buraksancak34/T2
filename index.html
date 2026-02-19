@@ -923,6 +923,11 @@
             const modal = document.getElementById('specialDayModal');
             modal.classList.remove('hidden');
             
+            // Paneli geçmişe ekle
+            if (!history.state || !history.state.popup) {
+                history.pushState({ popup: true }, null, "");
+            }
+            
             runConfetti();
         }
         
@@ -975,6 +980,12 @@
             pendingConfirmAction = callback;
             const modal = document.getElementById('customConfirmModal');
             modal.classList.remove('hidden');
+            
+            // Paneli geçmişe ekle
+            if (!history.state || !history.state.popup) {
+                history.pushState({ popup: true }, null, "");
+            }
+
             const btn = document.getElementById('customConfirmBtn');
             const newBtn = btn.cloneNode(true);
             btn.parentNode.replaceChild(newBtn, btn);
@@ -1110,6 +1121,12 @@
             document.getElementById('adminModal').classList.remove('hidden');
             setTimeout(() => document.getElementById('adminModal').classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
+            
+            // Paneli geçmişe ekle
+            if (!history.state || !history.state.popup) {
+                history.pushState({ popup: true }, null, "");
+            }
+            
             switchAdminTab('users');
         }
 
@@ -1225,6 +1242,11 @@
             modal.classList.remove('hidden');
             setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
+            
+            // Paneli geçmişe ekle
+            if (!history.state || !history.state.popup) {
+                history.pushState({ popup: true }, null, "");
+            }
         }
 
         function closeContactModal() {
@@ -1677,6 +1699,11 @@
             setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
             
+            // Paneli geçmişe ekle
+            if (!history.state || !history.state.popup) {
+                history.pushState({ popup: true }, null, "");
+            }
+
             renderFamilyList();
         }
         function closeSettingsPanel() { 
@@ -2097,6 +2124,11 @@
             modal.classList.remove('hidden');
             setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
+            
+            // Paneli geçmişe ekle
+            if (!history.state || !history.state.popup) {
+                history.pushState({ popup: true }, null, "");
+            }
         }
 
         function closeCategoryModal() {
@@ -2705,6 +2737,11 @@
             modal.classList.remove('hidden');
             setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active'); 
+            
+            // Paneli geçmişe ekle
+            if (!history.state || !history.state.popup) {
+                history.pushState({ popup: true }, null, "");
+            }
         }
         
         function calcEditLoan() {
@@ -3016,6 +3053,11 @@
             modal.classList.remove('hidden');
             setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
+            
+            // Paneli geçmişe ekle
+            if (!history.state || !history.state.popup) {
+                history.pushState({ popup: true }, null, "");
+            }
         }
 
         function closeLoanPlanModal() {
@@ -3048,7 +3090,6 @@
                     lastSalaryDate.setMonth(lastSalaryDate.getMonth() - 1);
                 }
                 startCalc = lastSalaryDate;
-                startCalc.setHours(0,0,0,0);
             } else if (calcMethod === 'today') {
                 btnToday.className = activeBtnClass;
                 startCalc = new Date();
@@ -3120,6 +3161,11 @@
             modal.classList.remove('hidden');
             setTimeout(() => modal.classList.add('open'), 10);
             document.getElementById('overlay').classList.add('active');
+            
+            // Paneli geçmişe ekle
+            if (!history.state || !history.state.popup) {
+                history.pushState({ popup: true }, null, "");
+            }
         }
 
         function closeBalanceModal() {
@@ -3424,7 +3470,12 @@
             const modal = document.getElementById('calcModal');
             modal.classList.remove('hidden');
             setTimeout(() => modal.classList.add('open'), 10);
-            document.getElementById('overlay').classList.add('active'); 
+            document.getElementById('overlay').classList.add('active');
+            
+            // Paneli geçmişe ekle
+            if (!history.state || !history.state.popup) {
+                history.pushState({ popup: true }, null, "");
+            }
         }
         function closeCalcModal() { 
             const modal = document.getElementById('calcModal');
@@ -3590,6 +3641,11 @@
             
             document.getElementById('reportContent').innerHTML = html;
             document.getElementById('monthlyReportModal').classList.remove('hidden');
+            
+            // Paneli geçmişe ekle
+            if (!history.state || !history.state.popup) {
+                history.pushState({ popup: true }, null, "");
+            }
         }
         
         function closeMonthlyReport() {
@@ -3606,6 +3662,18 @@
                 showAppAlert("Seçtiğiniz bu döneme ait henüz oluşturulmuş bir özet rapor bulunmuyor.");
             }
         }
+
+        // --- GERİ TUŞU YÖNETİMİ ---
+        window.addEventListener('popstate', function(event) {
+            // Geri tuşuna basılınca tüm açık panelleri kapat
+            closeAllPopups();
+            // Ekstra güvenlik için diğer modalları da manuel gizle
+            document.getElementById('monthlyReportModal').classList.add('hidden');
+            document.getElementById('specialDayModal').classList.add('hidden');
+            document.getElementById('appAlertModal').classList.add('hidden');
+            document.getElementById('customConfirmModal').classList.add('hidden');
+        });
+
     </script>
 </body>
 </html>
