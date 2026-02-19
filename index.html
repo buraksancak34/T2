@@ -233,7 +233,8 @@
                 <input type="number" id="regDailyLimit" class="w-full p-3 bg-blue-50 border border-blue-200 rounded-xl focus:ring-4 focus:ring-blue-100 outline-none font-black text-blue-700 transition-all text-xs hidden placeholder-blue-400" placeholder="Günlük Harcama Hedefiniz (TL)">
             </div>
             
-            <input type="text" id="emailInput" class="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-xs" placeholder="E-posta veya Kullanıcı Adı">
+            <!-- DEĞİŞİKLİK 1: Placeholder sadece "E-posta" yapıldı -->
+            <input type="text" id="emailInput" class="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-xs" placeholder="E-posta">
             <input type="password" id="passwordInput" class="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 outline-none font-bold text-gray-700 transition-all text-xs" placeholder="Şifre">
             
             <button id="loginBtn" onclick="firebaseLogin()" class="w-full bg-blue-600 text-white font-black py-3 rounded-xl shadow-xl shadow-blue-200 active:scale-95 transition-all hover:bg-blue-700 flex justify-center items-center gap-2 text-sm">
@@ -423,7 +424,7 @@
                     <button id="addExpBtn" onclick="addExpense()" class="bg-blue-600 text-white w-12 h-12 rounded-xl hover:bg-blue-700 active:scale-90 transition-all shadow-lg shadow-blue-200 flex items-center justify-center shrink-0"><i class="fas fa-plus text-lg"></i></button>
                 </div>
                 
-                <!-- Hızlı Tarih Seçici -->
+                <!-- Hızlı Tarih Seçici - DEĞİŞİKLİK 3: Sol ok arttırır (geçmiş), Sağ ok azaltır (gelecek) -->
                 <div class="flex items-center gap-2 bg-gray-50 p-2 rounded-xl border border-gray-100 w-full mt-1">
                     <button onclick="changeExpenseDate(1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-500 hover:text-blue-600 shadow-sm transition-colors border border-gray-200"><i class="fas fa-chevron-left text-xs"></i></button>
                     <div class="relative flex-1 text-center">
@@ -1141,7 +1142,7 @@
                     } else {
                         document.getElementById('btnAdmin').classList.add('hidden');
                          document.getElementById('btnAdminSettings').classList.add('hidden');
-                         checkSpecialDayConfig(); // Normal kullanıcı için kontrol et
+                        checkSpecialDayConfig(); // Normal kullanıcı için kontrol et
                     }
                     
                     // Sistem mesajlarını çek (Admin olmayanlar için de güncel liste)
@@ -1673,7 +1674,7 @@
             document.getElementById('registerBtn').classList.add('hidden');
             document.getElementById('registerFields').classList.add('hidden');
             document.getElementById('regDailyLimit').classList.add('hidden');
-            document.getElementById('emailInput').placeholder = "E-posta veya Kullanıcı Adı";
+            document.getElementById('emailInput').placeholder = "E-posta";
             document.getElementById('actionButtons').classList.remove('hidden');
             document.getElementById('backToLoginText').classList.add('hidden');
             document.getElementById('forgotPassText').classList.remove('hidden');
@@ -2184,11 +2185,9 @@
 
         // --- TARİH NAVİGASYON MANTIĞI ---
         function changeExpenseDate(delta) {
-            if (delta === -1) {
-                currentExpenseDateOffset += 1;
-            } else {
-                currentExpenseDateOffset -= 1;
-            }
+            // DEĞİŞİKLİK 3: delta +1 (Sol buton) artık offset'i arttırarak geçmişe götürür.
+            // delta -1 (Sağ buton) artık offset'i azaltarak bugüne yaklaştırır.
+            currentExpenseDateOffset += delta;
             
             if (currentExpenseDateOffset < 0) currentExpenseDateOffset = 0;
             updateExpenseDateLabel();
@@ -2660,7 +2659,8 @@
         function renderHistoryList() {
             const list = document.getElementById('historyList');
             if(!list) return;
-            if(state.expenses.length === 0) { list.innerHTML = '<div class="text-center text-gray-400 text-xs py-4">Harcama yok.</div>'; return; }
+            // DEĞİŞİKLİK 2: Veri yoksa bile "Bugün"ü gösterelim
+            // if(state.expenses.length === 0) { list.innerHTML = '<div class="text-center text-gray-400 text-xs py-4">Harcama yok.</div>'; return; }
             
             const myName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Ben';
             
@@ -2672,7 +2672,21 @@
                 grouped[e.date].push({ ...e, originalIndex: origIdx });
             });
 
-            const sortedDates = [...new Set(sortedExpenses.map(e => e.date))];
+            // DEĞİŞİKLİK 2: Bugün tarihini mutlaka listenin en başına ekle
+            const todayStr = new Date().toLocaleDateString('tr-TR');
+            let sortedDates = [...new Set(sortedExpenses.map(e => e.date))];
+            
+            if (sortedDates.length === 0 || sortedDates[0] !== todayStr) {
+                // Eğer bugün harcama yoksa, manuel olarak ekle
+                if (!sortedDates.includes(todayStr)) {
+                    sortedDates.unshift(todayStr);
+                } else {
+                    // Bugün listede var ama başta değilse (bu teknik olarak imkansız çünkü tarih sırasına göre ama yine de)
+                    // sortedDates'in zaten string compare ile sıralanmadığını, harcama eklenme sırasına göre olduğunu unutma.
+                    // En yeni harcama en üstte olduğu için, bugün harcama yaptıysak zaten en üstte olur.
+                    // Yapmadıysak sortedDates içinde yoktur.
+                }
+            }
 
             if (window.currentHistoryDateIndex >= sortedDates.length) window.currentHistoryDateIndex = sortedDates.length - 1;
             if (window.currentHistoryDateIndex < 0) window.currentHistoryDateIndex = 0;
@@ -2687,34 +2701,38 @@
             <div class="mb-5">
                 <div class="flex items-center justify-between gap-4 mb-3 bg-blue-50 p-2 rounded-xl border border-blue-100">
                     <button onclick="changeHistoryDate(1)" class="w-7 h-7 flex items-center justify-center rounded-lg bg-white text-blue-600 shadow-sm hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" ${!hasNext ? 'disabled' : ''}><i class="fas fa-chevron-left text-xs"></i></button>
-                    <div class="text-blue-800 px-3 py-1 rounded-lg text-xs font-black tracking-widest text-center flex-1">${currentDate}</div>
+                    <div class="text-blue-800 px-3 py-1 rounded-lg text-xs font-black tracking-widest text-center flex-1">${currentDate === todayStr ? 'Bugün' : currentDate}</div>
                     <button onclick="changeHistoryDate(-1)" class="w-7 h-7 flex items-center justify-center rounded-lg bg-white text-blue-600 shadow-sm hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" ${!hasPrev ? 'disabled' : ''}><i class="fas fa-chevron-right text-xs"></i></button>
                 </div>
                 <div class="space-y-2">`;
             
-            expensesForDate.forEach(e => {
-                const canEdit = currentUserRole === 'owner' || currentUserRole === 'full' || e.addedBy === myName || e.addedBy === 'Ben';
-                const initials = e.addedBy.substring(0, 2).toUpperCase();
-                html += `
-                    <div class="flex justify-between items-center p-2.5 bg-white border border-gray-100 rounded-xl hover:shadow-md transition-all group">
-                        <div class="flex items-center gap-2">
-                            <div class="w-7 h-7 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 font-black text-[10px] uppercase border border-gray-200">
-                                ${initials}
+            if (expensesForDate && expensesForDate.length > 0) {
+                expensesForDate.forEach(e => {
+                    const canEdit = currentUserRole === 'owner' || currentUserRole === 'full' || e.addedBy === myName || e.addedBy === 'Ben';
+                    const initials = e.addedBy.substring(0, 2).toUpperCase();
+                    html += `
+                        <div class="flex justify-between items-center p-2.5 bg-white border border-gray-100 rounded-xl hover:shadow-md transition-all group">
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 font-black text-[10px] uppercase border border-gray-200">
+                                    ${initials}
+                                </div>
+                                <div>
+                                    <p class="font-black text-gray-800 text-xs">${e.desc}</p>
+                                    <p class="text-[9px] text-gray-400 font-bold uppercase tracking-wide">
+                                        ${e.category && e.category !== 'Diğer' ? `<span class="bg-blue-50 text-blue-600 px-1 rounded mr-1">${e.category}</span>` : ''} 
+                                        ${e.addedBy}
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <p class="font-black text-gray-800 text-xs">${e.desc}</p>
-                                <p class="text-[9px] text-gray-400 font-bold uppercase tracking-wide">
-                                    ${e.category && e.category !== 'Diğer' ? `<span class="bg-blue-50 text-blue-600 px-1 rounded mr-1">${e.category}</span>` : ''} 
-                                    ${e.addedBy}
-                                </p>
+                            <div class="flex items-center gap-2">
+                                <span class="font-black text-red-500 text-sm">-₺${Math.floor(e.amount).toLocaleString()}</span>
+                                ${canEdit ? `<div class="flex gap-1"><button onclick="editExpense(${e.originalIndex})" class="text-blue-300 hover:text-blue-500"><i class="fas fa-pen text-xs"></i></button><button onclick="deleteExpense(${e.originalIndex})" class="text-gray-200 hover:text-red-500"><i class="fas fa-trash-alt text-xs"></i></button></div>` : ''}
                             </div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="font-black text-red-500 text-sm">-₺${Math.floor(e.amount).toLocaleString()}</span>
-                            ${canEdit ? `<div class="flex gap-1"><button onclick="editExpense(${e.originalIndex})" class="text-blue-300 hover:text-blue-500"><i class="fas fa-pen text-xs"></i></button><button onclick="deleteExpense(${e.originalIndex})" class="text-gray-200 hover:text-red-500"><i class="fas fa-trash-alt text-xs"></i></button></div>` : ''}
-                        </div>
-                    </div>`;
-            });
+                        </div>`;
+                });
+            } else {
+                html += `<div class="text-center text-gray-400 text-xs py-4 italic">Bu tarihte harcama yok.</div>`;
+            }
             html += `</div></div>`;
             list.innerHTML = html;
         }
@@ -3312,7 +3330,7 @@
                             <span class="text-gray-800">${daysPassed} Gün</span>
                         </div>
                         <div class="flex justify-between items-center text-xs font-bold text-green-600 border-b border-gray-100 pb-2">
-                            <span>Biriken Limit (${daysPassed} x ₺${Math.floor(dailyLimit)})</span>
+                            <span>Biriken Limit (${daysPassed} x ₺${Math.floor(daily)})</span>
                             <span>+ ₺${Math.floor(accumulatedLimit).toLocaleString()}</span>
                         </div>
                         <div class="flex justify-between items-center text-xs font-bold text-red-500 border-b border-gray-100 pb-2">
