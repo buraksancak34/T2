@@ -1,1 +1,10 @@
-
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "UYGULAMANIZIN_PAKET_ADI_BURAYA_GELECEK",
+    "sha256_cert_fingerprints": [
+      "D5:31:C5:A8:47:59:E0:24:FD:AE:59:EA:72:75:F6:F6:10:36:A6:1E:F9:2C:86:94:2D:D4:82:A4:15:74:F5:0E"
+    ]
+  }
+}]
