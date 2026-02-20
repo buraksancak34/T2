@@ -5,21 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Birikim Koçum | Gelir-Gider Takip</title>
     
-    <!-- PWA ve Mobil Uygulama Ayarları - DİNAMİK MANİFEST EKLENTİSİ -->
-    <link id="dynamic-manifest" rel="manifest">
-    <script>
-        const manifestData = {
-            "name": "Birikim Koçum",
-            "short_name": "Birikim Koçum",
-            "start_url": window.location.pathname,
-            "display": "standalone",
-            "orientation": "portrait",
-            "background_color": "#f8fafc",
-            "theme_color": "#2563eb",
-            "icons": [{"src": "https://cdn-icons-png.flaticon.com/512/2382/2382461.png", "sizes": "512x512", "type": "image/png"}]
-        };
-        document.getElementById('dynamic-manifest').setAttribute('href', 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifestData)));
-    </script>
+    <!-- PWA ve Mobil Uygulama Ayarları - DİREKT GÖMÜLÜ MANİFEST (Eski Cihazlar İçin) -->
+    <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Birikim%20Ko%C3%A7um%22%2C%22short_name%22%3A%22Birikim%20Ko%C3%A7um%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%23f8fafc%22%2C%22theme_color%22%3A%22%232563eb%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fcdn-icons-png.flaticon.com%2F512%2F2382%2F2382461.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
     
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
