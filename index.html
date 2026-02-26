@@ -942,7 +942,12 @@
         let isPanelOpenInHistory = false;
         let ignoreNextPop = false;
 
+        // Sadece mobil cihazlarda geri tuşuyla kapatma özelliğini aktifleştiriyoruz.
+        // PC tarayıcılarında history.back() sekmeyi tamamen kapatma/farklı siteye atma sorunu yaratabilir.
+        const isMobileView = () => window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
         function pushPanelHistory() {
+            if (!isMobileView()) return;
             if (!isPanelOpenInHistory) {
                 history.pushState({ panelOpen: true }, "", "");
                 isPanelOpenInHistory = true;
@@ -950,6 +955,7 @@
         }
 
         function popPanelHistory() {
+            if (!isMobileView()) return;
             if (isPanelOpenInHistory) {
                 isPanelOpenInHistory = false;
                 ignoreNextPop = true;
@@ -1467,6 +1473,10 @@
         async function inspectUser(targetUid, targetName) {
             if (!originalAdminUid) originalAdminUid = currentUser.uid;
             
+            // Paneli asenkron işlemden önce hemen kapatıyoruz ki hem hızlı hissettirsin hem de PC'de tarayıcı kafası karışmasın.
+            closeAdminPanel();
+            document.getElementById('dashWelcome').innerText = "Yükleniyor...";
+            
             try {
                 const doc = await db.collection("users").doc(targetUid).get();
                 if (doc.exists) {
@@ -1474,16 +1484,20 @@
                     currentPlanId = targetUid; 
                     currentUserRole = 'owner'; 
                     
-                    closeAdminPanel();
-                    
                     updateDashboardUI();
                     
                     document.getElementById('adminModeBanner').classList.remove('hidden');
                     document.getElementById('adminInspectName').innerText = targetName;
                     
                     document.getElementById('overlay').classList.remove('active');
+                } else {
+                    showAppAlert("Kullanıcı verisi bulunamadı.");
+                    exitAdminInspect();
                 }
-            } catch(e) { showAppAlert("Hata: " + e.message); }
+            } catch(e) { 
+                showAppAlert("Hata: " + e.message); 
+                exitAdminInspect();
+            }
         }
 
         async function exitAdminInspect() {
