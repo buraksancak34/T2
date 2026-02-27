@@ -288,13 +288,16 @@
                             </div>
                             <h2 id="displayCumulativeLimit" onclick="openBalanceModal()" class="text-5xl font-black tracking-tighter leading-none cursor-pointer">₺0</h2>
                             
-                            <div class="flex flex-wrap gap-1 mt-2 items-center">
-                                <button onclick="setBalanceMethod('salary')" id="btnCalcSalary" class="text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10">Gelir Günü</button>
-                                <button onclick="setBalanceMethod('register')" id="btnCalcRegister" class="text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10">Kayıt Günü</button>
-                                <div class="relative overflow-hidden inline-block">
-                                    <input type="date" id="customBalanceDate" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="setCustomBalanceDate(this.value)">
-                                    <button id="btnCalcCustom" class="text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1">
-                                        Tarih: <span id="customDateDisplay">Seç</span>
+                            <div class="flex flex-col gap-2 mt-3">
+                                <div class="flex gap-2 items-center">
+                                    <button onclick="setBalanceMethod('salary')" id="btnCalcSalary" class="text-[10px] font-bold px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10">Gelir Günü</button>
+                                    <button onclick="setBalanceMethod('register')" id="btnCalcRegister" class="text-[10px] font-bold px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10">Kayıt Günü</button>
+                                </div>
+                                <div class="relative overflow-hidden block w-full">
+                                    <input type="date" id="customBalanceDate" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 block" onchange="setCustomBalanceDate(this.value)">
+                                    <button id="btnCalcCustom" class="w-full text-[10px] font-bold px-4 py-2.5 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center justify-between gap-1 shadow-sm">
+                                        <span><i class="fas fa-calendar-alt mr-1"></i> Şu tarihten itibaren hesapla:</span>
+                                        <span id="customDateDisplay" class="bg-black/30 px-2 py-1 rounded text-white">Seç</span>
                                     </button>
                                 </div>
                             </div>
@@ -2052,11 +2055,13 @@
             const customDateDisplay = document.getElementById('customDateDisplay');
             
             [btnSalary, btnRegister].forEach(btn => {
-                btn.className = "text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10";
+                btn.className = "text-[10px] font-bold px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10";
             });
-            btnCustom.className = "text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1";
+            btnCustom.className = "w-full text-[10px] font-bold px-4 py-2.5 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center justify-between gap-1 shadow-sm";
             
-            const activeBtnClass = "text-[9px] font-bold px-2 py-1 rounded bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
+            const activeBtnClass = "text-[10px] font-bold px-3 py-1.5 rounded bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
+            const activeCustomBtnClass = "w-full text-[10px] font-bold px-4 py-2.5 rounded bg-green-500 text-white shadow-md border border-green-400 transform scale-[1.02] pointer-events-none flex items-center justify-between gap-1 shadow-sm";
+
             if (calcMethod === 'salary') {
                 btnSalary.className = activeBtnClass;
                 const salaryDay = state.salaryDay || 15;
@@ -2067,7 +2072,7 @@
                 startCalc = lastSalaryDate;
                 startCalc.setHours(0,0,0,0);
             } else if (calcMethod === 'custom') {
-                btnCustom.className = activeBtnClass + " pointer-events-none flex items-center gap-1";
+                btnCustom.className = activeCustomBtnClass;
                 startCalc = new Date(state.customBalanceDate || state.registrationDate);
                 if(isNaN(startCalc.getTime())) startCalc = new Date();
                 startCalc.setHours(0,0,0,0);
@@ -3230,11 +3235,11 @@
             const customDateDisplay = document.getElementById('customDateDisplay');
             
             [btnSalary, btnRegister].forEach(btn => {
-                btn.className = "text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10";
+                btn.className = "text-[10px] font-bold px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10";
             });
-            btnCustom.className = "text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1";
+            btnCustom.className = "w-full text-[10px] font-bold px-4 py-2.5 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center justify-between gap-1 shadow-sm";
             
-            const activeBtnClass = "text-[9px] font-bold px-2 py-1 rounded bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
+            const activeBtnClass = "text-[10px] font-bold px-3 py-1.5 rounded bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
             if (calcMethod === 'salary') {
                 btnSalary.className = activeBtnClass;
                 const salaryDay = state.salaryDay || 15;
