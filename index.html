@@ -2078,9 +2078,8 @@
                 startCalc.setHours(0,0,0,0);
             }
 
-            if (state.customBalanceDate) {
-                const d = new Date(state.customBalanceDate);
-                customDateDisplay.innerText = d.toLocaleDateString('tr-TR', {day:'2-digit', month:'2-digit', year:'numeric'});
+            if (startCalc) {
+                customDateDisplay.innerText = startCalc.toLocaleDateString('tr-TR', {day:'2-digit', month:'2-digit', year:'numeric'});
             } else {
                 customDateDisplay.innerText = "Seç";
             }
@@ -3257,9 +3256,8 @@
                 startCalc.setHours(0,0,0,0);
             }
 
-            if (state.customBalanceDate) {
-                const d = new Date(state.customBalanceDate);
-                customDateDisplay.innerText = d.toLocaleDateString('tr-TR', {day:'2-digit', month:'2-digit', year:'numeric'});
+            if (startCalc) {
+                customDateDisplay.innerText = startCalc.toLocaleDateString('tr-TR', {day:'2-digit', month:'2-digit', year:'numeric'});
             } else {
                 customDateDisplay.innerText = "Seç";
             }
