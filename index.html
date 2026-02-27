@@ -288,10 +288,15 @@
                             </div>
                             <h2 id="displayCumulativeLimit" onclick="openBalanceModal()" class="text-5xl font-black tracking-tighter leading-none cursor-pointer">₺0</h2>
                             
-                            <div class="flex gap-1 mt-2">
+                            <div class="flex flex-wrap gap-1 mt-2 items-center">
                                 <button onclick="setBalanceMethod('salary')" id="btnCalcSalary" class="text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10">Gelir Günü</button>
                                 <button onclick="setBalanceMethod('register')" id="btnCalcRegister" class="text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10">Kayıt Günü</button>
-                                <button onclick="setBalanceMethod('today')" id="btnCalcToday" class="text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10">Bugün</button>
+                                <div class="relative overflow-hidden inline-block">
+                                    <input type="date" id="customBalanceDate" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="setCustomBalanceDate(this.value)">
+                                    <button id="btnCalcCustom" class="text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1">
+                                        Tarih: <span id="customDateDisplay">Seç</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div class="text-right">
@@ -1090,6 +1095,7 @@
             step: 1, salaryDay: 15,
             registrationDate: new Date().toISOString(),
             balanceCalcMethod: 'register', 
+            customBalanceDate: null,
             incomes: [{ name: 'Maaş', val: null }], 
             bills: [
                 { name: 'Kira', val: null }, { name: 'Aidat', val: null }, { name: 'Elektrik', val: null },
@@ -2042,11 +2048,13 @@
             
             const btnSalary = document.getElementById('btnCalcSalary');
             const btnRegister = document.getElementById('btnCalcRegister');
-            const btnToday = document.getElementById('btnCalcToday');
+            const btnCustom = document.getElementById('btnCalcCustom');
+            const customDateDisplay = document.getElementById('customDateDisplay');
             
-            [btnSalary, btnRegister, btnToday].forEach(btn => {
+            [btnSalary, btnRegister].forEach(btn => {
                 btn.className = "text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10";
             });
+            btnCustom.className = "text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1";
             
             const activeBtnClass = "text-[9px] font-bold px-2 py-1 rounded bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
             if (calcMethod === 'salary') {
@@ -2058,15 +2066,23 @@
                 }
                 startCalc = lastSalaryDate;
                 startCalc.setHours(0,0,0,0);
-            } else if (calcMethod === 'today') {
-                btnToday.className = activeBtnClass;
-                startCalc = new Date();
+            } else if (calcMethod === 'custom') {
+                btnCustom.className = activeBtnClass + " pointer-events-none flex items-center gap-1";
+                startCalc = new Date(state.customBalanceDate || state.registrationDate);
+                if(isNaN(startCalc.getTime())) startCalc = new Date();
                 startCalc.setHours(0,0,0,0);
             } else {
                 btnRegister.className = activeBtnClass;
                 startCalc = new Date(state.registrationDate);
                 if(isNaN(startCalc.getTime())) startCalc = new Date();
                 startCalc.setHours(0,0,0,0);
+            }
+
+            if (state.customBalanceDate) {
+                const d = new Date(state.customBalanceDate);
+                customDateDisplay.innerText = d.toLocaleDateString('tr-TR', {day:'2-digit', month:'2-digit', year:'numeric'});
+            } else {
+                customDateDisplay.innerText = "Seç";
             }
 
             const daysPassed = Math.max(1, Math.ceil(Math.abs(now - startCalc) / (1000 * 60 * 60 * 24))); 
@@ -2161,6 +2177,14 @@
         
         function setBalanceMethod(method) {
             state.balanceCalcMethod = method;
+            saveToCloud();
+            updateDashboardUI();
+        }
+        
+        function setCustomBalanceDate(val) {
+            if(!val) return;
+            state.customBalanceDate = val;
+            state.balanceCalcMethod = 'custom';
             saveToCloud();
             updateDashboardUI();
         }
@@ -3203,11 +3227,13 @@
             
             const btnSalary = document.getElementById('btnCalcSalary');
             const btnRegister = document.getElementById('btnCalcRegister');
-            const btnToday = document.getElementById('btnCalcToday');
+            const btnCustom = document.getElementById('btnCalcCustom');
+            const customDateDisplay = document.getElementById('customDateDisplay');
             
-            [btnSalary, btnRegister, btnToday].forEach(btn => {
+            [btnSalary, btnRegister].forEach(btn => {
                 btn.className = "text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10";
             });
+            btnCustom.className = "text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1";
             
             const activeBtnClass = "text-[9px] font-bold px-2 py-1 rounded bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
             if (calcMethod === 'salary') {
@@ -3218,14 +3244,24 @@
                     lastSalaryDate.setMonth(lastSalaryDate.getMonth() - 1);
                 }
                 startCalc = lastSalaryDate;
-            } else if (calcMethod === 'today') {
-                btnToday.className = activeBtnClass;
-                startCalc = new Date();
+                startCalc.setHours(0,0,0,0);
+            } else if (calcMethod === 'custom') {
+                btnCustom.className = activeBtnClass + " pointer-events-none flex items-center gap-1";
+                startCalc = new Date(state.customBalanceDate || state.registrationDate);
+                if(isNaN(startCalc.getTime())) startCalc = new Date();
                 startCalc.setHours(0,0,0,0);
             } else {
                 btnRegister.className = activeBtnClass;
                 startCalc = new Date(state.registrationDate);
                 if(isNaN(startCalc.getTime())) startCalc = new Date();
+                startCalc.setHours(0,0,0,0);
+            }
+
+            if (state.customBalanceDate) {
+                const d = new Date(state.customBalanceDate);
+                customDateDisplay.innerText = d.toLocaleDateString('tr-TR', {day:'2-digit', month:'2-digit', year:'numeric'});
+            } else {
+                customDateDisplay.innerText = "Seç";
             }
 
             const daysPassed = Math.max(1, Math.ceil(Math.abs(now - startCalc) / (1000 * 60 * 60 * 24))); 
@@ -3260,7 +3296,7 @@
                     <div class="space-y-3 pt-2">
                         <div class="flex justify-between items-center text-xs font-bold text-gray-600 border-b border-gray-100 pb-2">
                             <span>Hesap Başlangıcı</span>
-                            <span class="text-gray-800">${startCalc.toLocaleDateString('tr-TR')} ${isSalaryBased ? '<span class="text-[9px] bg-yellow-100 text-yellow-700 px-1 rounded ml-1">Maaş Günü</span>' : (calcMethod === 'today' ? '<span class="text-[9px] bg-purple-100 text-purple-700 px-1 rounded ml-1">Bugün</span>' : '<span class="text-[9px] bg-gray-100 text-gray-500 px-1 rounded ml-1">Kayıt Tarihi</span>')}</span>
+                            <span class="text-gray-800">${startCalc.toLocaleDateString('tr-TR')} ${isSalaryBased ? '<span class="text-[9px] bg-yellow-100 text-yellow-700 px-1 rounded ml-1">Maaş Günü</span>' : (calcMethod === 'custom' ? '<span class="text-[9px] bg-blue-100 text-blue-700 px-1 rounded ml-1">Özel Tarih</span>' : '<span class="text-[9px] bg-gray-100 text-gray-500 px-1 rounded ml-1">Kayıt Tarihi</span>')}</span>
                         </div>
                         <div class="flex justify-between items-center text-xs font-bold text-gray-600 border-b border-gray-100 pb-2">
                             <span>Geçen Gün</span>
