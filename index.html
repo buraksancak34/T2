@@ -76,8 +76,8 @@
         .side-panel { position: fixed; top: 0; right: 0; height: 100%; width: 100%; max-width: 28rem; background: white; z-index: 60; box-shadow: -10px 0 30px rgba(0,0,0,0.1); transform: translateX(100%); visibility: hidden; transition: transform 0.3s ease-in-out, visibility 0s linear 0.3s; display: flex; flex-direction: column; }
         .side-panel.open { transform: translateX(0); visibility: visible; transition: transform 0.3s ease-in-out, visibility 0s linear 0s; }
 
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-top: 1px solid #e2e8f0; display: flex; justify-content: space-around; items-center; z-index: 50; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -5px 20px rgba(0,0,0,0.05); }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #64748b; font-size: 0.7rem; font-weight: 700; gap: 4px; padding: 5px; width: 20%; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-top: 1px solid #e2e8f0; display: flex; justify-content: space-around; align-items: center; z-index: 50; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -5px 20px rgba(0,0,0,0.05); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #64748b; font-size: 0.7rem; font-weight: 700; gap: 4px; padding: 5px; width: 20%; cursor: pointer;}
         .nav-item i { font-size: 1.3rem; margin-bottom: 2px; }
         .nav-center-btn { background: #2563eb; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: -30px; border: 4px solid #f8fafc; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
         .nav-center-btn i { font-size: 1.5rem; margin: 0; }
@@ -323,7 +323,7 @@
             </div>
 
             <!-- TARİH SEÇİCİ (ORTALANMIŞ VE DETAYLI) -->
-            <div class="flex justify-center mb-4">
+            <div class="flex justify-center mb-2">
                 <div class="flex items-center gap-3 bg-red-50 p-2 rounded-2xl border border-red-100 shadow-sm w-full max-w-[250px]">
                     <button onclick="changeExpenseDate(1)" class="w-8 h-8 shrink-0 flex items-center justify-center bg-white rounded-xl text-red-400 hover:text-red-600 shadow-sm transition-transform active:scale-95 border border-red-50"><i class="fas fa-chevron-left text-sm"></i></button>
                     <div class="relative text-center flex-1">
@@ -335,6 +335,13 @@
                     </div>
                     <button onclick="changeExpenseDate(-1)" class="w-8 h-8 shrink-0 flex items-center justify-center bg-white rounded-xl text-red-400 hover:text-red-600 shadow-sm transition-transform active:scale-95 border border-red-50"><i class="fas fa-chevron-right text-sm"></i></button>
                 </div>
+            </div>
+            
+            <!-- BUGÜNE DÖN BUTONU -->
+            <div id="returnToTodayBtnContainer" class="flex justify-center mb-4 hidden animate-fade-in">
+                <button onclick="returnToToday()" class="bg-green-500 text-white px-5 py-1.5 rounded-full text-[10px] font-black shadow-lg shadow-green-200 hover:bg-green-600 active:scale-95 transition-all flex items-center gap-1 border-2 border-green-100 animate-pulse">
+                    <i class="fas fa-undo"></i> BUGÜNE DÖN
+                </button>
             </div>
             
             <div class="flex flex-col gap-3">
@@ -526,8 +533,8 @@
             <i class="fas fa-chart-pie"></i>
             <span>Analiz</span>
         </div>
-        <div class="nav-item">
-            <div class="nav-center-btn" onclick="scrollToAddExpense()">
+        <div class="nav-item" onclick="scrollToAddExpense()">
+            <div class="nav-center-btn">
                 <i class="fas fa-plus"></i>
             </div>
         </div>
@@ -933,7 +940,6 @@
         let trendRange = 'all'; 
         let adviceInterval = null;
         window.userInvites = [];
-        window.currentHistoryDateIndex = 0;
         let currentExpenseDateOffset = 0;
         let editingCategoryIndex = -1; 
         let originalAdminUid = null;
@@ -2146,9 +2152,6 @@
             renderFamilyList();
             renderDetailedHealthLists();
             
-            window.currentHistoryDateIndex = 0; 
-            renderHistoryList();
-            
             updateExpenseDateLabel();
             renderCategoryOptions(); 
 
@@ -2203,6 +2206,22 @@
             const mm = String(d.getMonth() + 1).padStart(2, '0');
             const dd = String(d.getDate()).padStart(2, '0');
             document.getElementById('expDateInputHidden').value = `${yyyy}-${mm}-${dd}`;
+
+            const btnContainer = document.getElementById('returnToTodayBtnContainer');
+            if(btnContainer) {
+                if (currentExpenseDateOffset > 0) {
+                    btnContainer.classList.remove('hidden');
+                } else {
+                    btnContainer.classList.add('hidden');
+                }
+            }
+            
+            renderHistoryList();
+        }
+
+        function returnToToday() {
+            currentExpenseDateOffset = 0;
+            updateExpenseDateLabel();
         }
         
         function setSpecificDate(val) {
@@ -2603,7 +2622,6 @@
             }
             
             amtInp.value = ''; descInp.value = ''; 
-            currentExpenseDateOffset = 0; 
             updateExpenseDateLabel();
             
             saveToCloud(); updateDashboardUI();
@@ -2634,49 +2652,28 @@
             });
         }
 
-        function changeHistoryDate(step) {
-            window.currentHistoryDateIndex += step;
-            renderHistoryList();
-        }
-
         function renderHistoryList() {
             const list = document.getElementById('historyList');
             if(!list) return;
             
             const myName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Ben';
             
-            const sortedExpenses = [...state.expenses].sort((a, b) => b.ts - a.ts);
-            const grouped = {};
-            sortedExpenses.forEach((e) => {
-                const origIdx = state.expenses.indexOf(e);
-                if(!grouped[e.date]) grouped[e.date] = [];
-                grouped[e.date].push({ ...e, originalIndex: origIdx });
-            });
-
+            const d = new Date();
+            d.setDate(d.getDate() - currentExpenseDateOffset);
+            const targetDateStr = d.toLocaleDateString('tr-TR');
             const todayStr = new Date().toLocaleDateString('tr-TR');
-            let sortedDates = [...new Set(sortedExpenses.map(e => e.date))];
-            
-            if (sortedDates.length === 0 || sortedDates[0] !== todayStr) {
-                if (!sortedDates.includes(todayStr)) {
-                    sortedDates.unshift(todayStr);
-                }
-            }
 
-            if (window.currentHistoryDateIndex >= sortedDates.length) window.currentHistoryDateIndex = sortedDates.length - 1;
-            if (window.currentHistoryDateIndex < 0) window.currentHistoryDateIndex = 0;
-
-            const currentDate = sortedDates[window.currentHistoryDateIndex];
-            const expensesForDate = grouped[currentDate];
-
-            const hasPrev = window.currentHistoryDateIndex > 0;
-            const hasNext = window.currentHistoryDateIndex < sortedDates.length - 1;
+            const expensesForDate = state.expenses
+                .map((e, i) => ({ ...e, originalIndex: i }))
+                .filter(e => e.date === targetDateStr)
+                .sort((a, b) => b.ts - a.ts);
 
             let html = `
-            <div class="mb-5">
-                <div class="flex items-center justify-between gap-4 mb-3 bg-blue-50 p-2 rounded-xl border border-blue-100">
-                    <button onclick="changeHistoryDate(1)" class="w-7 h-7 flex items-center justify-center rounded-lg bg-white text-blue-600 shadow-sm hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" ${!hasNext ? 'disabled' : ''}><i class="fas fa-chevron-left text-xs"></i></button>
-                    <div class="text-blue-800 px-3 py-1 rounded-lg text-xs font-black tracking-widest text-center flex-1">${currentDate === todayStr ? 'Bugün' : currentDate}</div>
-                    <button onclick="changeHistoryDate(-1)" class="w-7 h-7 flex items-center justify-center rounded-lg bg-white text-blue-600 shadow-sm hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" ${!hasPrev ? 'disabled' : ''}><i class="fas fa-chevron-right text-xs"></i></button>
+            <div class="mb-2">
+                <div class="text-center mb-3">
+                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-100 px-3 py-1 rounded-lg">
+                        ${targetDateStr === todayStr ? 'Bugünkü Harcamalar' : targetDateStr + ' Harcamaları'}
+                    </span>
                 </div>
                 <div class="space-y-2">`;
             
