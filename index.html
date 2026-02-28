@@ -2122,22 +2122,44 @@
             const daysPassed = Math.max(1, Math.ceil(Math.abs(now - startCalc) / (1000 * 60 * 60 * 24))); 
             
             let totalSpent = 0;
-            const spentToday = state.expenses.filter(e => e.date === todayStr).reduce((s,e)=>s+e.amount,0);
+            let spentToday = 0;
+            let spentTodayInBudget = 0;
             
             state.expenses.forEach(e => {
                 const dParts = e.date.split('.');
                 if(dParts.length === 3) {
                     const d = new Date(dParts[2], dParts[1]-1, dParts[0]);
                     d.setHours(0,0,0,0);
-                    if (d >= startCalc) {
-                        totalSpent += e.amount;
+                    
+                    if (e.date === todayStr) {
+                        spentToday += e.amount;
+                        // Eğer kurtarma modundaysak, sadece plana aktarıldıktan sonraki bugünkü harcamaları bütçeden düş
+                        if (calcMethod === 'recovery' && state.recoveryStartTs) {
+                            if (e.ts >= state.recoveryStartTs) {
+                                spentTodayInBudget += e.amount;
+                            }
+                        } else {
+                            spentTodayInBudget += e.amount;
+                        }
+                    }
+
+                    // Genel totalSpent hesabı (Gerçek bakiye için)
+                    if (calcMethod === 'recovery' && state.recoveryStartTs) {
+                        // Sadece kurtarma anından sonraki tüm harcamaları topla
+                        if (e.ts >= state.recoveryStartTs) {
+                            totalSpent += e.amount;
+                        }
+                    } else {
+                        if (d >= startCalc) {
+                            totalSpent += e.amount;
+                        }
                     }
                 }
             });
 
             const cumulative = (dailyLimitToUse * daysPassed) - totalSpent;
             
-            document.getElementById('displayDailyLimit').innerText = `₺${Math.floor(dailyLimitToUse - spentToday).toLocaleString()}`;
+            document.getElementById('displayDailyLimit').innerText = `₺${Math.floor(dailyLimitToUse - spentTodayInBudget).toLocaleString()}`;
             const cumEl = document.getElementById('displayCumulativeLimit');
             cumEl.innerText = `₺${Math.floor(cumulative).toLocaleString()}`;
             
@@ -3289,7 +3311,6 @@
                 if(isNaN(startCalc.getTime())) startCalc = new Date();
                 startCalc.setHours(0,0,0,0);
             } else if (calcMethod === 'recovery') {
-                // Modals shouldn't change the main button states unless they are active, but we can reflect it here
                 startCalc = new Date(state.recoveryStartDate || state.registrationDate);
                 if(isNaN(startCalc.getTime())) startCalc = new Date();
                 startCalc.setHours(0,0,0,0);
@@ -3321,8 +3342,15 @@
                 if(dParts.length === 3) {
                     const d = new Date(dParts[2], dParts[1]-1, dParts[0]);
                     d.setHours(0,0,0,0);
-                    if (d >= startCalc) {
-                        totalSpent += e.amount;
+                    
+                    if (calcMethod === 'recovery' && state.recoveryStartTs) {
+                        if (e.ts >= state.recoveryStartTs) {
+                            totalSpent += e.amount;
+                        }
+                    } else {
+                        if (d >= startCalc) {
+                            totalSpent += e.amount;
+                        }
                     }
                 }
             });
@@ -3368,7 +3396,7 @@
                         <p><strong>Gerçek Bakiye Mantığı:</strong><br>
                         Sistem, belirlediğiniz günlük limiti her yeni günde kumbaranıza ekler. Harcamalarınız bu kumbaradan düşülür. Kalan tutar, ay sonuna kadar "fazladan" harcayabileceğiniz veya biriktirebileceğiniz net tutardır.</p>
                         ${isSalaryBased ? '<p class="mt-2 text-blue-500">Not: Geçmişe dönük harcama girdiğiniz için hesaplama son maaş gününüzden başlatılmıştır.</p>' : ''}
-                        ${isRecovery ? '<p class="mt-2 text-blue-500">Not: Hedefe Dönüş Modunda, limitiniz eski eksileri silip bugünden itibaren kalan günlere göre hesaplanmaktadır.</p>' : ''}
+                        ${isRecovery ? '<p class="mt-2 text-blue-500">Not: Hedefe Dönüş Modunda, plana başladığınız <strong>saniyeden önceki</strong> tüm harcamalar geçmişte bırakılır. Bakiye sadece bu andan sonraki harcamalarınızla hesaplanır.</p>' : ''}
                     </div>
                 </div>
             `;
@@ -3467,11 +3495,11 @@
                         </div>
 
                         <p class="text-[10px] text-gray-500 bg-yellow-50/50 p-4 rounded-xl leading-relaxed border border-yellow-100 font-bold">
-                            <i class="fas fa-info-circle text-yellow-500 mr-1"></i> <strong>Nasıl Çalışır?</strong><br>Eğer "Plana Aktar" derseniz, şu ana kadarki eksi veya artılarınız dengelenir ve <strong class="text-blue-600">bugünden itibaren</strong> maaş gününüze kadar günde tam <strong>₺${Math.floor(newDailyLimit).toLocaleString()}</strong> harcayarak orijinal birikim hedefinizi tutturabilirsiniz.
+                            <i class="fas fa-info-circle text-yellow-500 mr-1"></i> <strong>Nasıl Çalışır?</strong><br>Eğer "Plana Aktar" derseniz, <strong class="text-red-500">şu saniyeye kadar olan</strong> tüm harcamalarınız ana bütçeden düşülerek geçmişte bırakılır. <strong class="text-blue-600">Bu andan itibaren</strong> maaş gününüze kadar her gün <strong>₺${Math.floor(newDailyLimit).toLocaleString()}</strong> harcayarak hedefinizi tutturabilirsiniz.
                         </p>
 
                         <button onclick="applyRecoveryPlan(${newDailyLimit})" class="w-full py-4 bg-blue-600 text-white font-black rounded-xl text-xs hover:bg-blue-700 shadow-xl shadow-blue-200 active:scale-95 transition-all flex items-center justify-center gap-2 mt-2">
-                            <i class="fas fa-magic"></i> Plana Aktar (Bugünden Başlat)
+                            <i class="fas fa-magic"></i> Plana Aktar (Şu Andan İtibaren)
                         </button>
                     </div>
                 `;
@@ -3497,6 +3525,7 @@
             state.balanceCalcMethod = 'recovery';
             state.recoveryDailyLimit = limit;
             state.recoveryStartDate = new Date().toISOString();
+            state.recoveryStartTs = Date.now(); // Tıklanılan anlık zaman damgası eklendi.
             saveToCloud();
             
             closeRecoveryPlanModal();
