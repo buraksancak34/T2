@@ -307,7 +307,14 @@
                             <h4 id="displayDailyLimit" class="text-3xl font-black text-white tracking-tight">₺0</h4>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2 mt-6 pt-4 border-t border-white/10">
+                    
+                    <div class="mt-3 pt-3 border-t border-white/10 w-full">
+                        <button onclick="openRecoveryPlanModal()" id="btnCalcRecovery" class="w-full text-[10px] font-bold px-4 py-2.5 rounded bg-blue-600/50 hover:bg-blue-600/70 text-white transition-all border border-blue-400/50 flex items-center justify-center gap-2 shadow-sm">
+                            <i class="fas fa-life-ring"></i> Hedefi tutturmam için günde ne kadar harcamalıyım?
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-2 mt-4 pt-4 border-t border-white/10">
                         <div class="bg-white/10 px-3 py-2 rounded-xl backdrop-blur-md border border-white/5 flex-1 text-center">
                             <span class="text-[8px] text-slate-300 font-bold uppercase block">Maaşa Kalan</span>
                             <span id="displayRemainingDays" class="text-base font-black text-white">-- Gün</span>
@@ -746,6 +753,19 @@
                 <button onclick="closeBalanceModal()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
             </div>
             <div id="balanceModalContent" class="space-y-4 text-sm flex-1 overflow-y-auto custom-scrollbar pb-10"></div>
+        </div>
+    </div>
+    
+    <!-- YENİ: HEDEFE DÖNÜŞ (RECOVERY) MODALI -->
+    <div id="recoveryPlanModal" class="side-panel">
+        <div class="p-6 h-full flex flex-col">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b">
+                <h4 class="font-black text-xl text-gray-800 tracking-tight">Hedefe Dönüş Planı</h4>
+                <button onclick="closeRecoveryPlanModal()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div id="recoveryPlanContent" class="flex-1 overflow-y-auto custom-scrollbar pb-10">
+                <!-- Dinamik içerik JS ile gelecek -->
+            </div>
         </div>
     </div>
 
@@ -2049,14 +2069,18 @@
             const btnSalary = document.getElementById('btnCalcSalary');
             const btnRegister = document.getElementById('btnCalcRegister');
             const btnCustom = document.getElementById('btnCalcCustom');
+            const btnRecovery = document.getElementById('btnCalcRecovery');
             const customDateDisplay = document.getElementById('customDateDisplay');
             
             [btnSalary, btnRegister].forEach(btn => {
                 btn.className = "text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10";
             });
             btnCustom.className = "text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1 m-0";
+            btnRecovery.className = "w-full text-[10px] font-bold px-4 py-2.5 rounded bg-blue-600/10 hover:bg-blue-600/20 text-blue-700 transition-all border border-blue-400/30 flex items-center justify-center gap-2 shadow-sm";
             
             const activeBtnClass = "text-[9px] font-bold px-2 py-1 rounded bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
+
+            let dailyLimitToUse = state.manualDailyLimit || 0;
 
             if (calcMethod === 'salary') {
                 btnSalary.className = activeBtnClass;
@@ -2072,6 +2096,12 @@
                 startCalc = new Date(state.customBalanceDate || state.registrationDate);
                 if(isNaN(startCalc.getTime())) startCalc = new Date();
                 startCalc.setHours(0,0,0,0);
+            } else if (calcMethod === 'recovery') {
+                btnRecovery.className = "w-full text-[10px] font-bold px-4 py-2.5 rounded bg-blue-600 text-white shadow-md border border-blue-400 transform scale-[1.02] pointer-events-none flex items-center justify-center gap-2 shadow-sm";
+                startCalc = new Date(state.recoveryStartDate || state.registrationDate);
+                if(isNaN(startCalc.getTime())) startCalc = new Date();
+                startCalc.setHours(0,0,0,0);
+                dailyLimitToUse = state.recoveryDailyLimit || state.manualDailyLimit || 0;
             } else {
                 btnRegister.className = activeBtnClass;
                 startCalc = new Date(state.registrationDate);
@@ -2080,7 +2110,11 @@
             }
 
             if (startCalc) {
-                customDateDisplay.innerText = startCalc.toLocaleDateString('tr-TR', {day:'2-digit', month:'2-digit', year:'numeric'});
+                if (calcMethod === 'recovery') {
+                    customDateDisplay.innerText = "Seç";
+                } else {
+                    customDateDisplay.innerText = startCalc.toLocaleDateString('tr-TR', {day:'2-digit', month:'2-digit', year:'numeric'});
+                }
             } else {
                 customDateDisplay.innerText = "Seç";
             }
@@ -2101,9 +2135,9 @@
                 }
             });
 
-            const cumulative = ((state.manualDailyLimit||0) * daysPassed) - totalSpent;
+            const cumulative = (dailyLimitToUse * daysPassed) - totalSpent;
             
-            document.getElementById('displayDailyLimit').innerText = `₺${Math.floor((state.manualDailyLimit||0) - spentToday).toLocaleString()}`;
+            document.getElementById('displayDailyLimit').innerText = `₺${Math.floor(dailyLimitToUse - spentToday).toLocaleString()}`;
             const cumEl = document.getElementById('displayCumulativeLimit');
             cumEl.innerText = `₺${Math.floor(cumulative).toLocaleString()}`;
             
@@ -3231,11 +3265,15 @@
             const customDateDisplay = document.getElementById('customDateDisplay');
             
             [btnSalary, btnRegister].forEach(btn => {
-                btn.className = "text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10";
+                btn.className = "text-[10px] font-bold px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10";
             });
-            btnCustom.className = "text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1 m-0";
+            btnCustom.className = "w-full text-[10px] font-bold px-4 py-2.5 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center justify-between gap-1 shadow-sm";
             
-            const activeBtnClass = "text-[9px] font-bold px-2 py-1 rounded bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
+            const activeBtnClass = "text-[10px] font-bold px-3 py-1.5 rounded bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
+            const activeCustomBtnClass = "w-full text-[10px] font-bold px-4 py-2.5 rounded bg-green-500 text-white shadow-md border border-green-400 transform scale-[1.02] pointer-events-none flex items-center justify-between gap-1 shadow-sm";
+
+            let dailyLimitToUse = state.manualDailyLimit || 0;
+
             if (calcMethod === 'salary') {
                 btnSalary.className = activeBtnClass;
                 const salaryDay = state.salaryDay || 15;
@@ -3246,10 +3284,16 @@
                 startCalc = lastSalaryDate;
                 startCalc.setHours(0,0,0,0);
             } else if (calcMethod === 'custom') {
-                btnCustom.className = activeBtnClass + " pointer-events-none flex items-center gap-1 m-0";
+                btnCustom.className = activeCustomBtnClass;
                 startCalc = new Date(state.customBalanceDate || state.registrationDate);
                 if(isNaN(startCalc.getTime())) startCalc = new Date();
                 startCalc.setHours(0,0,0,0);
+            } else if (calcMethod === 'recovery') {
+                // Modals shouldn't change the main button states unless they are active, but we can reflect it here
+                startCalc = new Date(state.recoveryStartDate || state.registrationDate);
+                if(isNaN(startCalc.getTime())) startCalc = new Date();
+                startCalc.setHours(0,0,0,0);
+                dailyLimitToUse = state.recoveryDailyLimit || state.manualDailyLimit || 0;
             } else {
                 btnRegister.className = activeBtnClass;
                 startCalc = new Date(state.registrationDate);
@@ -3258,7 +3302,11 @@
             }
 
             if (startCalc) {
-                customDateDisplay.innerText = startCalc.toLocaleDateString('tr-TR', {day:'2-digit', month:'2-digit', year:'numeric'});
+                if (calcMethod === 'recovery') {
+                    customDateDisplay.innerText = "Seç";
+                } else {
+                    customDateDisplay.innerText = startCalc.toLocaleDateString('tr-TR', {day:'2-digit', month:'2-digit', year:'numeric'});
+                }
             } else {
                 customDateDisplay.innerText = "Seç";
             }
@@ -3280,13 +3328,18 @@
             });
 
             let isSalaryBased = (calcMethod === 'salary');
+            let isRecovery = (calcMethod === 'recovery');
 
-            const dailyLimit = state.manualDailyLimit || 0;
-            const accumulatedLimit = dailyLimit * daysPassed;
+            const accumulatedLimit = dailyLimitToUse * daysPassed;
             const balance = accumulatedLimit - totalSpent;
 
             const html = `
                 <div class="space-y-4">
+                    ${isRecovery ? `
+                    <div class="bg-blue-100 text-blue-800 p-3 rounded-xl border border-blue-200 text-center mb-2 animate-pulse">
+                        <i class="fas fa-magic"></i> <strong>Hedefe Dönüş (Kurtarma) Modu Aktif</strong>
+                    </div>
+                    ` : ''}
                     <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100 text-center">
                         <p class="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">Şu Anki Durum</p>
                         <p class="text-3xl font-black ${balance >= 0 ? 'text-green-600' : 'text-red-600'}">₺${Math.floor(balance).toLocaleString()}</p>
@@ -3295,14 +3348,14 @@
                     <div class="space-y-3 pt-2">
                         <div class="flex justify-between items-center text-xs font-bold text-gray-600 border-b border-gray-100 pb-2">
                             <span>Hesap Başlangıcı</span>
-                            <span class="text-gray-800">${startCalc.toLocaleDateString('tr-TR')} ${isSalaryBased ? '<span class="text-[9px] bg-yellow-100 text-yellow-700 px-1 rounded ml-1">Maaş Günü</span>' : (calcMethod === 'custom' ? '<span class="text-[9px] bg-blue-100 text-blue-700 px-1 rounded ml-1">Özel Tarih</span>' : '<span class="text-[9px] bg-gray-100 text-gray-500 px-1 rounded ml-1">Kayıt Tarihi</span>')}</span>
+                            <span class="text-gray-800">${startCalc.toLocaleDateString('tr-TR')} ${isSalaryBased ? '<span class="text-[9px] bg-yellow-100 text-yellow-700 px-1 rounded ml-1">Maaş Günü</span>' : (isRecovery ? '<span class="text-[9px] bg-blue-100 text-blue-700 px-1 rounded ml-1">Bugün (Kurtarma)</span>' : (calcMethod === 'custom' ? '<span class="text-[9px] bg-blue-100 text-blue-700 px-1 rounded ml-1">Özel Tarih</span>' : '<span class="text-[9px] bg-gray-100 text-gray-500 px-1 rounded ml-1">Kayıt Tarihi</span>'))}</span>
                         </div>
                         <div class="flex justify-between items-center text-xs font-bold text-gray-600 border-b border-gray-100 pb-2">
                             <span>Geçen Gün</span>
                             <span class="text-gray-800">${daysPassed} Gün</span>
                         </div>
                         <div class="flex justify-between items-center text-xs font-bold text-green-600 border-b border-gray-100 pb-2">
-                            <span>Biriken Limit (${daysPassed} x ₺${Math.floor(dailyLimit)})</span>
+                            <span>Biriken Limit (${daysPassed} x ₺${Math.floor(dailyLimitToUse)})</span>
                             <span>+ ₺${Math.floor(accumulatedLimit).toLocaleString()}</span>
                         </div>
                         <div class="flex justify-between items-center text-xs font-bold text-red-500 border-b border-gray-100 pb-2">
@@ -3315,6 +3368,7 @@
                         <p><strong>Gerçek Bakiye Mantığı:</strong><br>
                         Sistem, belirlediğiniz günlük limiti her yeni günde kumbaranıza ekler. Harcamalarınız bu kumbaradan düşülür. Kalan tutar, ay sonuna kadar "fazladan" harcayabileceğiniz veya biriktirebileceğiniz net tutardır.</p>
                         ${isSalaryBased ? '<p class="mt-2 text-blue-500">Not: Geçmişe dönük harcama girdiğiniz için hesaplama son maaş gününüzden başlatılmıştır.</p>' : ''}
+                        ${isRecovery ? '<p class="mt-2 text-blue-500">Not: Hedefe Dönüş Modunda, limitiniz eski eksileri silip bugünden itibaren kalan günlere göre hesaplanmaktadır.</p>' : ''}
                     </div>
                 </div>
             `;
@@ -3334,6 +3388,120 @@
             setTimeout(() => modal.classList.add('hidden'), 300);
             document.getElementById('overlay').classList.remove('active'); 
             popPanelHistory();
+        }
+        
+        function openRecoveryPlanModal() {
+            const now = new Date();
+            const salaryDay = state.salaryDay || 15;
+            let lastSalaryDate = new Date(now.getFullYear(), now.getMonth(), salaryDay);
+            if (now.getDate() < salaryDay) {
+                lastSalaryDate.setMonth(lastSalaryDate.getMonth() - 1);
+            }
+            lastSalaryDate.setHours(0,0,0,0);
+            
+            let nextSalaryDate = new Date(lastSalaryDate);
+            nextSalaryDate.setMonth(nextSalaryDate.getMonth() + 1);
+            
+            const daysInMonth = Math.round((nextSalaryDate - lastSalaryDate) / (1000 * 60 * 60 * 24));
+            const remainingDays = Math.max(1, Math.ceil((nextSalaryDate - now) / (1000 * 60 * 60 * 24)));
+            
+            let spentSinceSalary = 0;
+            state.expenses.forEach(e => {
+                const parts = e.date.split('.');
+                if(parts.length === 3) {
+                    const d = new Date(parts[2], parts[1]-1, parts[0]);
+                    d.setHours(0,0,0,0);
+                    if (d >= lastSalaryDate && d < nextSalaryDate) {
+                        spentSinceSalary += e.amount;
+                    }
+                }
+            });
+
+            const totalBudget = (state.manualDailyLimit || 0) * daysInMonth;
+            const remainingBudget = totalBudget - spentSinceSalary;
+            
+            let newDailyLimit = remainingBudget / remainingDays;
+            
+            let html = '';
+            if (newDailyLimit <= 0) {
+                html = `
+                    <div class="text-center space-y-4">
+                        <div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-2 shadow-inner"><i class="fas fa-exclamation-triangle text-2xl"></i></div>
+                        <h3 class="text-xl font-black text-gray-800 tracking-tight">Hedef Aşılmış</h3>
+                        <p class="text-xs text-gray-500 font-bold leading-relaxed bg-gray-50 p-4 rounded-xl">Maaş döngünüzdeki toplam harcama hedefinizi (<strong class="text-gray-800">₺${Math.floor(totalBudget).toLocaleString()}</strong>) çoktan aşmışsınız. (Şu ana kadar harcanan: <strong class="text-red-500">₺${Math.floor(spentSinceSalary).toLocaleString()}</strong>)</p>
+                        <p class="text-[10px] text-gray-400 font-bold">Bu ay hedefi tutturmak için maalesef harcama bütçeniz kalmadı. Birikim hedeflerinizden kısmak veya ek gelir yaratmak gerekebilir.</p>
+                        <button onclick="closeRecoveryPlanModal()" class="w-full py-3 bg-gray-100 text-gray-600 font-black rounded-xl text-xs hover:bg-gray-200 transition-colors mt-2">Anladım</button>
+                    </div>
+                `;
+            } else {
+                html = `
+                    <div class="space-y-4">
+                        <div class="text-center mb-4">
+                            <div class="w-16 h-16 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-2 shadow-inner"><i class="fas fa-bullseye text-2xl"></i></div>
+                            <h3 class="text-xl font-black text-gray-800 tracking-tight mb-1">Hedefe Dönüş Planı</h3>
+                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Kalan Günler İçin Rota</p>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-5 rounded-[2rem] border border-blue-100 text-center shadow-inner">
+                            <p class="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-2">Hedef İçin Günlük Limitiniz</p>
+                            <p class="text-4xl font-black text-blue-600 tracking-tighter">₺${Math.floor(newDailyLimit).toLocaleString()}</p>
+                        </div>
+                        
+                        <div class="space-y-2 pt-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                            <div class="flex justify-between items-center text-xs font-bold text-gray-600 border-b border-gray-50 pb-2">
+                                <span>Maaşa Kalan Süre</span>
+                                <span class="text-gray-800 bg-gray-100 px-2 py-0.5 rounded">${remainingDays} Gün</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs font-bold text-gray-600 border-b border-gray-50 pb-2">
+                                <span>Tüm Ay Bütçesi</span>
+                                <span class="text-gray-800">₺${Math.floor(totalBudget).toLocaleString()}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs font-bold text-red-500 border-b border-gray-50 pb-2">
+                                <span>Harcanan</span>
+                                <span>- ₺${Math.floor(spentSinceSalary).toLocaleString()}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs font-black text-green-600 pt-1">
+                                <span>Kalan Bütçe</span>
+                                <span class="bg-green-50 px-2 py-0.5 rounded">₺${Math.floor(remainingBudget).toLocaleString()}</span>
+                            </div>
+                        </div>
+
+                        <p class="text-[10px] text-gray-500 bg-yellow-50/50 p-4 rounded-xl leading-relaxed border border-yellow-100 font-bold">
+                            <i class="fas fa-info-circle text-yellow-500 mr-1"></i> <strong>Nasıl Çalışır?</strong><br>Eğer "Plana Aktar" derseniz, şu ana kadarki eksi veya artılarınız dengelenir ve <strong class="text-blue-600">bugünden itibaren</strong> maaş gününüze kadar günde tam <strong>₺${Math.floor(newDailyLimit).toLocaleString()}</strong> harcayarak orijinal birikim hedefinizi tutturabilirsiniz.
+                        </p>
+
+                        <button onclick="applyRecoveryPlan(${newDailyLimit})" class="w-full py-4 bg-blue-600 text-white font-black rounded-xl text-xs hover:bg-blue-700 shadow-xl shadow-blue-200 active:scale-95 transition-all flex items-center justify-center gap-2 mt-2">
+                            <i class="fas fa-magic"></i> Plana Aktar (Bugünden Başlat)
+                        </button>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('recoveryPlanContent').innerHTML = html;
+            const modal = document.getElementById('recoveryPlanModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('open'), 10);
+            document.getElementById('overlay').classList.add('active');
+            pushPanelHistory();
+        }
+        
+        function closeRecoveryPlanModal() {
+            const modal = document.getElementById('recoveryPlanModal');
+            modal.classList.remove('open');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            document.getElementById('overlay').classList.remove('active'); 
+            popPanelHistory();
+        }
+        
+        function applyRecoveryPlan(limit) {
+            state.balanceCalcMethod = 'recovery';
+            state.recoveryDailyLimit = limit;
+            state.recoveryStartDate = new Date().toISOString();
+            saveToCloud();
+            
+            closeRecoveryPlanModal();
+            updateDashboardUI();
+            showAppAlert("Hedefe Dönüş planınız başarıyla aktif edildi! Günlük limitiniz kalan günlere göre güncellendi.");
         }
 
         function startWizard(isEditMode) {
@@ -3815,4 +3983,3 @@
     </script>
 </body>
 </html>
-
