@@ -284,16 +284,16 @@
                         <div>
                             <div class="flex items-center gap-2 mb-1">
                                 <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest opacity-80">Gerçek Bakiye</p>
-                                <button onclick="openBalanceModal()" class="text-blue-300 hover:text-white text-[9px] font-bold underline decoration-dashed underline-offset-2 transition-colors cursor-pointer relative z-20">Nasıl Hesaplandı?</button>
+                                <button onclick="openBalanceModal()" class="text-blue-300 hover:text-white text-[7px] font-medium underline decoration-dashed underline-offset-1 transition-colors cursor-pointer relative z-20 opacity-80">Nasıl Hesaplandı?</button>
                             </div>
                             <h2 id="displayCumulativeLimit" onclick="openBalanceModal()" class="text-5xl font-black tracking-tighter leading-none cursor-pointer">₺0</h2>
                             
                             <div class="flex flex-wrap gap-1 mt-2 items-center">
-                                <button onclick="setBalanceMethod('salary')" id="btnCalcSalary" class="text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10">Gelir Günü</button>
-                                <button onclick="setBalanceMethod('register')" id="btnCalcRegister" class="text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10">Kayıt Günü</button>
+                                <button onclick="setBalanceMethod('salary')" id="btnCalcSalary" class="text-[7px] font-medium px-1.5 py-0.5 rounded-sm bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10">Gelir Günü</button>
+                                <button onclick="setBalanceMethod('register')" id="btnCalcRegister" class="text-[7px] font-medium px-1.5 py-0.5 rounded-sm bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10">Kayıt Günü</button>
                                 <label class="relative overflow-hidden inline-flex cursor-pointer items-center" onclick="try{document.getElementById('customBalanceDate').showPicker()}catch(e){}">
                                     <input type="date" id="customBalanceDate" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="setCustomBalanceDate(this.value)">
-                                    <button id="btnCalcCustom" class="text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1 m-0">
+                                    <button id="btnCalcCustom" class="text-[7px] font-medium px-1.5 py-0.5 rounded-sm bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1 m-0">
                                         Şu tarihten itibaren hesapla: <span id="customDateDisplay">Seç</span>
                                     </button>
                                 </label>
@@ -302,14 +302,14 @@
                         <div class="text-right">
                              <div class="flex items-center justify-end gap-2 mb-1">
                                 <p class="text-blue-400 text-[10px] font-bold uppercase tracking-widest opacity-80">Bugünün Limiti</p>
-                                <button onclick="openCalcModal()" class="text-blue-300 hover:text-white text-[9px] font-bold underline decoration-dashed underline-offset-2 transition-colors cursor-pointer relative z-20">Nasıl Hesaplandı?</button>
+                                <button onclick="openCalcModal()" class="text-blue-300 hover:text-white text-[7px] font-medium underline decoration-dashed underline-offset-1 transition-colors cursor-pointer relative z-20 opacity-80">Nasıl Hesaplandı?</button>
                             </div>
                             <h4 id="displayDailyLimit" class="text-3xl font-black text-white tracking-tight">₺0</h4>
                         </div>
                     </div>
                     
                     <div class="mt-3 pt-3 border-t border-white/10 w-full">
-                        <button onclick="openRecoveryPlanModal()" id="btnCalcRecovery" class="w-full text-[10px] font-bold px-4 py-2.5 rounded bg-blue-600/50 hover:bg-blue-600/70 text-white transition-all border border-blue-400/50 flex items-center justify-center gap-2 shadow-sm">
+                        <button onclick="openRecoveryPlanModal()" id="btnCalcRecovery" class="w-full text-[8px] font-medium px-3 py-1.5 rounded-lg bg-blue-600/50 hover:bg-blue-600/70 text-white transition-all border border-blue-400/50 flex items-center justify-center gap-1 shadow-sm">
                             <i class="fas fa-life-ring"></i> Hedefi tutturmam için günde ne kadar harcamalıyım?
                         </button>
                     </div>
@@ -2073,12 +2073,12 @@
             const customDateDisplay = document.getElementById('customDateDisplay');
             
             [btnSalary, btnRegister].forEach(btn => {
-                btn.className = "text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10";
+                btn.className = "text-[7px] font-medium px-1.5 py-0.5 rounded-sm bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10";
             });
-            btnCustom.className = "text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1 m-0";
-            btnRecovery.className = "w-full text-[10px] font-bold px-4 py-2.5 rounded bg-blue-600/10 hover:bg-blue-600/20 text-blue-700 transition-all border border-blue-400/30 flex items-center justify-center gap-2 shadow-sm";
+            btnCustom.className = "text-[7px] font-medium px-1.5 py-0.5 rounded-sm bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1 m-0";
+            btnRecovery.className = "w-full text-[8px] font-medium px-3 py-1.5 rounded-lg bg-blue-600/10 hover:bg-blue-600/20 text-blue-700 transition-all border border-blue-400/30 flex items-center justify-center gap-1 shadow-sm";
             
-            const activeBtnClass = "text-[9px] font-bold px-2 py-1 rounded bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
+            const activeBtnClass = "text-[7px] font-medium px-1.5 py-0.5 rounded-sm bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
 
             let dailyLimitToUse = state.manualDailyLimit || 0;
 
@@ -2097,7 +2097,7 @@
                 if(isNaN(startCalc.getTime())) startCalc = new Date();
                 startCalc.setHours(0,0,0,0);
             } else if (calcMethod === 'recovery') {
-                btnRecovery.className = "w-full text-[10px] font-bold px-4 py-2.5 rounded bg-blue-600 text-white shadow-md border border-blue-400 transform scale-[1.02] pointer-events-none flex items-center justify-center gap-2 shadow-sm";
+                btnRecovery.className = "w-full text-[8px] font-medium px-3 py-1.5 rounded-lg bg-blue-600 text-white shadow-md border border-blue-400 transform scale-[1.02] pointer-events-none flex items-center justify-center gap-1 shadow-sm";
                 startCalc = new Date(state.recoveryStartDate || state.registrationDate);
                 if(isNaN(startCalc.getTime())) startCalc = new Date();
                 startCalc.setHours(0,0,0,0);
@@ -3287,12 +3287,12 @@
             const customDateDisplay = document.getElementById('customDateDisplay');
             
             [btnSalary, btnRegister].forEach(btn => {
-                btn.className = "text-[10px] font-bold px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10";
+                btn.className = "text-[7px] font-medium px-1.5 py-0.5 rounded-sm bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10";
             });
-            btnCustom.className = "w-full text-[10px] font-bold px-4 py-2.5 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center justify-between gap-1 shadow-sm";
+            btnCustom.className = "text-[7px] font-medium px-1.5 py-0.5 rounded-sm bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1 m-0";
             
-            const activeBtnClass = "text-[10px] font-bold px-3 py-1.5 rounded bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
-            const activeCustomBtnClass = "w-full text-[10px] font-bold px-4 py-2.5 rounded bg-green-500 text-white shadow-md border border-green-400 transform scale-[1.02] pointer-events-none flex items-center justify-between gap-1 shadow-sm";
+            const activeBtnClass = "text-[7px] font-medium px-1.5 py-0.5 rounded-sm bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
+            const activeCustomBtnClass = "text-[7px] font-medium px-1.5 py-0.5 rounded-sm bg-green-500 text-white shadow-md border border-green-400 transform scale-105 pointer-events-none flex items-center gap-1 m-0";
 
             let dailyLimitToUse = state.manualDailyLimit || 0;
 
