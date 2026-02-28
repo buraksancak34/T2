@@ -276,50 +276,80 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="md:col-span-3 glass-card p-5 rounded-[2.5rem] bg-gradient-to-br from-slate-800 to-slate-900 text-white shadow-2xl relative overflow-hidden group">
-                <div class="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full mix-blend-overlay filter blur-3xl opacity-20 -mr-16 -mt-16"></div>
-                <div class="relative z-10">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest opacity-80">Gerçek Bakiye</p>
-                                <button onclick="openBalanceModal()" class="text-blue-300 hover:text-white text-[9px] font-bold underline decoration-dashed underline-offset-2 transition-colors cursor-pointer relative z-20">Nasıl Hesaplandı?</button>
-                            </div>
-                            <h2 id="displayCumulativeLimit" onclick="openBalanceModal()" class="text-5xl font-black tracking-tighter leading-none cursor-pointer">₺0</h2>
-                            
-                            <div class="flex flex-wrap gap-1 mt-2 items-center">
-                                <button onclick="setBalanceMethod('salary')" id="btnCalcSalary" class="text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10">Gelir Günü</button>
-                                <button onclick="setBalanceMethod('register')" id="btnCalcRegister" class="text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10">Kayıt Günü</button>
-                                <label class="relative overflow-hidden inline-flex cursor-pointer items-center" onclick="try{document.getElementById('customBalanceDate').showPicker()}catch(e){}">
-                                    <input type="date" id="customBalanceDate" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="setCustomBalanceDate(this.value)">
-                                    <button id="btnCalcCustom" class="text-[9px] font-bold px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1 m-0">
-                                        Şu tarihten itibaren hesapla: <span id="customDateDisplay">Seç</span>
-                                    </button>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                             <div class="flex items-center justify-end gap-2 mb-1">
-                                <p class="text-blue-400 text-[10px] font-bold uppercase tracking-widest opacity-80">Bugünün Limiti</p>
-                                <button onclick="openCalcModal()" class="text-blue-300 hover:text-white text-[9px] font-bold underline decoration-dashed underline-offset-2 transition-colors cursor-pointer relative z-20">Nasıl Hesaplandı?</button>
-                            </div>
-                            <h4 id="displayDailyLimit" class="text-3xl font-black text-white tracking-tight">₺0</h4>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2 mt-6 pt-4 border-t border-white/10">
-                        <div class="bg-white/10 px-3 py-2 rounded-xl backdrop-blur-md border border-white/5 flex-1 text-center">
-                            <span class="text-[8px] text-slate-300 font-bold uppercase block">Maaşa Kalan</span>
-                            <span id="displayRemainingDays" class="text-base font-black text-white">-- Gün</span>
-                        </div>
-                         <div class="bg-white/10 px-3 py-2 rounded-xl backdrop-blur-md border border-white/5 flex-1 text-center">
-                            <span class="text-[8px] text-slate-300 font-bold uppercase block">Hedef Birikim</span>
-                            <span id="sumSavings" class="text-base font-black text-green-400">₺0</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              Nasıl Hesaplandı?
+            </button>
+          </div>
+
+          <h2 id="displayCumulativeLimit" onclick="openBalanceModal()" class="text-5xl font-black tracking-tighter leading-none cursor-pointer">₺0</h2>
+
+          <div class="flex flex-wrap gap-1 mt-2 items-center">
+            <button
+              onclick="setBalanceMethod('salary')"
+              id="btnCalcSalary"
+              class="text-[6.5px] font-bold px-[6px] py-[3px] rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10"
+            >
+              Gelir Günü
+            </button>
+
+            <button
+              onclick="setBalanceMethod('register')"
+              id="btnCalcRegister"
+              class="text-[6.5px] font-bold px-[6px] py-[3px] rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10"
+            >
+              Kayıt Günü
+            </button>
+
+            <label
+              class="relative overflow-hidden inline-flex cursor-pointer items-center"
+              onclick="try{document.getElementById('customBalanceDate').showPicker()}catch(e){}"
+            >
+              <input
+                type="date"
+                id="customBalanceDate"
+                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                onchange="setCustomBalanceDate(this.value)"
+              >
+
+              <button
+                id="btnCalcCustom"
+                class="text-[6.5px] font-bold px-[6px] py-[3px] rounded bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1 m-0"
+              >
+                Şu tarihten itibaren hesapla: <span id="customDateDisplay">Seç</span>
+              </button>
+            </label>
+          </div>
         </div>
+
+        <div class="text-right">
+          <div class="flex items-center justify-end gap-2 mb-1">
+            <p class="text-blue-400 text-[10px] font-bold uppercase tracking-widest opacity-80">Bugünün Limiti</p>
+            <button
+              onclick="openCalcModal()"
+              class="text-blue-300 hover:text-white text-[6.5px] font-bold underline decoration-dashed underline-offset-2 transition-colors cursor-pointer relative z-20"
+            >
+              Nasıl Hesaplandı?
+            </button>
+          </div>
+
+          <h4 id="displayDailyLimit" class="text-3xl font-black text-white tracking-tight">₺0</h4>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 mt-6 pt-4 border-t border-white/10">
+        <div class="bg-white/10 px-3 py-2 rounded-xl backdrop-blur-md border border-white/5 flex-1 text-center">
+          <span class="text-[8px] text-slate-300 font-bold uppercase block">Maaşa Kalan</span>
+          <span id="displayRemainingDays" class="text-base font-black text-white">-- Gün</span>
+        </div>
+
+        <div class="bg-white/10 px-3 py-2 rounded-xl backdrop-blur-md border border-white/5 flex-1 text-center">
+          <span class="text-[8px] text-slate-300 font-bold uppercase block">Hedef Birikim</span>
+          <span id="sumSavings" class="text-base font-black text-green-400">₺0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
         <div id="addExpenseSection" class="glass-card p-5 rounded-[2rem] bg-white border border-gray-100 shadow-lg">
             <div class="flex items-center justify-between mb-3">
@@ -3815,3 +3845,4 @@
     </script>
 </body>
 </html>
+
