@@ -470,9 +470,13 @@
         <div class="flex justify-between items-center mb-4">
             <div>
                 <h2 class="text-xl font-black text-gray-800 tracking-tight">Finansal Analiz</h2>
-                <div class="flex items-center gap-3 mt-2">
+                <div class="flex items-center gap-3 mt-2 relative">
                      <p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Analiz Dönemi:</p>
-                     <input type="month" id="analysisDateFilter" class="bg-gray-100 text-gray-700 text-[10px] font-bold p-1 rounded-lg border-none outline-none" onchange="renderCharts()">
+                     <div class="relative cursor-pointer bg-gray-100 rounded-lg p-1.5 px-3 flex items-center gap-2 hover:bg-gray-200 transition-colors" onclick="try{document.getElementById('analysisDateFilter').showPicker()}catch(e){}">
+                         <span id="analysisMonthDisplay" class="text-gray-700 text-[10px] font-black">Seçiniz</span>
+                         <i class="fas fa-chevron-down text-[8px] text-gray-400"></i>
+                         <input type="month" id="analysisDateFilter" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="renderCharts()">
+                     </div>
                 </div>
                 <p id="analysisPeriodLabel" class="text-[9px] text-blue-500 font-bold mt-1"></p>
             </div>
@@ -983,6 +987,24 @@
             let end = new Date(start);
             end.setMonth(end.getMonth() + 1);
             return Math.round((end - start) / (1000 * 60 * 60 * 24));
+        }
+
+        function formatPeriodMonth(yyyy_mm) {
+            if (!yyyy_mm) return "-";
+            const [year, month] = yyyy_mm.split('-').map(Number);
+            const salaryDay = state.salaryDay || 15;
+            const startDate = new Date(year, month - 1, salaryDay);
+            const endDate = new Date(year, month, salaryDay);
+            
+            const startMonthName = startDate.toLocaleDateString('tr-TR', { month: 'long' });
+            const endMonthName = new Date(endDate - 1).toLocaleDateString('tr-TR', { month: 'long' });
+            const startYear = startDate.getFullYear();
+            const endYear = new Date(endDate - 1).getFullYear();
+            
+            if (salaryDay === 1) return `${startMonthName} ${startYear}`;
+            return startYear === endYear 
+                ? `${startMonthName} - ${endMonthName} ${startYear}`
+                : `${startMonthName} ${startYear} - ${endMonthName} ${endYear}`;
         }
 
         function pushPanelHistory() {
@@ -3055,6 +3077,7 @@
                 const startStr = startDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
                 const endStr = new Date(endDate - 1).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
                 document.getElementById('analysisPeriodLabel').innerText = `Dönem: ${startStr} - ${endStr}`;
+                document.getElementById('analysisMonthDisplay').innerText = formatPeriodMonth(filterVal);
                 
                 filteredExpenses = state.expenses.filter(e => {
                     const parts = e.date.split('.'); 
@@ -3135,7 +3158,7 @@
                 sortedHistory = sortedHistory.slice(-12);
             }
 
-            const labels = sortedHistory.map(h => h.date);
+            const labels = sortedHistory.map(h => formatPeriodMonth(h.date));
             
             const data = sortedHistory.map(h => {
                 let val = (h.assets || 0) - (h.debts || 0);
@@ -3225,7 +3248,7 @@
                 const originalIndex = state.monthlyHistory.findIndex(item => item === h);
                 return `
                 <tr class="border-b border-gray-100 hover:bg-gray-50">
-                    <td class="py-2">${h.date}</td>
+                    <td class="py-2">${formatPeriodMonth(h.date)}</td>
                     <td class="py-2 text-right text-green-600">₺${(h.assets||0).toLocaleString()}</td>
                     <td class="py-2 text-right text-red-600">₺${(h.debts||0).toLocaleString()}</td>
                     <td class="py-2 text-right text-blue-600">${h.usdRate ? '$'+h.usdRate : '-'}</td>
@@ -4031,11 +4054,6 @@
             document.getElementById('monthlyReportModal').classList.remove('hidden');
             
             pushPanelHistory();
-        }
-        
-        function closeMonthlyReport() {
-            document.getElementById('monthlyReportModal').classList.add('hidden');
-            popPanelHistory();
         }
 
         function openReportForSelectedMonth() {
