@@ -29,7 +29,7 @@
         @media (max-width: 768px) { :root { font-size: 12px; } }
 
         html, body {
-            overflow-x: hidden; /* Yatay kaymayı engeller */
+            overflow-x: hidden;
             width: 100%;
             position: relative;
         }
@@ -82,26 +82,6 @@
         .nav-center-btn { background: #2563eb; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: -30px; border: 4px solid #f8fafc; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
         .nav-center-btn i { font-size: 1.5rem; margin: 0; }
 
-        /* Performans için GPU hızlandırmalı nabız animasyonu */
-        .heartbeat-bg { 
-            position: absolute; top: 0; left: 0; 
-            width: 200%; /* Kaydırma için genişliği artırdık */
-            height: 100%; 
-            background-repeat: repeat-x; 
-            background-position: left center; 
-            background-size: 200px 100%; 
-            opacity: 0.15; 
-            pointer-events: none; 
-            z-index: 0; 
-            will-change: transform; 
-        }
-        .heartbeat-red { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='0,50 50,50 60,20 70,80 80,50 200,50' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3C/svg%3E"); animation: scrollHeartbeat 3s linear infinite; }
-        .heartbeat-green { background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='0,50 50,50 60,20 70,80 80,50 200,50' fill='none' stroke='%2322c55e' stroke-width='2'/%3E%3C/svg%3E"); animation: scrollHeartbeat 1.5s linear infinite; }
-        @keyframes scrollHeartbeat { 
-            from { transform: translateX(0); } 
-            to { transform: translateX(-200px); } 
-        }
-        
         .gradient-text-family { background: linear-gradient(to right, #f97316, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .gradient-text-analysis { background: linear-gradient(to right, #3b82f6, #8b5cf6, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .gradient-text-plan { background: linear-gradient(to right, #22c55e, #14b8a6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -280,48 +260,57 @@
             <div class="md:col-span-3 glass-card p-5 rounded-[2.5rem] bg-gradient-to-br from-slate-800 to-slate-900 text-white shadow-2xl relative overflow-hidden group">
                 <div class="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full mix-blend-overlay filter blur-3xl opacity-20 -mr-16 -mt-16"></div>
                 <div class="relative z-10">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
+                    <!-- Top Row -->
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-white/10 pb-5">
+                        <div class="cursor-pointer group" onclick="openBalanceModal()">
                             <div class="flex items-center gap-2 mb-1">
-                                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest opacity-80">Gerçek Bakiye</p>
-                                <button onclick="openBalanceModal()" class="text-blue-300 hover:text-white text-[7px] font-medium underline decoration-dashed underline-offset-1 transition-colors cursor-pointer relative z-20 opacity-80">Nasıl Hesaplandı?</button>
+                                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest opacity-80 group-hover:text-white transition-colors">Gerçek Bakiye</p>
                             </div>
-                            <h2 id="displayCumulativeLimit" onclick="openBalanceModal()" class="text-5xl font-black tracking-tighter leading-none cursor-pointer">₺0</h2>
-                            
-                            <div class="flex flex-wrap gap-1 mt-2 items-center">
-                                <button onclick="setBalanceMethod('salary')" id="btnCalcSalary" class="text-[7px] font-medium px-1.5 py-0.5 rounded-sm bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10">Gelir Günü</button>
-                                <button onclick="setBalanceMethod('register')" id="btnCalcRegister" class="text-[7px] font-medium px-1.5 py-0.5 rounded-sm bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10">Kayıt Günü</button>
-                                <label class="relative overflow-hidden inline-flex cursor-pointer items-center" onclick="try{document.getElementById('customBalanceDate').showPicker()}catch(e){}">
-                                    <input type="date" id="customBalanceDate" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="setCustomBalanceDate(this.value)">
-                                    <button id="btnCalcCustom" class="text-[7px] font-medium px-1.5 py-0.5 rounded-sm bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1 m-0">
-                                        Şu tarihten itibaren hesapla: <span id="customDateDisplay">Seç</span>
-                                    </button>
-                                </label>
-                            </div>
+                            <h2 id="displayCumulativeLimit" class="text-5xl md:text-6xl font-black tracking-tighter leading-none group-hover:scale-105 transform origin-left transition-transform duration-300">₺0</h2>
                         </div>
-                        <div class="text-right">
-                             <div class="flex items-center justify-end gap-2 mb-1">
-                                <p class="text-blue-400 text-[10px] font-bold uppercase tracking-widest opacity-80">Bugünün Limiti</p>
-                                <button onclick="openCalcModal()" class="text-blue-300 hover:text-white text-[7px] font-medium underline decoration-dashed underline-offset-1 transition-colors cursor-pointer relative z-20 opacity-80">Nasıl Hesaplandı?</button>
+                        
+                        <div class="flex flex-col gap-2 items-end">
+                            <div class="flex gap-1 bg-white/5 p-1 rounded-lg border border-white/10">
+                                <button onclick="setBalanceMethod('salary')" id="btnCalcSalary" class="text-[7px] font-medium px-2 py-1 rounded-md text-slate-300 transition-all hover:bg-white/10">Gelir Günü</button>
+                                <button onclick="setBalanceMethod('register')" id="btnCalcRegister" class="text-[7px] font-medium px-2 py-1 rounded-md text-slate-300 transition-all hover:bg-white/10">Kayıt Günü</button>
                             </div>
-                            <h4 id="displayDailyLimit" class="text-3xl font-black text-white tracking-tight">₺0</h4>
+                            <label class="relative overflow-hidden inline-flex cursor-pointer items-center" onclick="try{document.getElementById('customBalanceDate').showPicker()}catch(e){}">
+                                <input type="date" id="customBalanceDate" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="setCustomBalanceDate(this.value)">
+                                <button id="btnCalcCustom" class="text-[7px] font-medium px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1 w-full justify-center">
+                                    Şu tarihten itibaren: <span id="customDateDisplay" class="font-bold text-white">Seç</span>
+                                </button>
+                            </label>
                         </div>
                     </div>
                     
-                    <div class="mt-3 pt-3 border-t border-white/10 w-full">
-                        <button onclick="openRecoveryPlanModal()" id="btnCalcRecovery" class="w-full text-[8px] font-medium px-3 py-1.5 rounded-lg bg-blue-600/50 hover:bg-blue-600/70 text-white transition-all border border-blue-400/50 flex items-center justify-center gap-1 shadow-sm">
-                            <i class="fas fa-life-ring"></i> Hedefi tutturmam için günde ne kadar harcamalıyım?
-                        </button>
+                    <!-- Middle Row Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                        <div class="bg-slate-800/50 p-4 rounded-2xl border border-slate-700 cursor-pointer hover:bg-slate-800 transition-colors group" onclick="openCalcModal()">
+                            <p class="text-blue-400 text-[9px] font-bold uppercase tracking-widest opacity-80 mb-2 group-hover:text-blue-300 transition-colors">Bugünün Limiti</p>
+                            <div class="flex justify-between items-end">
+                                <h4 id="displayDailyLimit" class="text-3xl font-black text-white tracking-tight">₺0</h4>
+                                <span class="text-slate-500 text-[10px] group-hover:text-blue-400 transition-colors"><i class="fas fa-info-circle"></i></span>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-blue-600/10 p-4 rounded-2xl border border-blue-500/20 cursor-pointer hover:bg-blue-600/20 transition-colors group" onclick="openRecoveryPlanModal()">
+                            <p class="text-blue-200 text-[9px] font-bold uppercase tracking-widest opacity-90 mb-2 group-hover:text-white transition-colors">Hedefi Tutturmak İçin Gereken Günlük</p>
+                            <div class="flex justify-between items-end">
+                                <h4 id="displayRequiredDaily" class="text-3xl font-black text-blue-400 tracking-tight">₺0</h4>
+                                <span class="text-blue-500/50 text-[10px] group-hover:text-blue-300 transition-colors"><i class="fas fa-calculator"></i></span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="flex items-center gap-2 mt-4 pt-4 border-t border-white/10">
-                        <div class="bg-white/10 px-3 py-2 rounded-xl backdrop-blur-md border border-white/5 flex-1 text-center">
-                            <span class="text-[8px] text-slate-300 font-bold uppercase block">Maaşa Kalan</span>
-                            <span id="displayRemainingDays" class="text-base font-black text-white">-- Gün</span>
+                    <!-- Bottom Row -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-white/5 px-4 py-3 rounded-2xl border border-white/5 text-center">
+                            <span class="text-[8px] text-slate-400 font-bold uppercase tracking-widest block mb-1">Maaşa Kalan</span>
+                            <span id="displayRemainingDays" class="text-lg font-black text-white">-- Gün</span>
                         </div>
-                         <div class="bg-white/10 px-3 py-2 rounded-xl backdrop-blur-md border border-white/5 flex-1 text-center">
-                            <span class="text-[8px] text-slate-300 font-bold uppercase block">Hedef Birikim</span>
-                            <span id="sumSavings" class="text-base font-black text-green-400">₺0</span>
+                         <div class="bg-white/5 px-4 py-3 rounded-2xl border border-white/5 text-center">
+                            <span class="text-[8px] text-slate-400 font-bold uppercase tracking-widest block mb-1">Hedef Birikim</span>
+                            <span id="sumSavings" class="text-lg font-black text-green-400">₺0</span>
                         </div>
                     </div>
                 </div>
@@ -760,11 +749,10 @@
         </div>
     </div>
     
-    <!-- YENİ: HEDEFE DÖNÜŞ (RECOVERY) MODALI -->
     <div id="recoveryPlanModal" class="side-panel">
         <div class="p-6 h-full flex flex-col">
             <div class="flex justify-between items-center mb-6 pb-4 border-b">
-                <h4 class="font-black text-xl text-gray-800 tracking-tight">Hedefe Dönüş Planı</h4>
+                <h4 class="font-black text-xl text-gray-800 tracking-tight">Hedefi Tutturmak İçin Gereken</h4>
                 <button onclick="closeRecoveryPlanModal()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
             </div>
             <div id="recoveryPlanContent" class="flex-1 overflow-y-auto custom-scrollbar pb-10">
@@ -2103,17 +2091,15 @@
             const btnSalary = document.getElementById('btnCalcSalary');
             const btnRegister = document.getElementById('btnCalcRegister');
             const btnCustom = document.getElementById('btnCalcCustom');
-            const btnRecovery = document.getElementById('btnCalcRecovery');
             const customDateDisplay = document.getElementById('customDateDisplay');
             
             [btnSalary, btnRegister].forEach(btn => {
-                btn.className = "text-[7px] font-medium px-1.5 py-0.5 rounded-sm bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10";
+                btn.className = "text-[7px] font-medium px-2 py-1 rounded-md text-slate-300 transition-all hover:bg-white/10";
             });
-            btnCustom.className = "text-[7px] font-medium px-1.5 py-0.5 rounded-sm bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1 m-0";
-            btnRecovery.className = "w-full text-[8px] font-medium px-3 py-1.5 rounded-lg bg-blue-600/10 hover:bg-blue-600/20 text-blue-700 transition-all border border-blue-400/30 flex items-center justify-center gap-1 shadow-sm";
-            btnRecovery.innerHTML = '<i class="fas fa-life-ring"></i> Hedefi tutturmam için günde ne kadar harcamalıyım?';
+            btnCustom.className = "text-[7px] font-medium px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1 w-full justify-center";
             
-            const activeBtnClass = "text-[7px] font-medium px-1.5 py-0.5 rounded-sm bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
+            const activeBtnClass = "text-[7px] font-medium px-2 py-1 rounded-md bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
+            const activeCustomBtnClass = "text-[7px] font-medium px-2 py-1 rounded-lg bg-green-500 text-white shadow-md border border-green-400 transform scale-105 pointer-events-none flex items-center gap-1 w-full justify-center";
 
             let dailyLimitToUse = state.manualDailyLimit || 0;
 
@@ -2127,17 +2113,10 @@
                 startCalc = lastSalaryDate;
                 startCalc.setHours(0,0,0,0);
             } else if (calcMethod === 'custom') {
-                btnCustom.className = activeBtnClass + " pointer-events-none flex items-center gap-1 m-0";
+                btnCustom.className = activeCustomBtnClass;
                 startCalc = new Date(state.customBalanceDate || state.registrationDate);
                 if(isNaN(startCalc.getTime())) startCalc = new Date();
                 startCalc.setHours(0,0,0,0);
-            } else if (calcMethod === 'recovery') {
-                btnRecovery.className = "w-full text-[8px] font-medium px-3 py-1.5 rounded-lg bg-green-500 hover:bg-green-600 text-white shadow-md border border-green-500 transition-all flex items-center justify-center gap-1 shadow-sm";
-                btnRecovery.innerHTML = '<i class="fas fa-heartbeat animate-pulse text-[10px]"></i> Kurtarma Planı Aktif (Yeniden Hesapla)';
-                startCalc = new Date(state.recoveryStartDate || state.registrationDate);
-                if(isNaN(startCalc.getTime())) startCalc = new Date();
-                startCalc.setHours(0,0,0,0);
-                dailyLimitToUse = state.recoveryDailyLimit || state.manualDailyLimit || 0;
             } else {
                 btnRegister.className = activeBtnClass;
                 startCalc = new Date(state.registrationDate);
@@ -2146,7 +2125,7 @@
             }
 
             if (startCalc) {
-                if (calcMethod === 'recovery') {
+                if (calcMethod !== 'custom') {
                     customDateDisplay.innerText = "Seç";
                 } else {
                     customDateDisplay.innerText = startCalc.toLocaleDateString('tr-TR', {day:'2-digit', month:'2-digit', year:'numeric'});
@@ -2169,26 +2148,11 @@
                     
                     if (e.date === todayStr) {
                         spentToday += e.amount;
-                        // Eğer kurtarma modundaysak, sadece plana aktarıldıktan sonraki bugünkü harcamaları bütçeden düş
-                        if (calcMethod === 'recovery' && state.recoveryStartTs) {
-                            if (e.ts >= state.recoveryStartTs) {
-                                spentTodayInBudget += e.amount;
-                            }
-                        } else {
-                            spentTodayInBudget += e.amount;
-                        }
+                        spentTodayInBudget += e.amount;
                     }
 
-                    // Genel totalSpent hesabı (Gerçek bakiye için)
-                    if (calcMethod === 'recovery' && state.recoveryStartTs) {
-                        // Sadece kurtarma anından sonraki tüm harcamaları topla
-                        if (e.ts >= state.recoveryStartTs) {
-                            totalSpent += e.amount;
-                        }
-                    } else {
-                        if (d >= startCalc) {
-                            totalSpent += e.amount;
-                        }
+                    if (d >= startCalc) {
+                        totalSpent += e.amount;
                     }
                 }
             });
@@ -2199,15 +2163,55 @@
             const cumEl = document.getElementById('displayCumulativeLimit');
             cumEl.innerText = `₺${Math.floor(cumulative).toLocaleString()}`;
             
-            cumEl.classList.remove('animate-pulse-red', 'animate-pulse-green');
-            if (cumulative < 0) cumEl.classList.add('animate-pulse-red');
-            else if (cumulative > 0) cumEl.classList.add('animate-pulse-green');
+            cumEl.classList.remove('text-red-400', 'text-green-400', 'text-white');
+            if (cumulative < 0) cumEl.classList.add('text-red-500');
+            else if (cumulative > 0) cumEl.classList.add('text-green-500');
+            else cumEl.classList.add('text-white');
 
             document.getElementById('todayTotal').innerText = `Bugün: ₺${Math.floor(spentToday).toLocaleString()}`;
             
             let targetDate = new Date(now.getFullYear(), now.getMonth(), state.salaryDay||15);
             if (now.getDate() >= (state.salaryDay||15)) targetDate.setMonth(targetDate.getMonth()+1);
             document.getElementById('displayRemainingDays').innerText = `${Math.ceil((targetDate - now)/(1000*60*60*24))} Gün`;
+
+            // Hedefi Tutturmak İçin Gereken Hesaplama
+            const sd = state.salaryDay || 15;
+            let periodStart = new Date(now.getFullYear(), now.getMonth(), sd);
+            if (now.getDate() < sd) {
+                periodStart.setMonth(periodStart.getMonth() - 1);
+            }
+            periodStart.setHours(0,0,0,0);
+            
+            let nextSalaryDate = new Date(periodStart);
+            nextSalaryDate.setMonth(nextSalaryDate.getMonth() + 1);
+            
+            const daysInPeriod = Math.round((nextSalaryDate - periodStart) / (1000 * 60 * 60 * 24));
+            const remainingDaysInPeriod = Math.max(1, Math.ceil((nextSalaryDate - now) / (1000 * 60 * 60 * 24)));
+            
+            let spentInPeriod = 0;
+            state.expenses.forEach(e => {
+                const dParts = e.date.split('.');
+                if(dParts.length === 3) {
+                    const d = new Date(dParts[2], dParts[1]-1, dParts[0]);
+                    d.setHours(0,0,0,0);
+                    if (d >= periodStart && d < nextSalaryDate) {
+                        spentInPeriod += e.amount;
+                    }
+                }
+            });
+
+            const totalPeriodBudget = (state.manualDailyLimit || 0) * daysInPeriod;
+            const remainingPeriodBudget = totalPeriodBudget - spentInPeriod;
+            const requiredDailyLimit = remainingDaysInPeriod > 0 ? (remainingPeriodBudget / remainingDaysInPeriod) : 0;
+            
+            const reqDailyEl = document.getElementById('displayRequiredDaily');
+            reqDailyEl.innerText = `₺${Math.floor(requiredDailyLimit).toLocaleString()}`;
+            reqDailyEl.classList.remove('text-blue-400', 'text-red-400');
+            if (requiredDailyLimit < 0) {
+                reqDailyEl.classList.add('text-red-400');
+            } else {
+                reqDailyEl.classList.add('text-blue-400');
+            }
 
             const assets = state.assets.filter(a => !a.excludeFromNetWorth).reduce((s,a)=>s+(a.val||0),0);
             const loans = state.loans.filter(l=>!l.excludeFromDebt).reduce((s,l)=>s+(l.totalDebt||0),0);
@@ -3324,12 +3328,12 @@
             const customDateDisplay = document.getElementById('customDateDisplay');
             
             [btnSalary, btnRegister].forEach(btn => {
-                btn.className = "text-[7px] font-medium px-1.5 py-0.5 rounded-sm bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10";
+                btn.className = "text-[7px] font-medium px-2 py-1 rounded-md text-slate-300 transition-all hover:bg-white/10";
             });
-            btnCustom.className = "text-[7px] font-medium px-1.5 py-0.5 rounded-sm bg-white/10 hover:bg-white/20 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1 m-0";
+            btnCustom.className = "text-[7px] font-medium px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1 w-full justify-center";
             
-            const activeBtnClass = "text-[7px] font-medium px-1.5 py-0.5 rounded-sm bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
-            const activeCustomBtnClass = "text-[7px] font-medium px-1.5 py-0.5 rounded-sm bg-green-500 text-white shadow-md border border-green-400 transform scale-105 pointer-events-none flex items-center gap-1 m-0";
+            const activeBtnClass = "text-[7px] font-medium px-2 py-1 rounded-md bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
+            const activeCustomBtnClass = "text-[7px] font-medium px-2 py-1 rounded-lg bg-green-500 text-white shadow-md border border-green-400 transform scale-105 pointer-events-none flex items-center gap-1 w-full justify-center";
 
             let dailyLimitToUse = state.manualDailyLimit || 0;
 
