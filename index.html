@@ -28,23 +28,9 @@
         :root { font-size: 14px; }
         @media (max-width: 768px) { :root { font-size: 12px; } }
 
-        html, body {
-            overflow-x: hidden;
-            width: 100%;
-            position: relative;
-        }
-
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #f8fafc; 
-            color: #1e293b;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none; -webkit-user-select: none;
-            padding-bottom: 80px; 
-        }
-        
+        html, body { overflow-x: hidden; width: 100%; position: relative; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; padding-bottom: 80px; }
         input, textarea { user-select: text; -webkit-user-select: text; }
-
         .glass-card { background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1); backdrop-filter: blur(10px); }
         .hidden { display: none !important; }
         input[type="range"] { accent-color: #2563eb; }
@@ -52,43 +38,30 @@
         .overlay.active { opacity: 1; pointer-events: auto; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        
         .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
         .health-detail { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
         .health-detail.open { max-height: 1000px; transition: max-height 0.5s ease-in; }
-        
         .fade-text { animation: textFade 0.5s ease-in-out; }
         @keyframes textFade { 0% { opacity: 0; } 100% { opacity: 1; } }
 
         /* Yeni Agresif (Acı Acı) Yanıp Sönme Animasyonları */
-        @keyframes pulse-red-intense { 
-            0%, 100% { color: #ef4444; text-shadow: 0 0 10px rgba(239, 68, 68, 0.4); } 
-            50% { color: #fca5a5; text-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 30px rgba(239, 68, 68, 0.6); } 
-        }
-        @keyframes pulse-green-intense { 
-            0%, 100% { color: #22c55e; text-shadow: 0 0 10px rgba(34, 197, 94, 0.4); } 
-            50% { color: #86efac; text-shadow: 0 0 20px rgba(34, 197, 94, 0.8), 0 0 30px rgba(34, 197, 94, 0.6); } 
-        }
+        @keyframes pulse-red-intense { 0%, 100% { color: #ef4444; text-shadow: 0 0 10px rgba(239, 68, 68, 0.4); } 50% { color: #fca5a5; text-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 30px rgba(239, 68, 68, 0.6); } }
+        @keyframes pulse-green-intense { 0%, 100% { color: #22c55e; text-shadow: 0 0 10px rgba(34, 197, 94, 0.4); } 50% { color: #86efac; text-shadow: 0 0 20px rgba(34, 197, 94, 0.8), 0 0 30px rgba(34, 197, 94, 0.6); } }
         .animate-pulse-red-intense { animation: pulse-red-intense 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         .animate-pulse-green-intense { animation: pulse-green-intense 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 
         @keyframes softPulse { 0% { background-color: #f9fafb; border-color: #e5e7eb; } 50% { background-color: #eff6ff; border-color: #bfdbfe; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); } 100% { background-color: #f9fafb; border-color: #e5e7eb; } }
         .animate-soft-pulse { animation: softPulse 3s infinite ease-in-out; }
-
         .side-panel { position: fixed; top: 0; right: 0; height: 100%; width: 100%; max-width: 28rem; background: white; z-index: 60; box-shadow: -10px 0 30px rgba(0,0,0,0.1); transform: translateX(100%); visibility: hidden; transition: transform 0.3s ease-in-out, visibility 0s linear 0.3s; display: flex; flex-direction: column; }
         .side-panel.open { transform: translateX(0); visibility: visible; transition: transform 0.3s ease-in-out, visibility 0s linear 0s; }
-
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-top: 1px solid #e2e8f0; display: flex; justify-content: space-around; align-items: center; z-index: 50; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -5px 20px rgba(0,0,0,0.05); }
         .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #64748b; font-size: 0.7rem; font-weight: 700; gap: 4px; padding: 5px; width: 20%; cursor: pointer;}
         .nav-item i { font-size: 1.3rem; margin-bottom: 2px; }
         .nav-center-btn { background: #2563eb; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: -30px; border: 4px solid #f8fafc; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
         .nav-center-btn i { font-size: 1.5rem; margin: 0; }
-
         .gradient-text-family { background: linear-gradient(to right, #f97316, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .gradient-text-analysis { background: linear-gradient(to right, #3b82f6, #8b5cf6, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .gradient-text-plan { background: linear-gradient(to right, #22c55e, #14b8a6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -269,47 +242,46 @@
                 <div class="relative z-10">
                     
                     <!-- ÜST SATIR: GERÇEK BAKİYE ve BUTONLAR -->
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-slate-800 pb-5">
-                        
+                    <div class="flex flex-row justify-between items-start mb-5 gap-2 border-b border-slate-800 pb-4">
                         <!-- Sol Taraf: Gerçek Bakiye -->
-                        <div class="cursor-pointer group w-full md:w-auto" onclick="openBalanceModal()">
-                            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1 group-hover:text-blue-300 transition-colors flex items-center gap-1">GERÇEK BAKİYE <i class="fas fa-question-circle opacity-50"></i></p>
-                            <h2 id="displayCumulativeLimit" class="text-5xl md:text-[4rem] font-black tracking-tighter leading-none mt-1 group-hover:scale-[1.02] transform origin-left transition-transform duration-300">₺0</h2>
+                        <div class="cursor-pointer group flex-shrink-0" onclick="openBalanceModal()">
+                            <p class="text-slate-400 text-[9px] font-bold uppercase tracking-widest mb-0.5 group-hover:text-blue-300 transition-colors flex items-center gap-1">GERÇEK BAKİYE <i class="fas fa-question-circle opacity-50"></i></p>
+                            <h2 id="displayCumulativeLimit" class="text-4xl md:text-5xl font-black tracking-tighter leading-none mt-1 group-hover:scale-[1.02] transform origin-left transition-transform duration-300">₺0</h2>
                         </div>
                         
                         <!-- Sağ Taraf: Ayar Butonları -->
-                        <div class="flex flex-col gap-2 w-full md:w-auto md:items-end">
-                            <div class="flex gap-2 w-full md:w-auto">
-                                <button onclick="setBalanceMethod('salary')" id="btnCalcSalary" class="flex-1 md:flex-none text-[10px] font-bold px-4 py-2 rounded-xl bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors border border-slate-700">Gelir Günü</button>
-                                <button onclick="setBalanceMethod('register')" id="btnCalcRegister" class="flex-1 md:flex-none text-[10px] font-bold px-4 py-2 rounded-xl bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors border border-slate-700">Kayıt Günü</button>
+                        <div class="flex flex-col gap-1.5 items-end">
+                            <div class="flex gap-1.5">
+                                <button onclick="setBalanceMethod('salary')" id="btnCalcSalary" class="text-[8px] font-bold px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors border border-slate-700">Gelir Günü</button>
+                                <button onclick="setBalanceMethod('register')" id="btnCalcRegister" class="text-[8px] font-bold px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors border border-slate-700">Kayıt Günü</button>
                             </div>
-                            <label class="relative overflow-hidden inline-flex cursor-pointer items-center w-full md:w-auto" onclick="try{document.getElementById('customBalanceDate').showPicker()}catch(e){}">
+                            <label class="relative overflow-hidden inline-flex cursor-pointer items-center" onclick="try{document.getElementById('customBalanceDate').showPicker()}catch(e){}">
                                 <input type="date" id="customBalanceDate" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="setCustomBalanceDate(this.value)">
-                                <button id="btnCalcCustom" class="text-[9px] font-medium px-4 py-2 rounded-xl bg-slate-800/50 hover:bg-slate-700 text-slate-300 transition-all border border-slate-700/50 pointer-events-none flex items-center justify-center gap-1 w-full md:w-auto">
-                                    Şu tarihten itibaren: <span id="customDateDisplay" class="font-bold text-white ml-1">Seç</span>
+                                <button id="btnCalcCustom" class="text-[8px] font-medium px-2 py-1 rounded-lg bg-slate-800/50 hover:bg-slate-700 text-slate-300 transition-all border border-slate-700/50 pointer-events-none flex items-center gap-1">
+                                    Şu tarihten itibaren: <span id="customDateDisplay" class="font-bold text-white ml-0.5">Seç</span>
                                 </button>
                             </label>
                         </div>
                     </div>
                     
                     <!-- ORTA SATIR: 2 Lİ KART -->
-                    <div class="space-y-3 mb-4">
+                    <div class="grid grid-cols-2 gap-3 mb-4">
                         <!-- Bugünün Limiti Kartı -->
-                        <div class="bg-[#151e32] p-4 rounded-2xl border border-slate-800 cursor-pointer hover:bg-slate-800 transition-colors flex justify-between items-center group" onclick="openCalcModal()">
-                            <div>
-                                <p class="text-blue-400 text-[10px] font-bold uppercase tracking-widest opacity-90 mb-1 group-hover:text-blue-300 transition-colors">Bugünün Limiti</p>
-                                <h4 id="displayDailyLimit" class="text-3xl font-black text-white tracking-tight">₺0</h4>
+                        <div class="bg-[#151e32] p-3 md:p-4 rounded-2xl border border-slate-800 cursor-pointer hover:bg-slate-800 transition-colors flex flex-col justify-between group" onclick="openCalcModal()">
+                            <div class="flex justify-between items-start mb-2">
+                                <p class="text-blue-400 text-[8px] md:text-[9px] font-bold uppercase tracking-widest opacity-90 group-hover:text-blue-300 transition-colors">Bugünün Limiti</p>
+                                <span class="text-slate-600 group-hover:text-blue-400 transition-colors"><i class="fas fa-info-circle text-sm md:text-base"></i></span>
                             </div>
-                            <span class="text-slate-600 group-hover:text-blue-400 transition-colors"><i class="fas fa-info-circle text-xl"></i></span>
+                            <h4 id="displayDailyLimit" class="text-2xl md:text-3xl font-black text-white tracking-tight">₺0</h4>
                         </div>
                         
                         <!-- Hedefi Tutturmak İçin Gereken Kartı -->
-                        <div class="bg-blue-900/20 p-4 rounded-2xl border border-blue-800/30 cursor-pointer hover:bg-blue-900/40 transition-colors flex justify-between items-center group" onclick="openRecoveryPlanModal()">
-                            <div>
-                                <p class="text-blue-300 text-[9px] font-bold uppercase tracking-widest opacity-90 mb-1 leading-relaxed">Hedefi Tutturmak İçin Gereken Günlük<br>Ortalama Harcama</p>
-                                <h4 id="displayRequiredDaily" class="text-3xl font-black text-blue-400 tracking-tight">₺0</h4>
+                        <div class="bg-blue-900/20 p-3 md:p-4 rounded-2xl border border-blue-800/30 cursor-pointer hover:bg-blue-900/40 transition-colors flex flex-col justify-between group" onclick="openRecoveryPlanModal()">
+                            <div class="flex justify-between items-start mb-2">
+                                <p class="text-blue-300 text-[8px] md:text-[9px] font-bold uppercase tracking-widest opacity-90 leading-tight group-hover:text-white transition-colors pr-2">Hedefi Tutturmak İçin Gereken Ort.</p>
+                                <span class="text-blue-500/40 group-hover:text-blue-400 transition-colors"><i class="fas fa-calculator text-sm md:text-base"></i></span>
                             </div>
-                            <span class="text-blue-500/40 group-hover:text-blue-400 transition-colors"><i class="fas fa-calculator text-xl"></i></span>
+                            <h4 id="displayRequiredDaily" class="text-2xl md:text-3xl font-black text-blue-400 tracking-tight">₺0</h4>
                         </div>
                     </div>
 
@@ -973,8 +945,6 @@
         let editingCategoryIndex = -1; 
         let originalAdminUid = null;
 
-        // Sadece mobil cihazlarda geri tuşuyla kapatma özelliğini aktifleştiriyoruz.
-        // PC tarayıcılarında history.back() sekmeyi tamamen kapatma/farklı siteye atma sorunu yaratabilir.
         const isMobileView = () => window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
         function getDaysInCurrentPeriod() {
@@ -1053,7 +1023,6 @@
             closeAllPopupsUIOnly();
             popPanelHistory();
         }
-        // -----------------------------------
 
         function showAppAlert(message) {
             document.getElementById('appAlertMsg').innerText = message;
@@ -1535,7 +1504,6 @@
         async function inspectUser(targetUid, targetName) {
             if (!originalAdminUid) originalAdminUid = currentUser.uid;
             
-            // Paneli asenkron işlemden önce hemen kapatıyoruz ki hem hızlı hissettirsin hem de PC'de tarayıcı kafası karışmasın.
             closeAdminPanel();
             document.getElementById('dashWelcome').innerText = "Yükleniyor...";
             
@@ -1603,8 +1571,7 @@
             }
         }
 
-        function startAdviceRotator() {
-        }
+        function startAdviceRotator() {}
 
         function checkGamificationStatus() {
             const todayStr = new Date().toLocaleDateString('tr-TR');
@@ -2055,7 +2022,7 @@
                     if(!state.expenses) state.expenses = [];
                     if(!state.monthlyHistory) state.monthlyHistory = [];
                     if(!state.familyMembers) state.familyMembers = [];
-                    if(!state.reports) state.reports = {}; // Ensure reports object exists
+                    if(!state.reports) state.reports = {}; 
                     
                     if(!state.categories || state.categories.length === 0) {
                         state.categories = ["Market / Manav", "Kasap", "Akaryakıt", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"];
@@ -2105,11 +2072,11 @@
             const btnCustom = document.getElementById('btnCalcCustom');
             const customDateDisplay = document.getElementById('customDateDisplay');
             
-            const inactiveBtn = "flex-1 md:flex-none text-[10px] font-bold px-4 py-2 rounded-xl bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors border border-slate-700";
-            const activeBtn = "flex-1 md:flex-none text-[10px] font-bold px-4 py-2 rounded-xl bg-green-500 text-white shadow-lg shadow-green-500/20 border border-green-400 transform scale-[1.02] transition-all";
+            const inactiveBtn = "flex-1 md:flex-none text-[8px] font-bold px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors border border-slate-700";
+            const activeBtn = "flex-1 md:flex-none text-[8px] font-bold px-2.5 py-1 rounded-lg bg-green-500 text-white shadow-md border border-green-400 transform scale-[1.02] transition-all";
             
-            const inactiveCustomBtn = "text-[9px] font-medium px-4 py-2 rounded-xl bg-slate-800/50 hover:bg-slate-700 text-slate-300 transition-all border border-slate-700/50 pointer-events-none flex items-center justify-center gap-1 w-full md:w-auto";
-            const activeCustomBtn = "text-[9px] font-medium px-4 py-2 rounded-xl bg-green-500/10 text-green-400 transition-all border border-green-500/30 pointer-events-none flex items-center justify-center gap-1 w-full md:w-auto";
+            const inactiveCustomBtn = "text-[8px] font-medium px-2 py-1 rounded-lg bg-slate-800/50 hover:bg-slate-700 text-slate-300 transition-all border border-slate-700/50 pointer-events-none flex items-center gap-1";
+            const activeCustomBtn = "text-[8px] font-medium px-2 py-1 rounded-lg bg-green-500/20 text-green-400 transition-all border border-green-500/30 pointer-events-none flex items-center gap-1";
 
             btnSalary.className = inactiveBtn;
             btnRegister.className = inactiveBtn;
@@ -2132,7 +2099,7 @@
                 if(isNaN(startCalc.getTime())) startCalc = new Date();
                 startCalc.setHours(0,0,0,0);
             } else if (calcMethod === 'recovery') {
-                btnCustom.className = activeCustomBtn; // Show as active since it overrides default
+                btnCustom.className = activeCustomBtn; 
                 startCalc = new Date(state.recoveryStartDate || state.registrationDate);
                 if(isNaN(startCalc.getTime())) startCalc = new Date();
                 startCalc.setHours(0,0,0,0);
@@ -2170,7 +2137,6 @@
                     
                     if (e.date === todayStr) {
                         spentToday += e.amount;
-                        // Eğer kurtarma modundaysak, sadece plana aktarıldıktan sonraki bugünkü harcamaları bütçeden düş
                         if (calcMethod === 'recovery' && state.recoveryStartTs) {
                             if (e.ts >= state.recoveryStartTs) {
                                 spentTodayInBudget += e.amount;
@@ -2180,9 +2146,7 @@
                         }
                     }
 
-                    // Genel totalSpent hesabı (Gerçek bakiye için)
                     if (calcMethod === 'recovery' && state.recoveryStartTs) {
-                        // Sadece kurtarma anından sonraki tüm harcamaları topla
                         if (e.ts >= state.recoveryStartTs) {
                             totalSpent += e.amount;
                         }
@@ -2512,12 +2476,6 @@
             });
         }
 
-        const subTypes = {
-            'Altın': ['Gr. (24 Ayar)', 'Gr & Ajda (22 Ayar)', 'Çeyrek', 'Yarım', 'Tam'],
-            'Döviz': ['Dolar', 'Euro', 'GBP', 'İsviçre Frangı'],
-            'Gümüş': ['Gümüş']
-        };
-
         function toggleInlineAdd(prefix) {
             const container = document.getElementById(`inlineAdd${prefix}Container`);
             const btn = document.getElementById(`btnShow${prefix}Form`);
@@ -2594,7 +2552,12 @@
                 html = `<input type="text" id="${prefix}_name" placeholder="Kalem Adı" class="${cmnCls} mb-2">
                         <input type="number" id="${prefix}_total" placeholder="Tutar (TL)" class="${cmnCls}">`;
             } else {
-                const options = subTypes[type].map(s => `<option value="${s}">${s}</option>`).join('');
+                const subTypesMapping = {
+                    'Altın': ['Gr. (24 Ayar)', 'Gr & Ajda (22 Ayar)', 'Çeyrek', 'Yarım', 'Tam'],
+                    'Döviz': ['Dolar', 'Euro', 'GBP', 'İsviçre Frangı'],
+                    'Gümüş': ['Gümüş']
+                };
+                const options = subTypesMapping[type].map(s => `<option value="${s}">${s}</option>`).join('');
                 html = `<select id="${prefix}_sub" class="${cmnCls} mb-2" onchange="fetchInlineRate('${prefix}', '${type}')">${options}</select>
                         <input type="text" id="${prefix}_name" placeholder="Özel İsim (Opsiyonel)" class="${cmnCls} mb-2">
                         <div class="flex gap-2 mb-2">
@@ -3373,18 +3336,16 @@
             const btnCustom = document.getElementById('btnCalcCustom');
             const customDateDisplay = document.getElementById('customDateDisplay');
             
-            [btnSalary, btnRegister].forEach(btn => {
-                btn.className = "text-[7px] font-medium px-2 py-1 rounded-md text-slate-300 transition-all hover:bg-white/10";
-            });
-            btnCustom.className = "text-[7px] font-medium px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1 w-full justify-center";
+            const inactiveBtn = "flex-1 md:flex-none text-[8px] font-bold px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors border border-slate-700";
+            const activeBtn = "flex-1 md:flex-none text-[8px] font-bold px-2.5 py-1 rounded-lg bg-green-500 text-white shadow-md border border-green-400 transform scale-[1.02] transition-all";
             
-            const activeBtnClass = "text-[7px] font-medium px-2 py-1 rounded-md bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
-            const activeCustomBtnClass = "text-[7px] font-medium px-2 py-1 rounded-lg bg-green-500 text-white shadow-md border border-green-400 transform scale-105 pointer-events-none flex items-center gap-1 w-full justify-center";
+            const inactiveCustomBtn = "text-[8px] font-medium px-2 py-1 rounded-lg bg-slate-800/50 hover:bg-slate-700 text-slate-300 transition-all border border-slate-700/50 pointer-events-none flex items-center gap-1";
+            const activeCustomBtn = "text-[8px] font-medium px-2 py-1 rounded-lg bg-green-500/20 text-green-400 transition-all border border-green-500/30 pointer-events-none flex items-center gap-1";
 
             let dailyLimitToUse = state.manualDailyLimit || 0;
 
             if (calcMethod === 'salary') {
-                btnSalary.className = activeBtnClass;
+                btnSalary.className = activeBtn;
                 const salaryDay = state.salaryDay || 15;
                 let lastSalaryDate = new Date(now.getFullYear(), now.getMonth(), salaryDay);
                 if (now.getDate() < salaryDay) {
@@ -3393,7 +3354,7 @@
                 startCalc = lastSalaryDate;
                 startCalc.setHours(0,0,0,0);
             } else if (calcMethod === 'custom') {
-                btnCustom.className = activeCustomBtnClass;
+                btnCustom.className = activeCustomBtn;
                 startCalc = new Date(state.customBalanceDate || state.registrationDate);
                 if(isNaN(startCalc.getTime())) startCalc = new Date();
                 startCalc.setHours(0,0,0,0);
@@ -3403,7 +3364,7 @@
                 startCalc.setHours(0,0,0,0);
                 dailyLimitToUse = state.recoveryDailyLimit || state.manualDailyLimit || 0;
             } else {
-                btnRegister.className = activeBtnClass;
+                btnRegister.className = activeBtn;
                 startCalc = new Date(state.registrationDate);
                 if(isNaN(startCalc.getTime())) startCalc = new Date();
                 startCalc.setHours(0,0,0,0);
@@ -3509,7 +3470,6 @@
             const now = new Date();
             let startCalcDate;
 
-            // Eğer özel bir tarih seçildiyse onu kullan, yoksa varsayılan maaş gününü hesapla
             if (typeof customStartDateStr === 'string' && customStartDateStr.trim() !== '') {
                 startCalcDate = new Date(customStartDateStr);
             } else {
@@ -3637,7 +3597,7 @@
             state.balanceCalcMethod = 'recovery';
             state.recoveryDailyLimit = limit;
             state.recoveryStartDate = new Date().toISOString();
-            state.recoveryStartTs = Date.now(); // Tıklanılan anlık zaman damgası eklendi.
+            state.recoveryStartTs = Date.now(); 
             saveToCloud();
             
             closeRecoveryPlanModal();
