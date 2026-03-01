@@ -28,9 +28,23 @@
         :root { font-size: 14px; }
         @media (max-width: 768px) { :root { font-size: 12px; } }
 
-        html, body { overflow-x: hidden; width: 100%; position: relative; }
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; padding-bottom: 80px; }
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+            position: relative;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc; 
+            color: #1e293b;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none; -webkit-user-select: none;
+            padding-bottom: 80px; 
+        }
+        
         input, textarea { user-select: text; -webkit-user-select: text; }
+
         .glass-card { background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1); backdrop-filter: blur(10px); }
         .hidden { display: none !important; }
         input[type="range"] { accent-color: #2563eb; }
@@ -38,30 +52,43 @@
         .overlay.active { opacity: 1; pointer-events: auto; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        
         .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         .health-detail { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
         .health-detail.open { max-height: 1000px; transition: max-height 0.5s ease-in; }
+        
         .fade-text { animation: textFade 0.5s ease-in-out; }
         @keyframes textFade { 0% { opacity: 0; } 100% { opacity: 1; } }
 
         /* Yeni Agresif (Acı Acı) Yanıp Sönme Animasyonları */
-        @keyframes pulse-red-intense { 0%, 100% { color: #ef4444; text-shadow: 0 0 10px rgba(239, 68, 68, 0.4); } 50% { color: #fca5a5; text-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 30px rgba(239, 68, 68, 0.6); } }
-        @keyframes pulse-green-intense { 0%, 100% { color: #22c55e; text-shadow: 0 0 10px rgba(34, 197, 94, 0.4); } 50% { color: #86efac; text-shadow: 0 0 20px rgba(34, 197, 94, 0.8), 0 0 30px rgba(34, 197, 94, 0.6); } }
+        @keyframes pulse-red-intense { 
+            0%, 100% { color: #ef4444; text-shadow: 0 0 10px rgba(239, 68, 68, 0.4); } 
+            50% { color: #fca5a5; text-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 30px rgba(239, 68, 68, 0.6); } 
+        }
+        @keyframes pulse-green-intense { 
+            0%, 100% { color: #22c55e; text-shadow: 0 0 10px rgba(34, 197, 94, 0.4); } 
+            50% { color: #86efac; text-shadow: 0 0 20px rgba(34, 197, 94, 0.8), 0 0 30px rgba(34, 197, 94, 0.6); } 
+        }
         .animate-pulse-red-intense { animation: pulse-red-intense 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         .animate-pulse-green-intense { animation: pulse-green-intense 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 
         @keyframes softPulse { 0% { background-color: #f9fafb; border-color: #e5e7eb; } 50% { background-color: #eff6ff; border-color: #bfdbfe; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); } 100% { background-color: #f9fafb; border-color: #e5e7eb; } }
         .animate-soft-pulse { animation: softPulse 3s infinite ease-in-out; }
+
         .side-panel { position: fixed; top: 0; right: 0; height: 100%; width: 100%; max-width: 28rem; background: white; z-index: 60; box-shadow: -10px 0 30px rgba(0,0,0,0.1); transform: translateX(100%); visibility: hidden; transition: transform 0.3s ease-in-out, visibility 0s linear 0.3s; display: flex; flex-direction: column; }
         .side-panel.open { transform: translateX(0); visibility: visible; transition: transform 0.3s ease-in-out, visibility 0s linear 0s; }
+
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-top: 1px solid #e2e8f0; display: flex; justify-content: space-around; align-items: center; z-index: 50; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -5px 20px rgba(0,0,0,0.05); }
         .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #64748b; font-size: 0.7rem; font-weight: 700; gap: 4px; padding: 5px; width: 20%; cursor: pointer;}
         .nav-item i { font-size: 1.3rem; margin-bottom: 2px; }
         .nav-center-btn { background: #2563eb; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: -30px; border: 4px solid #f8fafc; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
         .nav-center-btn i { font-size: 1.5rem; margin: 0; }
+
         .gradient-text-family { background: linear-gradient(to right, #f97316, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .gradient-text-analysis { background: linear-gradient(to right, #3b82f6, #8b5cf6, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .gradient-text-plan { background: linear-gradient(to right, #22c55e, #14b8a6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -264,9 +291,15 @@
                         </div>
                     </div>
                     
-                    <!-- ORTA SATIR: 2 Lİ KART -->
-                    <div class="grid grid-cols-2 gap-3 mb-4">
-                        <!-- Bugünün Limiti Kartı -->
+                    <!-- ORTA SATIR: GÜNLÜK DURUM BAŞLIĞI ve DETAY GÖSTER -->
+                    <div class="flex justify-between items-end mb-2 px-1">
+                         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest opacity-80">Günlük Durum</p>
+                         <button onclick="toggleAdvancedStats()" id="toggleAdvancedBtn" class="text-[9px] text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 font-bold">Detay Göster <i class="fas fa-chevron-down"></i></button>
+                    </div>
+
+                    <!-- ORTA SATIR: GRID KARTLARI -->
+                    <div id="dailyStatsGrid" class="grid grid-cols-1 gap-3 mb-4 transition-all">
+                        <!-- Bugünün Limiti Kartı (Daima Görünür) -->
                         <div class="bg-[#151e32] p-3 md:p-4 rounded-2xl border border-slate-800 cursor-pointer hover:bg-slate-800 transition-colors flex flex-col justify-between group" onclick="openCalcModal()">
                             <div class="flex justify-between items-start mb-2">
                                 <p class="text-blue-400 text-[8px] md:text-[9px] font-bold uppercase tracking-widest opacity-90 group-hover:text-blue-300 transition-colors">Bugünün Limiti</p>
@@ -275,8 +308,8 @@
                             <h4 id="displayDailyLimit" class="text-2xl md:text-3xl font-black text-white tracking-tight">₺0</h4>
                         </div>
                         
-                        <!-- Hedefi Tutturmak İçin Gereken Kartı -->
-                        <div class="bg-blue-900/20 p-3 md:p-4 rounded-2xl border border-blue-800/30 cursor-pointer hover:bg-blue-900/40 transition-colors flex flex-col justify-between group" onclick="openRecoveryPlanModal()">
+                        <!-- Hedefi Tutturmak İçin Gereken Kartı (Varsayılan Gizli) -->
+                        <div id="advancedStatsCard" class="hidden bg-blue-900/20 p-3 md:p-4 rounded-2xl border border-blue-800/30 cursor-pointer hover:bg-blue-900/40 transition-colors flex-col justify-between group" onclick="openRecoveryPlanModal()">
                             <div class="flex justify-between items-start mb-2">
                                 <p class="text-blue-300 text-[8px] md:text-[9px] font-bold uppercase tracking-widest opacity-90 leading-tight group-hover:text-white transition-colors pr-2">Hedefi Tutturmak İçin Gereken Ort.</p>
                                 <span class="text-blue-500/40 group-hover:text-blue-400 transition-colors"><i class="fas fa-calculator text-sm md:text-base"></i></span>
@@ -905,7 +938,6 @@
             "Tebrikler: ‘Hedef Tutarlı İnsan’ rozeti sende."
         ];
 
-        // YENİ: NORMAL DURUM MESAJLARI (RANDOM İÇİN)
         let messages_general = [
             "Bütçen senin kontrolünde, harika gidiyorsun!",
             "Planlı harcamak, özgürce yaşamaktır.",
@@ -944,8 +976,30 @@
         let currentExpenseDateOffset = 0;
         let editingCategoryIndex = -1; 
         let originalAdminUid = null;
+        let showAdvancedStats = false; // Detay Göster durumu
 
         const isMobileView = () => window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        function toggleAdvancedStats() {
+            showAdvancedStats = !showAdvancedStats;
+            const grid = document.getElementById('dailyStatsGrid');
+            const card = document.getElementById('advancedStatsCard');
+            const btn = document.getElementById('toggleAdvancedBtn');
+            
+            if (showAdvancedStats) {
+                grid.classList.remove('grid-cols-1');
+                grid.classList.add('md:grid-cols-2');
+                card.classList.remove('hidden');
+                card.classList.add('flex');
+                btn.innerHTML = 'Detay Gizle <i class="fas fa-chevron-up"></i>';
+            } else {
+                grid.classList.remove('md:grid-cols-2');
+                grid.classList.add('grid-cols-1');
+                card.classList.add('hidden');
+                card.classList.remove('flex');
+                btn.innerHTML = 'Detay Göster <i class="fas fa-chevron-down"></i>';
+            }
+        }
 
         function getDaysInCurrentPeriod() {
             const now = new Date();
