@@ -65,10 +65,17 @@
         .fade-text { animation: textFade 0.5s ease-in-out; }
         @keyframes textFade { 0% { opacity: 0; } 100% { opacity: 1; } }
 
-        @keyframes pulse-red { 0%, 100% { color: #ef4444; text-shadow: 0 0 5px rgba(239, 68, 68, 0.2); } 50% { color: #fca5a5; text-shadow: 0 0 15px rgba(239, 68, 68, 0.6); } }
-        @keyframes pulse-green { 0%, 100% { color: #22c55e; text-shadow: 0 0 5px rgba(34, 197, 94, 0.2); } 50% { color: #86efac; text-shadow: 0 0 15px rgba(34, 197, 94, 0.6); } }
-        .animate-pulse-red { animation: pulse-red 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        .animate-pulse-green { animation: pulse-green 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        /* Yeni Agresif (Acı Acı) Yanıp Sönme Animasyonları */
+        @keyframes pulse-red-intense { 
+            0%, 100% { color: #ef4444; text-shadow: 0 0 10px rgba(239, 68, 68, 0.4); } 
+            50% { color: #fca5a5; text-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 30px rgba(239, 68, 68, 0.6); } 
+        }
+        @keyframes pulse-green-intense { 
+            0%, 100% { color: #22c55e; text-shadow: 0 0 10px rgba(34, 197, 94, 0.4); } 
+            50% { color: #86efac; text-shadow: 0 0 20px rgba(34, 197, 94, 0.8), 0 0 30px rgba(34, 197, 94, 0.6); } 
+        }
+        .animate-pulse-red-intense { animation: pulse-red-intense 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .animate-pulse-green-intense { animation: pulse-green-intense 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 
         @keyframes softPulse { 0% { background-color: #f9fafb; border-color: #e5e7eb; } 50% { background-color: #eff6ff; border-color: #bfdbfe; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); } 100% { background-color: #f9fafb; border-color: #e5e7eb; } }
         .animate-soft-pulse { animation: softPulse 3s infinite ease-in-out; }
@@ -257,62 +264,67 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="md:col-span-3 glass-card p-5 rounded-[2.5rem] bg-gradient-to-br from-slate-800 to-slate-900 text-white shadow-2xl relative overflow-hidden group">
-                <div class="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full mix-blend-overlay filter blur-3xl opacity-20 -mr-16 -mt-16"></div>
+            <div class="md:col-span-3 glass-card p-4 md:p-6 rounded-[2rem] bg-gradient-to-br from-slate-900 to-[#0B1120] text-white shadow-2xl relative overflow-hidden group border border-slate-800">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20 pointer-events-none"></div>
                 <div class="relative z-10">
-                    <!-- Top Row -->
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-white/10 pb-5">
-                        <div class="cursor-pointer group" onclick="openBalanceModal()">
-                            <div class="flex items-center gap-2 mb-1">
-                                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest opacity-80 group-hover:text-white transition-colors">Gerçek Bakiye</p>
-                            </div>
-                            <h2 id="displayCumulativeLimit" class="text-5xl md:text-6xl font-black tracking-tighter leading-none group-hover:scale-105 transform origin-left transition-transform duration-300">₺0</h2>
+                    
+                    <!-- ÜST SATIR: GERÇEK BAKİYE ve BUTONLAR -->
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-slate-800 pb-5">
+                        
+                        <!-- Sol Taraf: Gerçek Bakiye -->
+                        <div class="cursor-pointer group w-full md:w-auto" onclick="openBalanceModal()">
+                            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1 group-hover:text-blue-300 transition-colors flex items-center gap-1">GERÇEK BAKİYE <i class="fas fa-question-circle opacity-50"></i></p>
+                            <h2 id="displayCumulativeLimit" class="text-5xl md:text-[4rem] font-black tracking-tighter leading-none mt-1 group-hover:scale-[1.02] transform origin-left transition-transform duration-300">₺0</h2>
                         </div>
                         
-                        <div class="flex flex-col gap-2 items-end">
-                            <div class="flex gap-1 bg-white/5 p-1 rounded-lg border border-white/10">
-                                <button onclick="setBalanceMethod('salary')" id="btnCalcSalary" class="text-[7px] font-medium px-2 py-1 rounded-md text-slate-300 transition-all hover:bg-white/10">Gelir Günü</button>
-                                <button onclick="setBalanceMethod('register')" id="btnCalcRegister" class="text-[7px] font-medium px-2 py-1 rounded-md text-slate-300 transition-all hover:bg-white/10">Kayıt Günü</button>
+                        <!-- Sağ Taraf: Ayar Butonları -->
+                        <div class="flex flex-col gap-2 w-full md:w-auto md:items-end">
+                            <div class="flex gap-2 w-full md:w-auto">
+                                <button onclick="setBalanceMethod('salary')" id="btnCalcSalary" class="flex-1 md:flex-none text-[10px] font-bold px-4 py-2 rounded-xl bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors border border-slate-700">Gelir Günü</button>
+                                <button onclick="setBalanceMethod('register')" id="btnCalcRegister" class="flex-1 md:flex-none text-[10px] font-bold px-4 py-2 rounded-xl bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors border border-slate-700">Kayıt Günü</button>
                             </div>
-                            <label class="relative overflow-hidden inline-flex cursor-pointer items-center" onclick="try{document.getElementById('customBalanceDate').showPicker()}catch(e){}">
+                            <label class="relative overflow-hidden inline-flex cursor-pointer items-center w-full md:w-auto" onclick="try{document.getElementById('customBalanceDate').showPicker()}catch(e){}">
                                 <input type="date" id="customBalanceDate" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="setCustomBalanceDate(this.value)">
-                                <button id="btnCalcCustom" class="text-[7px] font-medium px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1 w-full justify-center">
-                                    Şu tarihten itibaren: <span id="customDateDisplay" class="font-bold text-white">Seç</span>
+                                <button id="btnCalcCustom" class="text-[9px] font-medium px-4 py-2 rounded-xl bg-slate-800/50 hover:bg-slate-700 text-slate-300 transition-all border border-slate-700/50 pointer-events-none flex items-center justify-center gap-1 w-full md:w-auto">
+                                    Şu tarihten itibaren: <span id="customDateDisplay" class="font-bold text-white ml-1">Seç</span>
                                 </button>
                             </label>
                         </div>
                     </div>
                     
-                    <!-- Middle Row Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                        <div class="bg-slate-800/50 p-4 rounded-2xl border border-slate-700 cursor-pointer hover:bg-slate-800 transition-colors group" onclick="openCalcModal()">
-                            <p class="text-blue-400 text-[9px] font-bold uppercase tracking-widest opacity-80 mb-2 group-hover:text-blue-300 transition-colors">Bugünün Limiti</p>
-                            <div class="flex justify-between items-end">
+                    <!-- ORTA SATIR: 2 Lİ KART -->
+                    <div class="space-y-3 mb-4">
+                        <!-- Bugünün Limiti Kartı -->
+                        <div class="bg-[#151e32] p-4 rounded-2xl border border-slate-800 cursor-pointer hover:bg-slate-800 transition-colors flex justify-between items-center group" onclick="openCalcModal()">
+                            <div>
+                                <p class="text-blue-400 text-[10px] font-bold uppercase tracking-widest opacity-90 mb-1 group-hover:text-blue-300 transition-colors">Bugünün Limiti</p>
                                 <h4 id="displayDailyLimit" class="text-3xl font-black text-white tracking-tight">₺0</h4>
-                                <span class="text-slate-500 text-[10px] group-hover:text-blue-400 transition-colors"><i class="fas fa-info-circle"></i></span>
                             </div>
+                            <span class="text-slate-600 group-hover:text-blue-400 transition-colors"><i class="fas fa-info-circle text-xl"></i></span>
                         </div>
                         
-                        <div class="bg-blue-600/10 p-4 rounded-2xl border border-blue-500/20 cursor-pointer hover:bg-blue-600/20 transition-colors group" onclick="openRecoveryPlanModal()">
-                            <p class="text-blue-200 text-[9px] font-bold uppercase tracking-widest opacity-90 mb-2 group-hover:text-white transition-colors">Hedefi Tutturmak İçin Gereken Günlük Ortalama Harcama</p>
-                            <div class="flex justify-between items-end">
+                        <!-- Hedefi Tutturmak İçin Gereken Kartı -->
+                        <div class="bg-blue-900/20 p-4 rounded-2xl border border-blue-800/30 cursor-pointer hover:bg-blue-900/40 transition-colors flex justify-between items-center group" onclick="openRecoveryPlanModal()">
+                            <div>
+                                <p class="text-blue-300 text-[9px] font-bold uppercase tracking-widest opacity-90 mb-1 leading-relaxed">Hedefi Tutturmak İçin Gereken Günlük<br>Ortalama Harcama</p>
                                 <h4 id="displayRequiredDaily" class="text-3xl font-black text-blue-400 tracking-tight">₺0</h4>
-                                <span class="text-blue-500/50 text-[10px] group-hover:text-blue-300 transition-colors"><i class="fas fa-calculator"></i></span>
                             </div>
+                            <span class="text-blue-500/40 group-hover:text-blue-400 transition-colors"><i class="fas fa-calculator text-xl"></i></span>
                         </div>
                     </div>
 
-                    <!-- Bottom Row -->
+                    <!-- ALT SATIR: BİLGİ KARTLARI -->
                     <div class="grid grid-cols-2 gap-3">
-                        <div class="bg-white/5 px-4 py-3 rounded-2xl border border-white/5 text-center">
-                            <span class="text-[8px] text-slate-400 font-bold uppercase tracking-widest block mb-1">Maaşa Kalan</span>
+                        <div class="bg-[#151e32] px-4 py-4 rounded-2xl border border-slate-800 text-center">
+                            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest block mb-1">Maaşa Kalan</span>
                             <span id="displayRemainingDays" class="text-lg font-black text-white">-- Gün</span>
                         </div>
-                         <div class="bg-white/5 px-4 py-3 rounded-2xl border border-white/5 text-center">
-                            <span class="text-[8px] text-slate-400 font-bold uppercase tracking-widest block mb-1">Hedef Birikim</span>
+                         <div class="bg-[#151e32] px-4 py-4 rounded-2xl border border-slate-800 text-center">
+                            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest block mb-1">Hedef Birikim</span>
                             <span id="sumSavings" class="text-lg font-black text-green-400">₺0</span>
                         </div>
                     </div>
+                    
                 </div>
             </div>
         </div>
@@ -2093,18 +2105,20 @@
             const btnCustom = document.getElementById('btnCalcCustom');
             const customDateDisplay = document.getElementById('customDateDisplay');
             
-            [btnSalary, btnRegister].forEach(btn => {
-                btn.className = "text-[7px] font-medium px-2 py-1 rounded-md text-slate-300 transition-all hover:bg-white/10";
-            });
-            btnCustom.className = "text-[7px] font-medium px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-all border border-white/10 pointer-events-none flex items-center gap-1 w-full justify-center";
+            const inactiveBtn = "flex-1 md:flex-none text-[10px] font-bold px-4 py-2 rounded-xl bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors border border-slate-700";
+            const activeBtn = "flex-1 md:flex-none text-[10px] font-bold px-4 py-2 rounded-xl bg-green-500 text-white shadow-lg shadow-green-500/20 border border-green-400 transform scale-[1.02] transition-all";
             
-            const activeBtnClass = "text-[7px] font-medium px-2 py-1 rounded-md bg-green-500 text-white shadow-md border border-green-400 transform scale-105";
-            const activeCustomBtnClass = "text-[7px] font-medium px-2 py-1 rounded-lg bg-green-500 text-white shadow-md border border-green-400 transform scale-105 pointer-events-none flex items-center gap-1 w-full justify-center";
+            const inactiveCustomBtn = "text-[9px] font-medium px-4 py-2 rounded-xl bg-slate-800/50 hover:bg-slate-700 text-slate-300 transition-all border border-slate-700/50 pointer-events-none flex items-center justify-center gap-1 w-full md:w-auto";
+            const activeCustomBtn = "text-[9px] font-medium px-4 py-2 rounded-xl bg-green-500/10 text-green-400 transition-all border border-green-500/30 pointer-events-none flex items-center justify-center gap-1 w-full md:w-auto";
+
+            btnSalary.className = inactiveBtn;
+            btnRegister.className = inactiveBtn;
+            btnCustom.className = inactiveCustomBtn;
 
             let dailyLimitToUse = state.manualDailyLimit || 0;
 
             if (calcMethod === 'salary') {
-                btnSalary.className = activeBtnClass;
+                btnSalary.className = activeBtn;
                 const salaryDay = state.salaryDay || 15;
                 let lastSalaryDate = new Date(now.getFullYear(), now.getMonth(), salaryDay);
                 if (now.getDate() < salaryDay) {
@@ -2113,23 +2127,31 @@
                 startCalc = lastSalaryDate;
                 startCalc.setHours(0,0,0,0);
             } else if (calcMethod === 'custom') {
-                btnCustom.className = activeCustomBtnClass;
+                btnCustom.className = activeCustomBtn;
                 startCalc = new Date(state.customBalanceDate || state.registrationDate);
                 if(isNaN(startCalc.getTime())) startCalc = new Date();
                 startCalc.setHours(0,0,0,0);
+            } else if (calcMethod === 'recovery') {
+                btnCustom.className = activeCustomBtn; // Show as active since it overrides default
+                startCalc = new Date(state.recoveryStartDate || state.registrationDate);
+                if(isNaN(startCalc.getTime())) startCalc = new Date();
+                startCalc.setHours(0,0,0,0);
+                dailyLimitToUse = state.recoveryDailyLimit || state.manualDailyLimit || 0;
             } else {
-                btnRegister.className = activeBtnClass;
+                btnRegister.className = activeBtn;
                 startCalc = new Date(state.registrationDate);
                 if(isNaN(startCalc.getTime())) startCalc = new Date();
                 startCalc.setHours(0,0,0,0);
             }
 
             if (startCalc) {
-                if (calcMethod !== 'custom') {
-                    customDateDisplay.innerText = "Seç";
-                } else {
-                    customDateDisplay.innerText = startCalc.toLocaleDateString('tr-TR', {day:'2-digit', month:'2-digit', year:'numeric'});
-                }
+                let labelSuffix = "";
+                if (calcMethod === 'salary') labelSuffix = " (Gelir Günü)";
+                else if (calcMethod === 'register') labelSuffix = " (Kayıt Günü)";
+                else if (calcMethod === 'recovery') labelSuffix = " (Kurtarma Modu)";
+                
+                customDateDisplay.innerText = startCalc.toLocaleDateString('tr-TR') + labelSuffix;
+                try { document.getElementById('customBalanceDate').value = startCalc.toISOString().split('T')[0]; } catch(e){}
             } else {
                 customDateDisplay.innerText = "Seç";
             }
@@ -2148,11 +2170,26 @@
                     
                     if (e.date === todayStr) {
                         spentToday += e.amount;
-                        spentTodayInBudget += e.amount;
+                        // Eğer kurtarma modundaysak, sadece plana aktarıldıktan sonraki bugünkü harcamaları bütçeden düş
+                        if (calcMethod === 'recovery' && state.recoveryStartTs) {
+                            if (e.ts >= state.recoveryStartTs) {
+                                spentTodayInBudget += e.amount;
+                            }
+                        } else {
+                            spentTodayInBudget += e.amount;
+                        }
                     }
 
-                    if (d >= startCalc) {
-                        totalSpent += e.amount;
+                    // Genel totalSpent hesabı (Gerçek bakiye için)
+                    if (calcMethod === 'recovery' && state.recoveryStartTs) {
+                        // Sadece kurtarma anından sonraki tüm harcamaları topla
+                        if (e.ts >= state.recoveryStartTs) {
+                            totalSpent += e.amount;
+                        }
+                    } else {
+                        if (d >= startCalc) {
+                            totalSpent += e.amount;
+                        }
                     }
                 }
             });
@@ -2163,10 +2200,19 @@
             const cumEl = document.getElementById('displayCumulativeLimit');
             cumEl.innerText = `₺${Math.floor(cumulative).toLocaleString()}`;
             
-            cumEl.classList.remove('text-red-400', 'text-green-400', 'text-white');
-            if (cumulative < 0) cumEl.classList.add('text-red-500');
-            else if (cumulative > 0) cumEl.classList.add('text-green-500');
-            else cumEl.classList.add('text-white');
+            cumEl.classList.remove('animate-pulse-red-intense', 'animate-pulse-green-intense');
+            if (cumulative < 0) {
+                cumEl.classList.add('animate-pulse-red-intense');
+                cumEl.classList.remove('text-green-500', 'text-white');
+            }
+            else if (cumulative > 0) {
+                cumEl.classList.add('animate-pulse-green-intense');
+                cumEl.classList.remove('text-red-500', 'text-white');
+            }
+            else {
+                cumEl.classList.add('text-white');
+                cumEl.classList.remove('text-red-500', 'text-green-500');
+            }
 
             document.getElementById('todayTotal').innerText = `Bugün: ₺${Math.floor(spentToday).toLocaleString()}`;
             
@@ -2174,7 +2220,7 @@
             if (now.getDate() >= (state.salaryDay||15)) targetDate.setMonth(targetDate.getMonth()+1);
             document.getElementById('displayRemainingDays').innerText = `${Math.ceil((targetDate - now)/(1000*60*60*24))} Gün`;
 
-            // Hedefi Tutturmak İçin Gereken Hesaplama
+            // Hedefi Tutturmak İçin Gereken Hesaplama (Anlık)
             const sd = state.salaryDay || 15;
             let periodStart = new Date(now.getFullYear(), now.getMonth(), sd);
             if (now.getDate() < sd) {
@@ -4073,4 +4119,3 @@
     </script>
 </body>
 </html>
-
