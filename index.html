@@ -65,7 +65,6 @@
         .fade-text { animation: textFade 0.5s ease-in-out; }
         @keyframes textFade { 0% { opacity: 0; } 100% { opacity: 1; } }
 
-        /* Yeni Agresif (Acı Acı) Yanıp Sönme Animasyonları */
         @keyframes pulse-red-intense { 
             0%, 100% { color: #ef4444; text-shadow: 0 0 10px rgba(239, 68, 68, 0.4); } 
             50% { color: #fca5a5; text-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 30px rgba(239, 68, 68, 0.6); } 
@@ -342,7 +341,7 @@
             </div>
 
             <!-- TARİH SEÇİCİ (ORTALANMIŞ VE DETAYLI) -->
-            <div class="flex justify-center mb-2">
+            <div class="flex justify-center mb-4">
                 <div class="flex items-center gap-3 bg-red-50 p-2 rounded-2xl border border-red-100 shadow-sm w-full max-w-[250px]">
                     <button onclick="changeExpenseDate(1)" class="w-8 h-8 shrink-0 flex items-center justify-center bg-white rounded-xl text-red-400 hover:text-red-600 shadow-sm transition-transform active:scale-95 border border-red-50"><i class="fas fa-chevron-left text-sm"></i></button>
                     <div class="relative text-center flex-1">
@@ -364,21 +363,14 @@
             </div>
             
             <div class="flex flex-col gap-3">
-                <div class="w-full relative">
-                    <select id="expCat" class="w-full p-3 bg-gray-50 rounded-xl font-bold text-xs text-gray-700 outline-none focus:ring-2 focus:ring-blue-100 transition-all border border-gray-200 appearance-none">
-                        <!-- Categories will be injected here -->
-                    </select>
-                    <button onclick="openCategoryModal()" class="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-blue-500 rounded-r-xl border-l border-gray-200" title="Kategorileri Düzenle">
-                        <i class="fas fa-pencil-alt text-xs"></i>
-                    </button>
-                    <div class="pointer-events-none absolute inset-y-0 right-8 flex items-center px-2 text-gray-700">
-                        <i class="fas fa-chevron-down text-[10px]"></i>
-                    </div>
+                <!-- YENİ HIZLI KATEGORİ SEÇİM ALANI -->
+                <div id="quickCategoryContainer" class="flex gap-2 w-full h-[40px] mb-1">
+                    <!-- Javascript ile doldurulacak -->
                 </div>
 
-                 <div class="flex gap-2 items-center">
-                      <input type="number" id="expAmt" placeholder="Tutar (₺)" onkeyup="if(event.key === 'Enter') document.getElementById('expDesc').focus()" class="w-full p-4 bg-gray-50 rounded-xl font-black text-xl outline-none focus:ring-4 focus:ring-blue-100 transition-all text-center placeholder-gray-300 animate-soft-pulse">
-                 </div>
+                <div class="flex gap-2 items-center">
+                    <input type="number" id="expAmt" placeholder="Tutar (₺)" onkeyup="if(event.key === 'Enter') document.getElementById('expDesc').focus()" class="w-full p-4 bg-gray-50 rounded-xl font-black text-xl outline-none focus:ring-4 focus:ring-blue-100 transition-all text-center placeholder-gray-300 animate-soft-pulse">
+                </div>
 
                 <div class="flex gap-2 items-center">
                     <input type="text" id="expDesc" value="" placeholder="Açıklama (Opsiyonel)" onkeyup="if(event.key === 'Enter') addExpense()" class="flex-1 p-3 bg-gray-50 rounded-xl font-bold text-gray-600 outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs">
@@ -575,7 +567,7 @@
         </div>
     </nav>
 
-    <!-- Diğer tüm modallar (Aynı şekilde duruyor, yer tasarrufu için kısaltılmadı) -->
+    <!-- Diğer tüm modallar -->
     <!-- HIZLI PLAN (HEDEF BİRİKİM) MODALI -->
     <div id="quickPlanModal" class="side-panel">
         <div class="p-6 h-full flex flex-col">
@@ -1044,7 +1036,7 @@
             "Finansal özgürlük yolculuğunda iyi yolculuklar!"
         ];
 
-        const defaultState = { step: 1, salaryDay: 15, manualDailyLimit: 0, incomes: [], bills: [], loans: [], debts: [], otherDebts: [], assets: [], expenses: [], categories: ["Market / Manav", "Kasap", "Akaryakıt", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"], monthlyHistory: [] };
+        const defaultState = { step: 1, salaryDay: 15, manualDailyLimit: 0, incomes: [], bills: [], loans: [], debts: [], otherDebts: [], assets: [], expenses: [], categories: ["Market / Manav", "Kasap", "Akaryakıt", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"], pinnedCategories: [], monthlyHistory: [] };
         let state = JSON.parse(JSON.stringify(defaultState));
 
         let db, auth, currentUser = null;
@@ -1067,8 +1059,10 @@
         let isPanelOpenInHistory = false;
         let ignoreNextPop = false;
         
-        window.currentPeriodExpenses = []; // Bakiye panelinde indirmek için
-        window.lastFilteredExpenses = []; // Analiz panelinde detaya girmek için
+        let currentExpenseCategory = null; 
+
+        window.currentPeriodExpenses = []; 
+        window.lastFilteredExpenses = []; 
 
         const isMobileView = () => window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
@@ -1680,15 +1674,12 @@
             hideAll(); 
             document.getElementById('analysisScreen').classList.remove('hidden'); 
             
-            // --- HATA ÇÖZÜMÜ: UYARI MESAJI EKLENDİ ---
-            // Kullanıcı ana sayfada "Maaş Günü" dışında bir mod seçtiyse, Analiz ekranının farklı çalıştığını belirtelim.
             const method = state.balanceCalcMethod || 'register';
             let warningEl = document.getElementById('analysisModeWarning');
             if (!warningEl) {
                 warningEl = document.createElement('div');
                 warningEl.id = 'analysisModeWarning';
                 warningEl.className = 'bg-yellow-50 border border-yellow-200 text-yellow-700 text-[10px] p-3 rounded-xl mb-4 shadow-sm font-medium leading-relaxed hidden';
-                // Analiz ekranı başlığının altına ekleyelim
                 const analysisScreenHeader = document.querySelector('#analysisScreen > div.flex');
                 analysisScreenHeader.insertAdjacentElement('afterend', warningEl);
             }
@@ -1700,7 +1691,6 @@
             } else {
                 warningEl.classList.add('hidden');
             }
-            // ----------------------------------------
             
             const today = new Date();
             let analysisDate = new Date(today);
@@ -2176,6 +2166,7 @@
                     if(!state.expenses) state.expenses = [];
                     if(!state.monthlyHistory) state.monthlyHistory = [];
                     if(!state.familyMembers) state.familyMembers = [];
+                    if(!state.pinnedCategories) state.pinnedCategories = []; // Yeni eklendi
                     if(!state.reports) state.reports = {}; 
                     
                     if(!state.categories || state.categories.length === 0) {
@@ -2205,6 +2196,94 @@
             document.getElementById('btnAnalysis').classList.toggle('hidden', dis);
         }
 
+        // --- YENİ: Kategori Hızlı Seçim Mantığı ---
+        function getTopCategories() {
+            let selected = [...(state.pinnedCategories || [])];
+            
+            if (selected.length < 3) {
+                // En sık kullanılanları hesapla
+                let freqs = {};
+                state.expenses.forEach(e => {
+                    if (e.category && e.category !== 'Diğer') {
+                        freqs[e.category] = (freqs[e.category] || 0) + 1;
+                    }
+                });
+                let sortedFreqs = Object.entries(freqs).sort((a,b) => b[1] - a[1]).map(x => x[0]);
+                for (let cat of sortedFreqs) {
+                    if (!selected.includes(cat)) {
+                        selected.push(cat);
+                        if (selected.length === 3) break;
+                    }
+                }
+            }
+            
+            // Hala 3'ten azsa varsayılanlardan doldur
+            if (selected.length < 3) {
+                for (let cat of state.categories) {
+                    if (!selected.includes(cat) && cat !== 'Diğer') {
+                        selected.push(cat);
+                        if (selected.length === 3) break;
+                    }
+                }
+            }
+            return selected;
+        }
+
+        function renderQuickCategories() {
+            const top3 = getTopCategories();
+            if (!currentExpenseCategory) {
+                currentExpenseCategory = top3[0] || 'Diğer'; 
+            }
+
+            const container = document.getElementById('quickCategoryContainer');
+            if (!container) return;
+
+            const colors = [
+                { bg: 'bg-pink-100', text: 'text-pink-700' },
+                { bg: 'bg-purple-100', text: 'text-purple-700' },
+                { bg: 'bg-orange-100', text: 'text-orange-700' }
+            ];
+
+            let html = '';
+            top3.forEach((cat, idx) => {
+                const isSelected = currentExpenseCategory === cat;
+                const bgClass = isSelected ? 'bg-green-500 shadow-md shadow-green-200' : colors[idx].bg;
+                const textClass = isSelected ? 'text-white' : colors[idx].text;
+                html += `<button onclick="setExpenseCategory('${cat}')" class="flex-1 py-1 px-1 rounded-xl text-[10px] sm:text-xs font-black truncate transition-all active:scale-95 ${bgClass} ${textClass}" title="${cat}">${cat}</button>`;
+            });
+
+            let isDropdownSelected = !top3.includes(currentExpenseCategory) && currentExpenseCategory !== null;
+            let allOtherCats = state.categories.filter(c => !top3.includes(c));
+            if (!allOtherCats.includes('Diğer')) allOtherCats.push('Diğer');
+
+            let options = allOtherCats.map(c => `<option value="${c}" ${currentExpenseCategory === c ? 'selected' : ''}>${c}</option>`).join('');
+            let dropdownValueDisplay = isDropdownSelected ? currentExpenseCategory : 'Diğer ▾';
+
+            html += `
+            <div class="flex items-center bg-gray-50 border ${isDropdownSelected ? 'border-green-500 shadow-sm' : 'border-gray-200'} rounded-xl px-2 w-[28%] sm:w-auto relative cursor-pointer group hover:bg-gray-100 transition-all">
+                <select id="otherCatSelect" onchange="setExpenseCategory(this.value, true)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                    <option value="" disabled ${!isDropdownSelected ? 'selected' : ''}>Diğer Kategoriler</option>
+                    ${options}
+                </select>
+                <div class="flex-1 text-[10px] sm:text-xs font-bold ${isDropdownSelected ? 'text-green-600' : 'text-gray-600'} truncate mr-1 select-none pointer-events-none">
+                    ${dropdownValueDisplay}
+                </div>
+                <button onclick="event.stopPropagation(); openCategoryModal()" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-500 rounded-md z-10 transition-colors" title="Kategorileri Düzenle">
+                    <i class="fas fa-pencil-alt text-[10px]"></i>
+                </button>
+            </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function setExpenseCategory(cat, isFromDropdown = false) {
+            if(isFromDropdown && !cat) return; 
+            currentExpenseCategory = cat;
+            renderQuickCategories();
+        }
+        // ----------------------------------------
+
         function updateDashboardUI() {
             applyPermissions();
             
@@ -2221,11 +2300,7 @@
             const now = new Date(); const todayStr = now.toLocaleDateString('tr-TR');
             
             let startCalc;
-            // --- HATA ÇÖZÜMÜ: ÜST SINIR EKLENDİ ---
-            // Ana sayfanın dönemsel hesabı için eğer maaş döngüsü (salary) seçiliyse,
-            // sadece o ayın harcamalarını dahil etmesi için bir endCalc yaratıyoruz.
             let endCalc = null; 
-            // --------------------------------------
 
             const calcMethod = state.balanceCalcMethod || 'register';
             
@@ -2256,7 +2331,6 @@
                 startCalc = lastSalaryDate;
                 startCalc.setHours(0,0,0,0);
                 
-                // ÜST SINIR ATAMASI
                 endCalc = new Date(startCalc);
                 endCalc.setMonth(endCalc.getMonth() + 1);
                 endCalc.setHours(0,0,0,0);
@@ -2319,9 +2393,6 @@
                             totalSpent += e.amount;
                         }
                     } else {
-                        // --- HATA ÇÖZÜMÜ: (!endCalc || d < endCalc) KOŞULU EKLENDİ ---
-                        // Eğer maaş döngüsü seçiliyse ve geleceğe bir kayıt girildiyse
-                        // Dashboard bunu dahil etmeyecek, tıpkı Analiz sayfası gibi davranacak.
                         if (d >= startCalc && (!endCalc || d < endCalc)) {
                             totalSpent += e.amount;
                         }
@@ -2446,7 +2517,9 @@
             renderDetailedHealthLists();
             
             updateExpenseDateLabel();
-            renderCategoryOptions(); 
+            
+            // YENİ: Hızlı kategorileri oluştur
+            renderQuickCategories();
 
             // Otomatik Aylık Rapor Kontrolü
             checkMonthlyReport();
@@ -2545,34 +2618,58 @@
             }
         }
 
+        // YENİ: Modal İçindeki Kategori Seçenekleri ve Yıldızlama
         function renderCategoryOptions() {
-            const sel = document.getElementById('expCat');
             if (!state.categories) {
                 state.categories = ["Market / Manav", "Kasap", "Akaryakıt", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"];
             }
-            
-            sel.innerHTML = state.categories.map(c => `<option value="${c}">${c}</option>`).join('');
+            if (!state.pinnedCategories) state.pinnedCategories = [];
             
             const list = document.getElementById('categoryList');
-            list.innerHTML = state.categories.map((c, i) => `
-                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
-                    <div class="flex-1">
-                        ${editingCategoryIndex === i 
-                            ? `<div class="flex gap-2">
-                                 <input type="text" id="catEditInput_${i}" value="${c}" class="w-full p-2 border border-blue-200 rounded-lg text-sm" onkeyup="if(event.key==='Enter') saveCategoryEdit(${i})">
-                                 <button onclick="saveCategoryEdit(${i})" class="text-green-600 hover:text-green-800"><i class="fas fa-check"></i></button>
-                                 <button onclick="cancelCategoryEdit()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
-                               </div>`
-                            : `<span class="text-sm font-bold text-gray-700">${c}</span>`
-                        }
+            if(list) {
+                list.innerHTML = state.categories.map((c, i) => {
+                    const isPinned = state.pinnedCategories.includes(c);
+                    const starClass = isPinned ? 'fas fa-star text-yellow-400' : 'far fa-star text-gray-300';
+                    
+                    return `
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                        <div class="flex items-center flex-1">
+                            <button onclick="togglePinCategory('${c}')" class="mr-3 hover:scale-125 transition-transform" title="${isPinned ? 'Sabitlemeyi Kaldır' : 'Hızlı Seçime Sabitle'}"><i class="${starClass} text-lg"></i></button>
+                            ${editingCategoryIndex === i 
+                                ? `<div class="flex gap-2 flex-1">
+                                     <input type="text" id="catEditInput_${i}" value="${c}" class="w-full p-2 border border-blue-200 rounded-lg text-sm" onkeyup="if(event.key==='Enter') saveCategoryEdit(${i})">
+                                     <button onclick="saveCategoryEdit(${i})" class="text-green-600 hover:text-green-800"><i class="fas fa-check"></i></button>
+                                     <button onclick="cancelCategoryEdit()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+                                   </div>`
+                                : `<span class="text-sm font-bold text-gray-700">${c}</span>`
+                            }
+                        </div>
+                        ${editingCategoryIndex !== i ? 
+                        `<div class="flex gap-2 ml-2">
+                            <button onclick="startCategoryEdit(${i})" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pen"></i></button>
+                            <button onclick="deleteCategory(${i})" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button>
+                        </div>` : ''}
                     </div>
-                    ${editingCategoryIndex !== i ? 
-                    `<div class="flex gap-2">
-                        <button onclick="startCategoryEdit(${i})" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pen"></i></button>
-                        <button onclick="deleteCategory(${i})" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button>
-                    </div>` : ''}
-                </div>
-            `).join('');
+                `}).join('');
+            }
+        }
+
+        // YENİ: Yıldızlama/Sabitleme Fonksiyonu
+        function togglePinCategory(cat) {
+            if (!state.pinnedCategories) state.pinnedCategories = [];
+            const idx = state.pinnedCategories.indexOf(cat);
+            if (idx > -1) {
+                state.pinnedCategories.splice(idx, 1);
+            } else {
+                if (state.pinnedCategories.length >= 3) {
+                    showAppAlert("Ana ekranda en fazla 3 kategoriyi sabitleyebilirsiniz. Lütfen önce başka birinin yıldızını kaldırın.");
+                    return;
+                }
+                state.pinnedCategories.push(cat);
+            }
+            saveToCloud();
+            renderCategoryOptions();
+            renderQuickCategories(); // Ekranın hemen güncellenmesi için
         }
 
         function openCategoryModal() {
@@ -2603,6 +2700,7 @@
                 inp.value = '';
                 saveToCloud();
                 renderCategoryOptions();
+                renderQuickCategories();
             }
         }
         
@@ -2624,6 +2722,17 @@
                 const oldVal = state.categories[idx];
                 state.categories[idx] = newVal;
                 
+                // Yıldızlılarda varsa adını güncelle
+                if (state.pinnedCategories) {
+                    const pinIdx = state.pinnedCategories.indexOf(oldVal);
+                    if (pinIdx > -1) state.pinnedCategories[pinIdx] = newVal;
+                }
+                
+                // Seçili aktif kategori ise onu da güncelle
+                if (currentExpenseCategory === oldVal) {
+                    currentExpenseCategory = newVal;
+                }
+
                 state.expenses.forEach(exp => {
                     if (exp.category === oldVal) {
                         exp.category = newVal;
@@ -2641,9 +2750,23 @@
 
         function deleteCategory(idx) {
             showConfirm("Bu kategoriyi silmek istediğinize emin misiniz?", () => {
+                const catToDelete = state.categories[idx];
+                
+                // Sabitlenmişse oradan da çıkar
+                if (state.pinnedCategories) {
+                    const pinIdx = state.pinnedCategories.indexOf(catToDelete);
+                    if (pinIdx > -1) state.pinnedCategories.splice(pinIdx, 1);
+                }
+
+                // Seçili kategoriyse sıfırla
+                if (currentExpenseCategory === catToDelete) {
+                    currentExpenseCategory = null;
+                }
+
                 state.categories.splice(idx, 1);
                 saveToCloud();
                 renderCategoryOptions();
+                updateDashboardUI();
             });
         }
 
@@ -2863,10 +2986,11 @@
             else renderWizardLists();
         }
 
+        // YENİ: Harcama Ekle Kısmı Değişimi
         function addExpense() {
             const amtInp = document.getElementById('expAmt');
             const descInp = document.getElementById('expDesc');
-            const catInp = document.getElementById('expCat'); 
+            
             const editIndex = parseInt(document.getElementById('editExpIndex').value);
             const amt = parseFloat(amtInp.value);
             
@@ -2878,7 +3002,9 @@
             d.setDate(d.getDate() - currentExpenseDateOffset);
             let finalDate = d.toLocaleDateString('tr-TR');
             
-            const selectedCat = catInp.value;
+            // Kategoriyi global değişkenden (veya dropdowndan) al
+            const selectedCat = currentExpenseCategory || 'Diğer';
+            
             let finalDesc = descInp.value.trim();
             if (!finalDesc && selectedCat !== 'Diğer') {
                 finalDesc = selectedCat;
@@ -2931,16 +3057,18 @@
             const exp = state.expenses[idx];
             document.getElementById('expAmt').value = exp.amount;
             document.getElementById('expDesc').value = exp.desc;
-            const catInp = document.getElementById('expCat');
+            
             if (exp.category) {
-                catInp.value = exp.category;
+                currentExpenseCategory = exp.category;
             } else {
-                catInp.value = 'Diğer';
+                currentExpenseCategory = 'Diğer';
             }
             
             document.getElementById('editExpIndex').value = idx;
             document.getElementById('addExpBtn').innerHTML = '<i class="fas fa-check text-lg"></i>';
             document.getElementById('addExpBtn').classList.replace('bg-blue-600', 'bg-green-600');
+            
+            renderQuickCategories(); // Seçimi güncelle
             scrollToAddExpense();
         }
 
@@ -3227,6 +3355,7 @@
                 closeEditModal(); 
             } 
         }
+
         function closeEditModal() { 
             const modal = document.getElementById('editItemModal');
             modal.classList.remove('open');
@@ -3234,6 +3363,7 @@
             document.getElementById('overlay').classList.remove('active'); 
             popPanelHistory();
         }
+
         function deleteHealthItem(type, idx) { 
             showConfirm('Bu kalemi tamamen silmek istediğinize emin misiniz?', () => { 
                 state[type].splice(idx, 1); 
@@ -3270,7 +3400,7 @@
                 });
             }
             
-            window.lastFilteredExpenses = filteredExpenses; // Kategori detayı için kaydet
+            window.lastFilteredExpenses = filteredExpenses; 
 
             const assets = state.assets.reduce((s,a)=>s+(a.val||0),0);
             const debts = state.loans.filter(l=>!l.excludeFromDebt).reduce((s,l)=>s+(l.totalDebt||0),0) + state.debts.reduce((s,d)=>s+(d.val||0),0) + state.otherDebts.reduce((s,d)=>s+(d.val||0),0);
@@ -4544,4 +4674,3 @@
     </script>
 </body>
 </html>
-
