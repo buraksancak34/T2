@@ -575,6 +575,7 @@
         </div>
     </nav>
 
+    <!-- Diğer tüm modallar (Aynı şekilde duruyor, yer tasarrufu için kısaltılmadı) -->
     <!-- HIZLI PLAN (HEDEF BİRİKİM) MODALI -->
     <div id="quickPlanModal" class="side-panel">
         <div class="p-6 h-full flex flex-col">
@@ -648,6 +649,7 @@
         </div>
     </div>
 
+    <!-- AYARLAR MODALI -->
     <div id="settingsModal" class="side-panel">
         <div class="p-6 h-full flex flex-col">
             <div class="flex justify-between items-center mb-6 pb-4 border-b">
@@ -691,6 +693,7 @@
         </div>
     </div>
 
+    <!-- ADMİN MODALI -->
     <div id="adminModal" class="side-panel">
         <div class="p-6 h-full flex flex-col bg-slate-900 text-white">
             <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-700">
@@ -759,6 +762,7 @@
         </div>
     </div>
 
+    <!-- DÜZENLE MODALI -->
     <div id="editItemModal" class="side-panel">
         <div class="p-6 h-full flex flex-col">
             <div class="flex justify-between items-center mb-6 pb-4 border-b">
@@ -824,6 +828,7 @@
         </div>
     </div>
     
+    <!-- DİĞER MODALLAR -->
     <div id="calcModal" class="side-panel">
         <div class="p-6 h-full flex flex-col">
             <div class="flex justify-between items-center mb-6 pb-4 border-b">
@@ -1670,9 +1675,32 @@
 
         function showLoginScreen() { hideAll(); document.getElementById('loginScreen').classList.remove('hidden'); }
         function showDashboard() { hideAll(); document.getElementById('dashboardScreen').classList.remove('hidden'); updateDashboardUI(); }
+        
         function showAnalysisScreen() { 
             hideAll(); 
             document.getElementById('analysisScreen').classList.remove('hidden'); 
+            
+            // --- HATA ÇÖZÜMÜ: UYARI MESAJI EKLENDİ ---
+            // Kullanıcı ana sayfada "Maaş Günü" dışında bir mod seçtiyse, Analiz ekranının farklı çalıştığını belirtelim.
+            const method = state.balanceCalcMethod || 'register';
+            let warningEl = document.getElementById('analysisModeWarning');
+            if (!warningEl) {
+                warningEl = document.createElement('div');
+                warningEl.id = 'analysisModeWarning';
+                warningEl.className = 'bg-yellow-50 border border-yellow-200 text-yellow-700 text-[10px] p-3 rounded-xl mb-4 shadow-sm font-medium leading-relaxed hidden';
+                // Analiz ekranı başlığının altına ekleyelim
+                const analysisScreenHeader = document.querySelector('#analysisScreen > div.flex');
+                analysisScreenHeader.insertAdjacentElement('afterend', warningEl);
+            }
+
+            if (method !== 'salary') {
+                let modeName = method === 'recovery' ? 'Hedefe Dönüş (Kurtarma)' : (method === 'custom' ? 'Özel Tarih' : 'Kayıt Günü');
+                warningEl.innerHTML = `<i class="fas fa-exclamation-circle text-yellow-500 mr-1"></i> <strong>Önemli Bilgi:</strong> Ana sayfanızda hesaplama yöntemi <b>"${modeName}"</b> olarak seçili. Ancak bu Analiz ekranı, raporlama standartları gereği her zaman <b>Maaş/Gelir Günü (${state.salaryDay || 15}. gün)</b> döngünüzü baz alır. Bu yüzden ana sayfanızdaki harcama toplamları ile buradaki toplamlar farklılık gösterebilir.`;
+                warningEl.classList.remove('hidden');
+            } else {
+                warningEl.classList.add('hidden');
+            }
+            // ----------------------------------------
             
             const today = new Date();
             let analysisDate = new Date(today);
@@ -2193,6 +2221,12 @@
             const now = new Date(); const todayStr = now.toLocaleDateString('tr-TR');
             
             let startCalc;
+            // --- HATA ÇÖZÜMÜ: ÜST SINIR EKLENDİ ---
+            // Ana sayfanın dönemsel hesabı için eğer maaş döngüsü (salary) seçiliyse,
+            // sadece o ayın harcamalarını dahil etmesi için bir endCalc yaratıyoruz.
+            let endCalc = null; 
+            // --------------------------------------
+
             const calcMethod = state.balanceCalcMethod || 'register';
             
             const btnSalary = document.getElementById('btnCalcSalary');
@@ -2221,6 +2255,12 @@
                 }
                 startCalc = lastSalaryDate;
                 startCalc.setHours(0,0,0,0);
+                
+                // ÜST SINIR ATAMASI
+                endCalc = new Date(startCalc);
+                endCalc.setMonth(endCalc.getMonth() + 1);
+                endCalc.setHours(0,0,0,0);
+
             } else if (calcMethod === 'custom') {
                 btnCustom.className = activeCustomBtn;
                 startCalc = new Date(state.customBalanceDate || state.registrationDate);
@@ -2279,7 +2319,10 @@
                             totalSpent += e.amount;
                         }
                     } else {
-                        if (d >= startCalc) {
+                        // --- HATA ÇÖZÜMÜ: (!endCalc || d < endCalc) KOŞULU EKLENDİ ---
+                        // Eğer maaş döngüsü seçiliyse ve geleceğe bir kayıt girildiyse
+                        // Dashboard bunu dahil etmeyecek, tıpkı Analiz sayfası gibi davranacak.
+                        if (d >= startCalc && (!endCalc || d < endCalc)) {
                             totalSpent += e.amount;
                         }
                     }
@@ -3535,6 +3578,10 @@
             let startCalc;
             const calcMethod = state.balanceCalcMethod || 'register';
             
+            // --- HATA ÇÖZÜMÜ: ÜST SINIR EKLENDİ ---
+            let endCalc = null;
+            // --------------------------------------
+
             const btnSalary = document.getElementById('btnCalcSalary');
             const btnRegister = document.getElementById('btnCalcRegister');
             const btnCustom = document.getElementById('btnCalcCustom');
@@ -3557,6 +3604,12 @@
                 }
                 startCalc = lastSalaryDate;
                 startCalc.setHours(0,0,0,0);
+                
+                // ÜST SINIR
+                endCalc = new Date(startCalc);
+                endCalc.setMonth(endCalc.getMonth() + 1);
+                endCalc.setHours(0,0,0,0);
+
             } else if (calcMethod === 'custom') {
                 btnCustom.className = activeCustomBtn;
                 startCalc = new Date(state.customBalanceDate || state.registrationDate);
@@ -3601,7 +3654,8 @@
                             window.currentPeriodExpenses.push(e);
                         }
                     } else {
-                        if (d >= startCalc) {
+                        // --- HATA ÇÖZÜMÜ: ÜST SINIR KONTROLÜ EKLENDİ ---
+                        if (d >= startCalc && (!endCalc || d < endCalc)) {
                             totalSpent += e.amount;
                             window.currentPeriodExpenses.push(e);
                         }
