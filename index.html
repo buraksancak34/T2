@@ -78,6 +78,8 @@
         .animate-soft-pulse { animation: softPulse 3s infinite ease-in-out; }
 
         .side-panel { position: fixed; top: 0; right: 0; height: 100%; width: 100%; max-width: 28rem; background: white; z-index: 60; box-shadow: -10px 0 30px rgba(0,0,0,0.1); transform: translateX(100%); visibility: hidden; transition: transform 0.3s ease-in-out, visibility 0s linear 0.3s; display: flex; flex-direction: column; }
+        .side-panel-wide { max-width: 48rem !important; }
+        .side-panel-medium { max-width: 36rem !important; }
         .side-panel.open { transform: translateX(0); visibility: visible; transition: transform 0.3s ease-in-out, visibility 0s linear 0s; }
 
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-top: 1px solid #e2e8f0; display: flex; justify-content: space-around; align-items: center; z-index: 50; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -5px 20px rgba(0,0,0,0.05); }
@@ -189,15 +191,18 @@
         </div>
     </div>
 
-    <div id="wizardScreen" class="max-w-xl w-full glass-card p-6 rounded-[2rem] shadow-2xl hidden space-y-4 my-auto relative animate-fade-in">
-        <div class="flex justify-between items-center mb-2">
-            <div id="wizardProgress" class="flex gap-1 flex-1 mr-4"></div>
-            <span class="text-[10px] font-bold text-gray-300" id="stepCount">1/8</span>
-        </div>
-        <div id="wizardContent" class="min-h-[350px] flex flex-col relative"></div>
-        <div class="flex gap-3 mt-4" id="wizardNavBtns">
-             <button onclick="wizardBack()" class="flex-1 bg-gray-100 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-200 transition-all text-xs">Geri</button>
-             <button onclick="wizardNext()" id="wizNextBtn" class="flex-[2] bg-blue-600 text-white font-black py-3 rounded-xl shadow-xl active:scale-95 transition-all hover:bg-blue-700 text-xs">Devam Et</button>
+    <div id="wizardScreen" class="side-panel side-panel-medium bg-slate-50">
+        <div class="p-6 h-full flex flex-col">
+            <div class="flex justify-between items-center mb-4 pb-4 border-b border-gray-200">
+                <div id="wizardProgress" class="flex gap-1 flex-1 mr-4"></div>
+                <span class="text-[10px] font-bold text-gray-300 mr-4" id="stepCount">1/8</span>
+                <button onclick="closeWizardScreen()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div id="wizardContent" class="flex-1 overflow-y-auto custom-scrollbar min-h-[350px] relative"></div>
+            <div class="flex gap-3 mt-4 pt-4 border-t border-gray-200 shrink-0" id="wizardNavBtns">
+                 <button onclick="wizardBack()" class="flex-1 bg-gray-100 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-200 transition-all text-xs">Geri</button>
+                 <button onclick="wizardNext()" id="wizNextBtn" class="flex-[2] bg-blue-600 text-white font-black py-3 rounded-xl shadow-xl active:scale-95 transition-all hover:bg-blue-700 text-xs">Devam Et</button>
+            </div>
         </div>
     </div>
 
@@ -343,15 +348,12 @@
             </div>
             
             <div class="flex flex-col gap-3">
-                <div id="quickCategoryContainer" class="flex gap-2 w-full h-[40px] mb-1">
+                <div id="quickCategoryContainer" class="flex gap-2 w-full h-[40px] mb-1 items-stretch">
                     </div>
 
-                <div class="flex gap-2 items-center">
-                    <input type="number" id="expAmt" placeholder="Tutar (₺)" onkeyup="if(event.key === 'Enter') document.getElementById('expDesc').focus()" class="w-full p-4 bg-gray-50 rounded-xl font-black text-xl outline-none focus:ring-4 focus:ring-blue-100 transition-all text-center placeholder-gray-300 animate-soft-pulse">
-                </div>
-
-                <div class="flex gap-2 items-center">
-                    <input type="text" id="expDesc" value="" placeholder="Açıklama (Opsiyonel)" onkeyup="if(event.key === 'Enter') addExpense()" class="flex-1 p-3 bg-gray-50 rounded-xl font-bold text-gray-600 outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs">
+                <div class="flex flex-row gap-2 items-center w-full">
+                    <input type="number" id="expAmt" placeholder="Tutar (₺)" onkeyup="if(event.key === 'Enter') document.getElementById('expDesc').focus()" class="w-1/3 p-3 bg-gray-50 rounded-xl font-black text-lg outline-none focus:ring-4 focus:ring-blue-100 transition-all text-center placeholder-gray-400">
+                    <input type="text" id="expDesc" value="" placeholder="Açıklama" onkeyup="if(event.key === 'Enter') addExpense()" class="flex-1 p-3 bg-gray-50 rounded-xl font-bold text-gray-600 outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs">
                     <input type="hidden" id="editExpIndex" value="-1">
                     <button id="addExpBtn" onclick="addExpense()" class="bg-blue-600 text-white w-12 h-12 rounded-xl hover:bg-blue-700 active:scale-90 transition-all shadow-lg shadow-blue-200 flex items-center justify-center shrink-0"><i class="fas fa-plus text-lg"></i></button>
                 </div>
@@ -442,79 +444,87 @@
         </div>
     </div>
 
-    <div id="analysisScreen" class="max-w-4xl w-full hidden space-y-6 pb-32 animate-fade-in my-auto">
-        <div class="flex justify-between items-center mb-4">
-            <div>
+    <div id="analysisScreen" class="side-panel side-panel-wide bg-slate-50">
+        <div class="p-6 h-full flex flex-col">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
                 <h2 class="text-xl font-black text-gray-800 tracking-tight">Finansal Analiz</h2>
-                <div class="flex items-center gap-3 mt-2 relative">
-                     <p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Analiz Dönemi:</p>
-                     <div class="relative cursor-pointer bg-gray-100 rounded-lg p-1.5 px-3 flex items-center gap-2 hover:bg-gray-200 transition-colors" onclick="try{document.getElementById('analysisDateFilter').showPicker()}catch(e){}">
-                         <span id="analysisMonthDisplay" class="text-gray-700 text-[10px] font-black">Seçiniz</span>
-                         <i class="fas fa-chevron-down text-[8px] text-gray-400"></i>
-                         <input type="month" id="analysisDateFilter" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="renderCharts()">
-                     </div>
+                <button onclick="closeAnalysisScreen()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto custom-scrollbar pb-10 space-y-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="flex items-center gap-3 mt-2 relative">
+                             <p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Analiz Dönemi:</p>
+                             <div class="relative cursor-pointer bg-gray-100 rounded-lg p-1.5 px-3 flex items-center gap-2 hover:bg-gray-200 transition-colors" onclick="try{document.getElementById('analysisDateFilter').showPicker()}catch(e){}">
+                                 <span id="analysisMonthDisplay" class="text-gray-700 text-[10px] font-black">Seçiniz</span>
+                                 <i class="fas fa-chevron-down text-[8px] text-gray-400"></i>
+                                 <input type="month" id="analysisDateFilter" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="renderCharts()">
+                             </div>
+                        </div>
+                        <p id="analysisPeriodLabel" class="text-[9px] text-blue-500 font-bold mt-1"></p>
+                    </div>
+                    <div class="flex flex-col gap-2 items-end">
+                        <button onclick="openReportForSelectedMonth()" class="text-[9px] font-black bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm hover:bg-indigo-200 flex items-center gap-1 transition-colors">
+                            <i class="fas fa-file-invoice"></i> Raporu Oku
+                        </button>
+                    </div>
                 </div>
-                <p id="analysisPeriodLabel" class="text-[9px] text-blue-500 font-bold mt-1"></p>
-            </div>
-            <div class="flex flex-col gap-2 items-end">
-                <button onclick="openReportForSelectedMonth()" class="text-[9px] font-black bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm hover:bg-indigo-200 flex items-center gap-1 transition-colors">
-                    <i class="fas fa-file-invoice"></i> Raporu Oku
-                </button>
-                <button onclick="showDashboard()" class="text-[9px] font-black bg-gray-100 text-gray-600 border border-gray-200 px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm hover:bg-gray-200">Geri Dön</button>
-            </div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="glass-card p-4 rounded-[2rem] bg-white border border-gray-100 shadow-lg"><h3 class="font-black text-sm text-gray-800 mb-2 text-center">Varlık vs Borç</h3><div class="h-56"><canvas id="assetsChart"></canvas></div></div>
-            <div class="glass-card p-4 rounded-[2rem] bg-white border border-gray-100 shadow-lg relative">
-                <h3 class="font-black text-sm text-gray-800 mb-2 text-center">Harcama Dağılımı</h3>
-                <p class="text-[9px] text-center text-gray-400 absolute top-10 w-full left-0 z-0">Detay için sütunlara tıklayın</p>
-                <div class="h-56 relative z-10"><canvas id="expensesChart"></canvas></div>
-            </div>
-        </div>
-        
-        <div class="glass-card p-4 rounded-[2rem] bg-white border border-gray-100 shadow-lg mt-4">
-             <div class="flex flex-col sm:flex-row justify-between items-center mb-2 gap-2">
-                 <h3 class="font-black text-sm text-gray-800 text-center flex-1">Net Durum Değişimi (Trend)</h3>
-                 
-                 <div class="flex gap-1 bg-gray-50 p-1 rounded-lg">
-                    <button onclick="switchChartRange('6')" id="btnRange6" class="text-[9px] font-bold px-2 py-1 rounded hover:bg-white hover:shadow-sm text-gray-500 transition-all">6 Ay</button>
-                    <button onclick="switchChartRange('12')" id="btnRange12" class="text-[9px] font-bold px-2 py-1 rounded hover:bg-white hover:shadow-sm text-gray-500 transition-all">1 Yıl</button>
-                    <button onclick="switchChartRange('all')" id="btnRangeAll" class="text-[9px] font-bold px-2 py-1 rounded bg-white shadow-sm text-gray-800 border border-gray-100 transition-all">Tümü</button>
-                 </div>
-
-                 <div class="flex gap-2">
-                     <button onclick="switchChartMode('TL')" id="btnChartTL" class="text-[9px] font-bold px-2 py-1 rounded bg-blue-100 text-blue-600">TL Bazlı</button>
-                     <button onclick="switchChartMode('USD')" id="btnChartUSD" class="text-[9px] font-bold px-2 py-1 rounded bg-gray-100 text-gray-500 hover:bg-green-100 hover:text-green-600">USD Bazlı</button>
-                 </div>
-             </div>
-             <div class="h-56"><canvas id="historyTrendChart"></canvas></div>
-        </div>
-
-        <div class="glass-card p-6 rounded-[2rem] bg-white border border-gray-100 shadow-lg">
-            <h3 class="font-black text-lg text-gray-800 mb-3 border-b pb-2">Geçmiş Kayıt Ekle</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
-                <div><label class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Dönem</label><input type="month" id="histDate" class="w-full p-2.5 bg-gray-50 rounded-xl font-bold text-xs outline-none"></div>
-                <div><label class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Varlık (TL)</label><input type="number" id="histAssets" placeholder="0" class="w-full p-2.5 bg-gray-50 rounded-xl font-bold text-xs outline-none text-green-600"></div>
-                <div><label class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Borç (TL)</label><input type="number" id="histDebts" placeholder="0" class="w-full p-2.5 bg-gray-50 rounded-xl font-bold text-xs outline-none text-red-600"></div>
-                <div><label class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Dolar Kuru</label><input type="number" step="0.01" id="histUSDRate" placeholder="Örn: 30.50" class="w-full p-2.5 bg-blue-50 rounded-xl font-bold text-xs outline-none text-blue-600"></div>
                 
-                <button onclick="addHistoryRecord()" class="bg-indigo-600 text-white font-black py-2.5 rounded-xl shadow-lg hover:bg-indigo-700 active:scale-95 transition-all text-xs">Kaydet</button>
-            </div>
-            <div class="mt-4">
-                <h4 class="text-[10px] font-bold text-gray-500 mb-2 uppercase tracking-wide">Eklenen Kayıtlar</h4>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-xs text-left">
-                        <thead class="text-gray-400 border-b">
-                            <tr>
-                                <th class="pb-2">Dönem</th>
-                                <th class="pb-2 text-right">Varlık</th>
-                                <th class="pb-2 text-right">Borç</th>
-                                <th class="pb-2 text-right">Kur</th>
-                                <th class="pb-2 text-center">İşlem</th>
-                            </tr>
-                        </thead>
-                        <tbody id="historyTableBody" class="font-bold text-gray-700"></tbody>
-                    </table>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="glass-card p-4 rounded-[2rem] bg-white border border-gray-100 shadow-lg"><h3 class="font-black text-sm text-gray-800 mb-2 text-center">Varlık vs Borç</h3><div class="h-56"><canvas id="assetsChart"></canvas></div></div>
+                    <div class="glass-card p-4 rounded-[2rem] bg-white border border-gray-100 shadow-lg relative">
+                        <h3 class="font-black text-sm text-gray-800 mb-2 text-center">Harcama Dağılımı</h3>
+                        <p class="text-[9px] text-center text-gray-400 absolute top-10 w-full left-0 z-0">Detay için sütunlara tıklayın</p>
+                        <div class="h-56 relative z-10"><canvas id="expensesChart"></canvas></div>
+                    </div>
+                </div>
+                
+                <div class="glass-card p-4 rounded-[2rem] bg-white border border-gray-100 shadow-lg mt-4">
+                     <div class="flex flex-col sm:flex-row justify-between items-center mb-2 gap-2">
+                         <h3 class="font-black text-sm text-gray-800 text-center flex-1">Net Durum Değişimi (Trend)</h3>
+                         
+                         <div class="flex gap-1 bg-gray-50 p-1 rounded-lg">
+                            <button onclick="switchChartRange('6')" id="btnRange6" class="text-[9px] font-bold px-2 py-1 rounded hover:bg-white hover:shadow-sm text-gray-500 transition-all">6 Ay</button>
+                            <button onclick="switchChartRange('12')" id="btnRange12" class="text-[9px] font-bold px-2 py-1 rounded hover:bg-white hover:shadow-sm text-gray-500 transition-all">1 Yıl</button>
+                            <button onclick="switchChartRange('all')" id="btnRangeAll" class="text-[9px] font-bold px-2 py-1 rounded bg-white shadow-sm text-gray-800 border border-gray-100 transition-all">Tümü</button>
+                         </div>
+
+                         <div class="flex gap-2">
+                             <button onclick="switchChartMode('TL')" id="btnChartTL" class="text-[9px] font-bold px-2 py-1 rounded bg-blue-100 text-blue-600">TL Bazlı</button>
+                             <button onclick="switchChartMode('USD')" id="btnChartUSD" class="text-[9px] font-bold px-2 py-1 rounded bg-gray-100 text-gray-500 hover:bg-green-100 hover:text-green-600">USD Bazlı</button>
+                         </div>
+                     </div>
+                     <div class="h-56"><canvas id="historyTrendChart"></canvas></div>
+                </div>
+
+                <div class="glass-card p-6 rounded-[2rem] bg-white border border-gray-100 shadow-lg">
+                    <h3 class="font-black text-lg text-gray-800 mb-3 border-b pb-2">Geçmiş Kayıt Ekle</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
+                        <div><label class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Dönem</label><input type="month" id="histDate" class="w-full p-2.5 bg-gray-50 rounded-xl font-bold text-xs outline-none"></div>
+                        <div><label class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Varlık (TL)</label><input type="number" id="histAssets" placeholder="0" class="w-full p-2.5 bg-gray-50 rounded-xl font-bold text-xs outline-none text-green-600"></div>
+                        <div><label class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Borç (TL)</label><input type="number" id="histDebts" placeholder="0" class="w-full p-2.5 bg-gray-50 rounded-xl font-bold text-xs outline-none text-red-600"></div>
+                        <div><label class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Dolar Kuru</label><input type="number" step="0.01" id="histUSDRate" placeholder="Örn: 30.50" class="w-full p-2.5 bg-blue-50 rounded-xl font-bold text-xs outline-none text-blue-600"></div>
+                        
+                        <button onclick="addHistoryRecord()" class="bg-indigo-600 text-white font-black py-2.5 rounded-xl shadow-lg hover:bg-indigo-700 active:scale-95 transition-all text-xs">Kaydet</button>
+                    </div>
+                    <div class="mt-4">
+                        <h4 class="text-[10px] font-bold text-gray-500 mb-2 uppercase tracking-wide">Eklenen Kayıtlar</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs text-left">
+                                <thead class="text-gray-400 border-b">
+                                    <tr>
+                                        <th class="pb-2">Dönem</th>
+                                        <th class="pb-2 text-right">Varlık</th>
+                                        <th class="pb-2 text-right">Borç</th>
+                                        <th class="pb-2 text-right">Kur</th>
+                                        <th class="pb-2 text-center">İşlem</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyTableBody" class="font-bold text-gray-700"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1015,7 +1025,7 @@
         window.userInvites = [];
         let currentExpenseDateOffset = 0;
         let editingCategoryIndex = -1; 
-        let mergingCategoryIndex = -1; // YENİ: Kategori birleştirme takibi
+        let mergingCategoryIndex = -1; 
         let originalAdminUid = null;
         let showAdvancedStats = localStorage.getItem('showAdvancedStats') === 'true'; 
 
@@ -1028,6 +1038,27 @@
         window.lastFilteredExpenses = []; 
 
         const isMobileView = () => window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        // SAĞA KAYDIRARAK (SWIPE) PANEL KAPATMA SİSTEMİ
+        let touchStartX = 0;
+        let touchEndX = 0;
+        document.addEventListener('touchstart', e => {
+            if(e.changedTouches.length > 0) touchStartX = e.changedTouches[0].screenX;
+        }, {passive: true});
+
+        document.addEventListener('touchend', e => {
+            if(e.changedTouches.length > 0) touchEndX = e.changedTouches[0].screenX;
+            if (touchEndX - touchStartX > 80) { 
+                const openPanels = document.querySelectorAll('.side-panel.open');
+                if (openPanels.length > 0) {
+                    let isInside = Array.from(openPanels).some(panel => panel.contains(e.target));
+                    if (isInside || openPanels[0].contains(e.target)) {
+                        closeAllPopupsUIOnly();
+                        popPanelHistory();
+                    }
+                }
+            }
+        }, {passive: true});
 
         function applyAdvancedStatsUI() {
             const grid = document.getElementById('dailyStatsGrid');
@@ -1126,7 +1157,7 @@
             });
             
             editingCategoryIndex = -1;
-            mergingCategoryIndex = -1; // YENİ
+            mergingCategoryIndex = -1; 
         }
 
         function closeAllPopups() { 
@@ -1256,6 +1287,7 @@
                     startAdviceRotator();
                     
                     document.getElementById('bottomNav').classList.remove('hidden');
+                    showDashboard();
                     
                 } else {
                     currentUser = null;
@@ -1266,13 +1298,6 @@
                 }
             });
         } catch(e) { console.error("Firebase Init Error:", e); }
-
-        function hideAll() {
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('wizardScreen').classList.add('hidden');
-            document.getElementById('dashboardScreen').classList.add('hidden');
-            document.getElementById('analysisScreen').classList.add('hidden');
-        }
 
         async function fetchSystemMessages() {
             try {
@@ -1631,26 +1656,33 @@
             }
         }
 
-        function showLoginScreen() { hideAll(); document.getElementById('loginScreen').classList.remove('hidden'); }
-        function showDashboard() { hideAll(); document.getElementById('dashboardScreen').classList.remove('hidden'); updateDashboardUI(); }
+        function showDashboard() { 
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('dashboardScreen').classList.remove('hidden');
+            updateDashboardUI(); 
+        }
+
+        function showLoginScreen() { 
+            document.getElementById('dashboardScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            closeAllPopupsUIOnly();
+        }
         
         function showAnalysisScreen() { 
-            hideAll(); 
-            document.getElementById('analysisScreen').classList.remove('hidden'); 
-            
             const method = state.balanceCalcMethod || 'register';
             let warningEl = document.getElementById('analysisModeWarning');
             if (!warningEl) {
                 warningEl = document.createElement('div');
                 warningEl.id = 'analysisModeWarning';
                 warningEl.className = 'bg-yellow-50 border border-yellow-200 text-yellow-700 text-[10px] p-3 rounded-xl mb-4 shadow-sm font-medium leading-relaxed hidden';
-                const analysisScreenHeader = document.querySelector('#analysisScreen > div.flex');
+                
+                const analysisScreenHeader = document.querySelector('#analysisScreen > div > div.flex.justify-between.items-center.mb-6');
                 analysisScreenHeader.insertAdjacentElement('afterend', warningEl);
             }
 
             if (method !== 'salary') {
                 let modeName = method === 'recovery' ? 'Hedefe Dönüş (Kurtarma)' : (method === 'custom' ? 'Özel Tarih' : 'Kayıt Günü');
-                warningEl.innerHTML = `<i class="fas fa-exclamation-circle text-yellow-500 mr-1"></i> <strong>Önemli Bilgi:</strong> Ana sayfanızda hesaplama yöntemi <b>"${modeName}"</b> olarak seçili. Ancak bu Analiz ekranı, raporlama standartları gereği her zaman <b>Maaş/Gelir Günü (${state.salaryDay || 15}. gün)</b> döngünüzü baz alır. Bu yüzden ana sayfanızdaki harcama toplamları ile buradaki toplamlar farklılık gösterebilir.`;
+                warningEl.innerHTML = `<i class="fas fa-exclamation-circle text-yellow-500 mr-1"></i> <strong>Önemli Bilgi:</strong> Ana sayfanızda hesaplama yöntemi <b>"${modeName}"</b> olarak seçili. Ancak bu Analiz ekranı, raporlama standartları gereği her zaman <b>Maaş/Gelir Günü (${state.salaryDay || 15}. gün)</b> döngünüzü baz alır.`;
                 warningEl.classList.remove('hidden');
             } else {
                 warningEl.classList.add('hidden');
@@ -1668,10 +1700,24 @@
             renderCharts(); 
             renderHistoryTable(); 
             renderTrendChart();   
+
+            const modal = document.getElementById('analysisScreen');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.add('open'), 10);
+            document.getElementById('overlay').classList.add('active');
+            pushPanelHistory();
+        }
+
+        function closeAnalysisScreen() {
+            const modal = document.getElementById('analysisScreen');
+            modal.classList.remove('open');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            document.getElementById('overlay').classList.remove('active'); 
+            popPanelHistory();
         }
 
         function scrollToAddExpense() {
-            showDashboard();
+            closeAllPopupsUIOnly();
             const el = document.getElementById('addExpenseSection');
             if(el) {
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2130,11 +2176,17 @@
                     if(!state.expenses) state.expenses = [];
                     if(!state.monthlyHistory) state.monthlyHistory = [];
                     if(!state.familyMembers) state.familyMembers = [];
-                    if(!state.pinnedCategories) state.pinnedCategories = []; // Yeni eklendi
+                    if(!state.pinnedCategories) state.pinnedCategories = [];
                     if(!state.reports) state.reports = {}; 
                     
                     if(!state.categories || state.categories.length === 0) {
                         state.categories = ["Market", "Kasap", "Ulaşım", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"];
+                    }
+                    
+                    // Kurtarma modu kalıntısı varsa temizle
+                    if (state.balanceCalcMethod === 'recovery') {
+                        state.balanceCalcMethod = 'salary';
+                        saveToCloud();
                     }
                     
                     showDashboard();
@@ -2160,12 +2212,10 @@
             document.getElementById('btnAnalysis').classList.toggle('hidden', dis);
         }
 
-        // --- YENİ: Kategori Hızlı Seçim Mantığı ---
         function getTopCategories() {
             let selected = [...(state.pinnedCategories || [])];
             
             if (selected.length < 3) {
-                // En sık kullanılanları hesapla
                 let freqs = {};
                 state.expenses.forEach(e => {
                     if (e.category && e.category !== 'Diğer') {
@@ -2181,7 +2231,6 @@
                 }
             }
             
-            // Hala 3'ten azsa varsayılanlardan doldur
             if (selected.length < 3) {
                 for (let cat of state.categories) {
                     if (!selected.includes(cat) && cat !== 'Diğer') {
@@ -2205,10 +2254,9 @@
             let html = '';
             top3.forEach((cat, idx) => {
                 const isSelected = currentExpenseCategory === cat;
-                // Deaktifken silik mor, aktifken parlayan koyu mor
                 const bgClass = isSelected ? 'bg-purple-700 shadow-lg shadow-purple-500/60 scale-[1.02] ring-2 ring-purple-300' : 'bg-purple-100/60 hover:bg-purple-200/80';
                 const textClass = isSelected ? 'text-white' : 'text-purple-500';
-                html += `<button onclick="setExpenseCategory('${cat}')" class="flex-1 py-1.5 px-1 rounded-xl text-[10px] sm:text-xs font-black truncate transition-all active:scale-95 ${bgClass} ${textClass}" title="${cat}">${cat}</button>`;
+                html += `<button onclick="setExpenseCategory('${cat}')" class="flex-1 h-full rounded-xl text-[10px] sm:text-xs font-black truncate transition-all active:scale-95 ${bgClass} ${textClass} px-1 min-w-0" title="${cat}">${cat}</button>`;
             });
 
             let isDropdownSelected = !top3.includes(currentExpenseCategory) && currentExpenseCategory !== null;
@@ -2219,15 +2267,15 @@
             let dropdownValueDisplay = isDropdownSelected ? currentExpenseCategory : 'Diğer ▾';
 
             html += `
-            <div class="flex items-center bg-gray-50 border ${isDropdownSelected ? 'border-purple-500 shadow-md shadow-purple-200' : 'border-gray-200'} rounded-xl px-2 w-[28%] sm:w-auto relative cursor-pointer group hover:bg-gray-100 transition-all">
-                <select id="otherCatSelect" onchange="setExpenseCategory(this.value, true)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+            <div class="flex-1 h-full flex items-center bg-gray-50 border ${isDropdownSelected ? 'border-purple-500 shadow-md shadow-purple-200' : 'border-gray-200'} rounded-xl px-1 relative cursor-pointer group hover:bg-gray-100 transition-all min-w-0">
+                <select id="otherCatSelect" onchange="setExpenseCategory(this.value, true)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
                     <option value="" disabled ${!isDropdownSelected ? 'selected' : ''}>Diğer Kategoriler</option>
                     ${options}
                 </select>
                 <div class="flex-1 text-[10px] sm:text-xs font-bold ${isDropdownSelected ? 'text-purple-700' : 'text-gray-600'} truncate mr-1 select-none pointer-events-none">
                     ${dropdownValueDisplay}
                 </div>
-                <button onclick="event.stopPropagation(); openCategoryModal()" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-purple-500 rounded-md z-10 transition-colors" title="Kategorileri Düzenle">
+                <button onclick="event.stopPropagation(); openCategoryModal()" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-purple-500 rounded-md z-20 transition-colors shrink-0" title="Kategorileri Düzenle">
                     <i class="fas fa-pencil-alt text-[10px]"></i>
                 </button>
             </div>
@@ -2241,7 +2289,6 @@
             currentExpenseCategory = cat;
             renderQuickCategories();
         }
-        // ----------------------------------------
 
         function updateDashboardUI() {
             applyPermissions();
@@ -2299,12 +2346,6 @@
                 startCalc = new Date(state.customBalanceDate || state.registrationDate);
                 if(isNaN(startCalc.getTime())) startCalc = new Date();
                 startCalc.setHours(0,0,0,0);
-            } else if (calcMethod === 'recovery') {
-                btnCustom.className = activeCustomBtn; 
-                startCalc = new Date(state.recoveryStartDate || state.registrationDate);
-                if(isNaN(startCalc.getTime())) startCalc = new Date();
-                startCalc.setHours(0,0,0,0);
-                dailyLimitToUse = state.recoveryDailyLimit || state.manualDailyLimit || 0;
             } else {
                 btnRegister.className = activeBtn;
                 startCalc = new Date(state.registrationDate);
@@ -2316,7 +2357,6 @@
                 let labelSuffix = "";
                 if (calcMethod === 'salary') labelSuffix = " (Gelir Günü)";
                 else if (calcMethod === 'register') labelSuffix = " (Kayıt Günü)";
-                else if (calcMethod === 'recovery') labelSuffix = " (Kurtarma Modu)";
                 
                 customDateDisplay.innerText = startCalc.toLocaleDateString('tr-TR') + labelSuffix;
                 try { document.getElementById('customBalanceDate').value = startCalc.toISOString().split('T')[0]; } catch(e){}
@@ -2338,23 +2378,11 @@
                     
                     if (e.date === todayStr) {
                         spentToday += e.amount;
-                        if (calcMethod === 'recovery' && state.recoveryStartTs) {
-                            if (e.ts >= state.recoveryStartTs) {
-                                spentTodayInBudget += e.amount;
-                            }
-                        } else {
-                            spentTodayInBudget += e.amount;
-                        }
+                        spentTodayInBudget += e.amount;
                     }
 
-                    if (calcMethod === 'recovery' && state.recoveryStartTs) {
-                        if (e.ts >= state.recoveryStartTs) {
-                            totalSpent += e.amount;
-                        }
-                    } else {
-                        if (d >= startCalc && (!endCalc || d < endCalc)) {
-                            totalSpent += e.amount;
-                        }
+                    if (d >= startCalc && (!endCalc || d < endCalc)) {
+                        totalSpent += e.amount;
                     }
                 }
             });
@@ -2385,7 +2413,6 @@
             if (now.getDate() >= (state.salaryDay||15)) targetDate.setMonth(targetDate.getMonth()+1);
             document.getElementById('displayRemainingDays').innerText = `${Math.ceil((targetDate - now)/(1000*60*60*24))} Gün`;
 
-            // Hedefi Tutturmak İçin Gereken Hesaplama (Anlık)
             const sd = state.salaryDay || 15;
             let periodStart = new Date(now.getFullYear(), now.getMonth(), sd);
             if (now.getDate() < sd) {
@@ -2477,10 +2504,8 @@
             
             updateExpenseDateLabel();
             
-            // YENİ: Hızlı kategorileri oluştur
             renderQuickCategories();
 
-            // Otomatik Aylık Rapor Kontrolü
             checkMonthlyReport();
         }
         
@@ -2577,7 +2602,6 @@
             }
         }
 
-        // YENİ: Modal İçindeki Kategori Seçenekleri ve Yıldızlama
         function renderCategoryOptions() {
             if (!state.categories) {
                 state.categories = ["Market", "Kasap", "Ulaşım", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"];
@@ -2623,7 +2647,6 @@
             }
         }
 
-        // YENİ: Yıldızlama/Sabitleme Fonksiyonu
         function togglePinCategory(cat) {
             if (!state.pinnedCategories) state.pinnedCategories = [];
             const idx = state.pinnedCategories.indexOf(cat);
@@ -2638,7 +2661,7 @@
             }
             saveToCloud();
             renderCategoryOptions();
-            renderQuickCategories(); // Ekranın hemen güncellenmesi için
+            renderQuickCategories();
         }
 
         function openCategoryModal() {
@@ -2691,13 +2714,11 @@
                 const oldVal = state.categories[idx];
                 state.categories[idx] = newVal;
                 
-                // Yıldızlılarda varsa adını güncelle
                 if (state.pinnedCategories) {
                     const pinIdx = state.pinnedCategories.indexOf(oldVal);
                     if (pinIdx > -1) state.pinnedCategories[pinIdx] = newVal;
                 }
                 
-                // Seçili aktif kategori ise onu da güncelle
                 if (currentExpenseCategory === oldVal) {
                     currentExpenseCategory = newVal;
                 }
@@ -2721,13 +2742,11 @@
             showConfirm("Bu kategoriyi silmek istediğinize emin misiniz?", () => {
                 const catToDelete = state.categories[idx];
                 
-                // Sabitlenmişse oradan da çıkar
                 if (state.pinnedCategories) {
                     const pinIdx = state.pinnedCategories.indexOf(catToDelete);
                     if (pinIdx > -1) state.pinnedCategories.splice(pinIdx, 1);
                 }
 
-                // Seçili kategoriyse sıfırla
                 if (currentExpenseCategory === catToDelete) {
                     currentExpenseCategory = null;
                 }
@@ -2739,7 +2758,6 @@
             });
         }
         
-        // YENİ: Kategori Birleştirme İşlemleri
         function startCategoryMerge(idx) {
             mergingCategoryIndex = idx;
             editingCategoryIndex = -1;
@@ -2758,39 +2776,32 @@
             const cat1 = state.categories[idx];
             const cat2 = targetCat;
 
-            // İki kategorinin toplam harcamasını hesapla
             let total1 = 0, total2 = 0;
             state.expenses.forEach(e => {
                 if(e.category === cat1) total1 += e.amount;
                 if(e.category === cat2) total2 += e.amount;
             });
 
-            // Mantık: En çok harcama yapılan kategorinin ismini yaşat
             const winner = total1 > total2 ? cat1 : cat2;
             const loser = total1 > total2 ? cat2 : cat1;
 
             showConfirm(`"${loser}" kategorisi silinip, içindeki tüm harcamalar "${winner}" kategorisine aktarılacak. Onaylıyor musunuz?`, () => {
-                // Harcamaları galip kategoriye aktar
                 state.expenses.forEach(e => {
                     if(e.category === loser) e.category = winner;
                 });
 
-                // Kaybeden kategoriyi listeden sil
                 state.categories = state.categories.filter(c => c !== loser);
 
-                // Eğer kaybeden yıldızlı (sabitlenmiş) ise oradan da çıkar
                 if (state.pinnedCategories) {
                     const pinIdx = state.pinnedCategories.indexOf(loser);
                     if (pinIdx > -1) {
                         state.pinnedCategories.splice(pinIdx, 1);
-                        // Kazananı ekleyebiliriz (3'ten azsa)
                         if (!state.pinnedCategories.includes(winner) && state.pinnedCategories.length < 3) {
                             state.pinnedCategories.push(winner);
                         }
                     }
                 }
 
-                // Seçili kategori o an silinen ise yeniye geçir
                 if (currentExpenseCategory === loser) currentExpenseCategory = winner;
 
                 mergingCategoryIndex = -1;
@@ -3018,7 +3029,6 @@
             else renderWizardLists();
         }
 
-        // YENİ: Harcama Ekle Kısmı Değişimi
         function addExpense() {
             const amtInp = document.getElementById('expAmt');
             const descInp = document.getElementById('expDesc');
@@ -3034,7 +3044,6 @@
             d.setDate(d.getDate() - currentExpenseDateOffset);
             let finalDate = d.toLocaleDateString('tr-TR');
             
-            // Kategoriyi global değişkenden (veya dropdowndan) al
             const selectedCat = currentExpenseCategory || 'Diğer';
             
             let finalDesc = descInp.value.trim();
@@ -3100,7 +3109,7 @@
             document.getElementById('addExpBtn').innerHTML = '<i class="fas fa-check text-lg"></i>';
             document.getElementById('addExpBtn').classList.replace('bg-blue-600', 'bg-green-600');
             
-            renderQuickCategories(); // Seçimi güncelle
+            renderQuickCategories(); 
             scrollToAddExpense();
         }
 
@@ -3449,14 +3458,31 @@
             const sortedKeys = Object.keys(expenseMap).sort((a,b) => expenseMap[b] - expenseMap[a]);
             const sortedData = sortedKeys.map(k => expenseMap[k]);
 
+            let finalLabels = [];
+            let finalData = [];
+            
+            // Eğer 7'den fazla kategori varsa diğerlerini "Diğerleri" altında topla
+            if (sortedKeys.length > 7) {
+                finalLabels = sortedKeys.slice(0, 7);
+                finalData = sortedData.slice(0, 7);
+                const otherSum = sortedData.slice(7).reduce((a,b) => a+b, 0);
+                if (otherSum > 0) {
+                    finalLabels.push('Diğerleri (Toplu)');
+                    finalData.push(otherSum);
+                }
+            } else {
+                finalLabels = sortedKeys;
+                finalData = sortedData;
+            }
+
             assetsChartInstance = new Chart(ctx1, { type: 'doughnut', data: { labels: ['Varlıklar', 'Borçlar'], datasets: [{ data: [assets, debts], backgroundColor: ['#22c55e', '#ef4444'], borderWidth: 0 }] }, options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } } });
             expensesChartInstance = new Chart(ctx2, { 
                 type: 'bar', 
                 data: { 
-                    labels: sortedKeys.slice(0, 8), 
+                    labels: finalLabels, 
                     datasets: [{ 
                         label: 'Harcama', 
-                        data: sortedData.slice(0, 8), 
+                        data: finalData, 
                         backgroundColor: '#3b82f6', 
                         borderRadius: 5 
                     }] 
@@ -3467,7 +3493,7 @@
                     onClick: (e, elements) => {
                         if (elements.length > 0) {
                             const index = elements[0].index;
-                            const catName = sortedKeys.slice(0, 8)[index];
+                            const catName = finalLabels[index];
                             openAnalysisCategoryModal(catName);
                         }
                     }
@@ -3480,8 +3506,22 @@
             document.getElementById('analysisCatPeriod').innerText = document.getElementById('analysisPeriodLabel').innerText;
             
             let filtered = window.lastFilteredExpenses.filter(e => {
-                if (categoryName === 'Diğer / Özel') return (!e.category || e.category === 'Diğer');
-                return e.category === categoryName;
+                let cat = e.category;
+                if (!cat || cat === 'Diğer') cat = 'Diğer / Özel';
+                
+                if (categoryName === 'Diğerleri (Toplu)') {
+                    // Eğer toplu diğerlerine tıklandıysa ilk 7 haricindekileri bul
+                    const expenseMap = {};
+                    window.lastFilteredExpenses.forEach(ex => {
+                        let k = ex.category;
+                        if (!k || k === 'Diğer') k = 'Diğer / Özel';
+                        expenseMap[k] = (expenseMap[k] || 0) + ex.amount;
+                    });
+                    const top7 = Object.keys(expenseMap).sort((a,b) => expenseMap[b] - expenseMap[a]).slice(0, 7);
+                    return !top7.includes(cat);
+                } else {
+                    return cat === categoryName;
+                }
             });
             
             filtered.sort((a,b) => b.ts - a.ts);
