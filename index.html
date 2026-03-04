@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Birikim Koçum | Gelir-Gider Takip</title>
     
-    <!-- Temel Web App Ayarları -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-touch-fullscreen" content="yes">
@@ -17,7 +16,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <!-- FIREBASE SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -101,7 +99,6 @@
         <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div> Kaydedildi
     </div>
 
-    <!-- ÖZEL ONAY KUTUSU -->
     <div id="customConfirmModal" class="fixed inset-0 z-[70] hidden flex items-center justify-center">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeCustomConfirm()"></div>
         <div class="bg-white rounded-3xl p-6 w-[85%] max-w-sm relative z-10 shadow-2xl animate-fade-in text-center border-2 border-white">
@@ -115,7 +112,6 @@
         </div>
     </div>
 
-    <!-- APP UYARI MODALI -->
     <div id="appAlertModal" class="fixed inset-0 z-[80] hidden flex items-center justify-center">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeAppAlert()"></div>
         <div class="bg-white rounded-3xl p-6 w-[85%] max-w-sm relative z-10 shadow-2xl animate-fade-in text-center border-2 border-white">
@@ -126,7 +122,6 @@
         </div>
     </div>
     
-    <!-- HESAP SİLME PAROLA MODALI -->
     <div id="deleteAccountModal" class="fixed inset-0 z-[80] hidden flex items-center justify-center">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeDeleteAccountModal()"></div>
         <div class="bg-white rounded-3xl p-6 w-[85%] max-w-sm relative z-10 shadow-2xl animate-fade-in text-center border-2 border-red-100">
@@ -141,7 +136,6 @@
         </div>
     </div>
 
-    <!-- ÖZEL GÜN MODALI -->
     <div id="specialDayModal" class="fixed inset-0 z-[90] hidden flex items-center justify-center">
         <canvas id="confettiCanvas" class="absolute inset-0 pointer-events-none z-0"></canvas>
         <div class="absolute inset-0 bg-gradient-to-br from-red-600/90 to-red-900/95 backdrop-blur-md"></div>
@@ -153,7 +147,6 @@
         </div>
     </div>
 
-    <!-- 1. GİRİŞ EKRANI -->
     <div id="loginScreen" class="max-w-md w-full glass-card p-6 rounded-[2rem] shadow-2xl space-y-6 my-auto relative overflow-hidden animate-fade-in">
         <div class="text-center">
             <div class="mx-auto mb-6 w-full max-w-[150px] h-auto hover:scale-105 transition-transform duration-300">
@@ -196,7 +189,6 @@
         </div>
     </div>
 
-    <!-- 2. SİHİRBAZ (WIZARD) -->
     <div id="wizardScreen" class="max-w-xl w-full glass-card p-6 rounded-[2rem] shadow-2xl hidden space-y-4 my-auto relative animate-fade-in">
         <div class="flex justify-between items-center mb-2">
             <div id="wizardProgress" class="flex gap-1 flex-1 mr-4"></div>
@@ -209,7 +201,6 @@
         </div>
     </div>
 
-    <!-- 3. DASHBOARD -->
     <div id="dashboardScreen" class="max-w-4xl w-full hidden space-y-4 pb-20 animate-fade-in">
         
         <div id="motivationArea" class="hidden w-full p-3 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white shadow-lg animate-fade-in">
@@ -267,15 +258,12 @@
                 <div class="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20 pointer-events-none"></div>
                 <div class="relative z-10">
                     
-                    <!-- ÜST SATIR: GERÇEK BAKİYE ve BUTONLAR -->
                     <div class="flex flex-row justify-between items-start mb-5 gap-2 border-b border-slate-800 pb-4">
-                        <!-- Sol Taraf: Gerçek Bakiye -->
                         <div class="cursor-pointer group flex-shrink-0" onclick="openBalanceModal()">
                             <p class="text-slate-400 text-[9px] font-bold uppercase tracking-widest mb-0.5 group-hover:text-blue-300 transition-colors flex items-center gap-1">GERÇEK BAKİYE <i class="fas fa-question-circle opacity-50"></i></p>
                             <h2 id="displayCumulativeLimit" class="text-4xl md:text-5xl font-black tracking-tighter leading-none mt-1 group-hover:scale-[1.02] transform origin-left transition-transform duration-300">₺0</h2>
                         </div>
                         
-                        <!-- Sağ Taraf: Ayar Butonları -->
                         <div class="flex flex-col gap-1.5 items-end">
                             <div class="flex gap-1.5">
                                 <button onclick="setBalanceMethod('salary')" id="btnCalcSalary" class="text-[8px] font-bold px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors border border-slate-700">Gelir Günü</button>
@@ -290,15 +278,12 @@
                         </div>
                     </div>
                     
-                    <!-- ORTA SATIR: GÜNLÜK DURUM BAŞLIĞI ve DETAY GÖSTER -->
                     <div class="flex justify-between items-end mb-2 px-1">
                          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest opacity-80">Günlük Durum</p>
                          <button onclick="toggleAdvancedStats()" id="toggleAdvancedBtn" class="text-[9px] text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 font-bold">Detay Göster <i class="fas fa-chevron-down"></i></button>
                     </div>
 
-                    <!-- ORTA SATIR: GRID KARTLARI -->
                     <div id="dailyStatsGrid" class="grid grid-cols-1 gap-3 mb-4 transition-all">
-                        <!-- Bugünün Limiti Kartı (Daima Görünür) -->
                         <div class="bg-[#151e32] p-3 md:p-4 rounded-2xl border border-slate-800 cursor-pointer hover:bg-slate-800 transition-colors flex flex-col justify-between group" onclick="openCalcModal()">
                             <div class="flex justify-between items-start mb-2">
                                 <p class="text-blue-400 text-[8px] md:text-[9px] font-bold uppercase tracking-widest opacity-90 group-hover:text-blue-300 transition-colors">Bugünün Limiti</p>
@@ -307,7 +292,6 @@
                             <h4 id="displayDailyLimit" class="text-2xl md:text-3xl font-black text-white tracking-tight">₺0</h4>
                         </div>
                         
-                        <!-- Hedefi Tutturmak İçin Gereken Kartı (Varsayılan Gizli) -->
                         <div id="advancedStatsCard" class="hidden bg-blue-900/20 p-3 md:p-4 rounded-2xl border border-blue-800/30 cursor-pointer hover:bg-blue-900/40 transition-colors flex-col justify-between group" onclick="openRecoveryPlanModal()">
                             <div class="flex justify-between items-start mb-2">
                                 <p class="text-blue-300 text-[8px] md:text-[9px] font-bold uppercase tracking-widest opacity-90 leading-tight group-hover:text-white transition-colors pr-2">Hedefi Tutturmak İçin Gereken Ort.</p>
@@ -317,13 +301,11 @@
                         </div>
                     </div>
 
-                    <!-- ALT SATIR: BİLGİ KARTLARI -->
                     <div class="grid grid-cols-2 gap-3">
                         <div class="bg-[#151e32] px-4 py-4 rounded-2xl border border-slate-800 text-center cursor-pointer hover:bg-slate-700 transition-colors group" onclick="openSalaryDayModal()">
                             <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1 group-hover:text-blue-300 transition-colors flex items-center justify-center gap-1">Maaşa / Gelire Kalan <i class="fas fa-edit opacity-50 group-hover:opacity-100"></i></span>
                             <span id="displayRemainingDays" class="text-lg font-black text-white">-- Gün</span>
                         </div>
-                         <!-- Hedef Birikim Hızlı Plan Paneline Gider -->
                          <div class="bg-[#151e32] px-4 py-4 rounded-2xl border border-slate-800 text-center cursor-pointer hover:bg-slate-700 transition-colors group" onclick="openQuickPlanModal()">
                             <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest block mb-1 group-hover:text-blue-300 transition-colors flex items-center justify-center gap-1">Hedef Birikim <i class="fas fa-edit opacity-50 group-hover:opacity-100"></i></span>
                             <span id="sumSavings" class="text-lg font-black text-green-400">₺0</span>
@@ -340,7 +322,6 @@
                 <span id="todayTotal" class="text-[9px] font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-md uppercase tracking-wide">Bugün: ₺0</span>
             </div>
 
-            <!-- TARİH SEÇİCİ (ORTALANMIŞ VE DETAYLI) -->
             <div class="flex justify-center mb-4">
                 <div class="flex items-center gap-3 bg-red-50 p-2 rounded-2xl border border-red-100 shadow-sm w-full max-w-[250px]">
                     <button onclick="changeExpenseDate(1)" class="w-8 h-8 shrink-0 flex items-center justify-center bg-white rounded-xl text-red-400 hover:text-red-600 shadow-sm transition-transform active:scale-95 border border-red-50"><i class="fas fa-chevron-left text-sm"></i></button>
@@ -355,7 +336,6 @@
                 </div>
             </div>
             
-            <!-- BUGÜNE DÖN BUTONU -->
             <div id="returnToTodayBtnContainer" class="flex justify-center mb-4 hidden animate-fade-in">
                 <button onclick="returnToToday()" class="bg-green-500 text-white px-5 py-1.5 rounded-full text-[10px] font-black shadow-lg shadow-green-200 hover:bg-green-600 active:scale-95 transition-all flex items-center gap-1 border-2 border-green-100 animate-pulse">
                     <i class="fas fa-undo"></i> BUGÜNE DÖN
@@ -363,10 +343,8 @@
             </div>
             
             <div class="flex flex-col gap-3">
-                <!-- YENİ HIZLI KATEGORİ SEÇİM ALANI -->
                 <div id="quickCategoryContainer" class="flex gap-2 w-full h-[40px] mb-1">
-                    <!-- Javascript ile doldurulacak -->
-                </div>
+                    </div>
 
                 <div class="flex gap-2 items-center">
                     <input type="number" id="expAmt" placeholder="Tutar (₺)" onkeyup="if(event.key === 'Enter') document.getElementById('expDesc').focus()" class="w-full p-4 bg-gray-50 rounded-xl font-black text-xl outline-none focus:ring-4 focus:ring-blue-100 transition-all text-center placeholder-gray-300 animate-soft-pulse">
@@ -464,7 +442,6 @@
         </div>
     </div>
 
-    <!-- 4. ANALİZ EKRANI -->
     <div id="analysisScreen" class="max-w-4xl w-full hidden space-y-6 pb-32 animate-fade-in my-auto">
         <div class="flex justify-between items-center mb-4">
             <div>
@@ -567,8 +544,6 @@
         </div>
     </nav>
 
-    <!-- Diğer tüm modallar -->
-    <!-- HIZLI PLAN (HEDEF BİRİKİM) MODALI -->
     <div id="quickPlanModal" class="side-panel">
         <div class="p-6 h-full flex flex-col">
             <div class="flex justify-between items-center mb-6 pb-4 border-b">
@@ -579,15 +554,13 @@
                 <button onclick="closeQuickPlanModal()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
             </div>
             <div class="flex-1 overflow-y-auto custom-scrollbar pb-10" id="quickPlanContent">
-                <!-- Dinamik İçerik -->
-            </div>
+                </div>
             <div class="pt-4 border-t border-gray-100 shrink-0">
                 <button onclick="saveQuickPlan()" class="w-full py-4 bg-blue-600 text-white font-black rounded-xl text-sm hover:bg-blue-700 shadow-xl shadow-blue-200 transition-colors">Planı Kaydet</button>
             </div>
         </div>
     </div>
 
-    <!-- MAAŞ GÜNÜ MODALI -->
     <div id="salaryDayModal" class="side-panel">
         <div class="p-6 h-full flex flex-col">
             <div class="flex justify-between items-center mb-6 pb-4 border-b">
@@ -619,7 +592,6 @@
         </div>
     </div>
 
-    <!-- ANALİZ KATEGORİ DETAY MODALI -->
     <div id="analysisCategoryModal" class="side-panel">
         <div class="p-6 h-full flex flex-col bg-slate-50">
             <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
@@ -641,7 +613,6 @@
         </div>
     </div>
 
-    <!-- AYARLAR MODALI -->
     <div id="settingsModal" class="side-panel">
         <div class="p-6 h-full flex flex-col">
             <div class="flex justify-between items-center mb-6 pb-4 border-b">
@@ -685,7 +656,6 @@
         </div>
     </div>
 
-    <!-- ADMİN MODALI -->
     <div id="adminModal" class="side-panel">
         <div class="p-6 h-full flex flex-col bg-slate-900 text-white">
             <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-700">
@@ -754,7 +724,6 @@
         </div>
     </div>
 
-    <!-- DÜZENLE MODALI -->
     <div id="editItemModal" class="side-panel">
         <div class="p-6 h-full flex flex-col">
             <div class="flex justify-between items-center mb-6 pb-4 border-b">
@@ -820,7 +789,6 @@
         </div>
     </div>
     
-    <!-- DİĞER MODALLAR -->
     <div id="calcModal" class="side-panel">
         <div class="p-6 h-full flex flex-col">
             <div class="flex justify-between items-center mb-6 pb-4 border-b">
@@ -848,8 +816,7 @@
                 <button onclick="closeRecoveryPlanModal()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
             </div>
             <div id="recoveryPlanContent" class="flex-1 overflow-y-auto custom-scrollbar pb-10">
-                <!-- Dinamik içerik JS ile gelecek -->
-            </div>
+                </div>
         </div>
     </div>
 
@@ -902,11 +869,9 @@
         </div>
     </div>
 
-    <!-- AYLIK RAPOR MODALI -->
     <div id="monthlyReportModal" class="fixed inset-0 z-[85] hidden flex items-center justify-center">
         <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeMonthlyReport()"></div>
         <div class="bg-white rounded-[2rem] p-5 w-[90%] max-w-sm relative z-10 shadow-2xl animate-fade-in max-h-[80vh] flex flex-col border border-indigo-100 mb-20">
-            <!-- Header -->
             <div class="text-center mb-4">
                 <div class="w-16 h-16 bg-gradient-to-tr from-indigo-500 to-purple-500 text-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg shadow-indigo-200 animate-bounce-slow">
                     <i class="fas fa-bullhorn text-2xl"></i>
@@ -915,12 +880,9 @@
                 <p id="reportPeriodText" class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">...</p>
             </div>
             
-            <!-- Scrollable Content -->
             <div id="reportContent" class="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-4 text-sm text-gray-700 font-medium pb-2">
-                <!-- Dinamik içerik JS ile buraya gelecek -->
-            </div>
+                </div>
             
-            <!-- Footer / Action -->
             <div class="mt-4 pt-4 border-t border-gray-100 space-y-2 shrink-0">
                 <button onclick="closeMonthlyReport(); openQuickPlanModal();" class="w-full py-3.5 bg-indigo-600 text-white font-black rounded-xl text-xs hover:bg-indigo-700 shadow-xl shadow-indigo-200 active:scale-95 transition-all flex items-center justify-center gap-2">
                     <i class="fas fa-edit text-sm"></i> Yeni Hedef Belirle (Planı Güncelle)
@@ -1036,7 +998,7 @@
             "Finansal özgürlük yolculuğunda iyi yolculuklar!"
         ];
 
-        const defaultState = { step: 1, salaryDay: 15, manualDailyLimit: 0, incomes: [], bills: [], loans: [], debts: [], otherDebts: [], assets: [], expenses: [], categories: ["Market / Manav", "Kasap", "Akaryakıt", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"], pinnedCategories: [], monthlyHistory: [] };
+        const defaultState = { step: 1, salaryDay: 15, manualDailyLimit: 0, incomes: [], bills: [], loans: [], debts: [], otherDebts: [], assets: [], expenses: [], categories: ["Market", "Kasap", "Ulaşım", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"], pinnedCategories: ["Market", "Ulaşım", "Diğer"], monthlyHistory: [] };
         let state = JSON.parse(JSON.stringify(defaultState));
 
         let db, auth, currentUser = null;
@@ -1053,6 +1015,7 @@
         window.userInvites = [];
         let currentExpenseDateOffset = 0;
         let editingCategoryIndex = -1; 
+        let mergingCategoryIndex = -1; // YENİ: Kategori birleştirme takibi
         let originalAdminUid = null;
         let showAdvancedStats = localStorage.getItem('showAdvancedStats') === 'true'; 
 
@@ -1163,6 +1126,7 @@
             });
             
             editingCategoryIndex = -1;
+            mergingCategoryIndex = -1; // YENİ
         }
 
         function closeAllPopups() { 
@@ -2170,7 +2134,7 @@
                     if(!state.reports) state.reports = {}; 
                     
                     if(!state.categories || state.categories.length === 0) {
-                        state.categories = ["Market / Manav", "Kasap", "Akaryakıt", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"];
+                        state.categories = ["Market", "Kasap", "Ulaşım", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"];
                     }
                     
                     showDashboard();
@@ -2238,18 +2202,13 @@
             const container = document.getElementById('quickCategoryContainer');
             if (!container) return;
 
-            const colors = [
-                { bg: 'bg-pink-100', text: 'text-pink-700' },
-                { bg: 'bg-purple-100', text: 'text-purple-700' },
-                { bg: 'bg-orange-100', text: 'text-orange-700' }
-            ];
-
             let html = '';
             top3.forEach((cat, idx) => {
                 const isSelected = currentExpenseCategory === cat;
-                const bgClass = isSelected ? 'bg-green-500 shadow-md shadow-green-200' : colors[idx].bg;
-                const textClass = isSelected ? 'text-white' : colors[idx].text;
-                html += `<button onclick="setExpenseCategory('${cat}')" class="flex-1 py-1 px-1 rounded-xl text-[10px] sm:text-xs font-black truncate transition-all active:scale-95 ${bgClass} ${textClass}" title="${cat}">${cat}</button>`;
+                // Deaktifken silik mor, aktifken parlayan koyu mor
+                const bgClass = isSelected ? 'bg-purple-700 shadow-lg shadow-purple-500/60 scale-[1.02] ring-2 ring-purple-300' : 'bg-purple-100/60 hover:bg-purple-200/80';
+                const textClass = isSelected ? 'text-white' : 'text-purple-500';
+                html += `<button onclick="setExpenseCategory('${cat}')" class="flex-1 py-1.5 px-1 rounded-xl text-[10px] sm:text-xs font-black truncate transition-all active:scale-95 ${bgClass} ${textClass}" title="${cat}">${cat}</button>`;
             });
 
             let isDropdownSelected = !top3.includes(currentExpenseCategory) && currentExpenseCategory !== null;
@@ -2260,15 +2219,15 @@
             let dropdownValueDisplay = isDropdownSelected ? currentExpenseCategory : 'Diğer ▾';
 
             html += `
-            <div class="flex items-center bg-gray-50 border ${isDropdownSelected ? 'border-green-500 shadow-sm' : 'border-gray-200'} rounded-xl px-2 w-[28%] sm:w-auto relative cursor-pointer group hover:bg-gray-100 transition-all">
+            <div class="flex items-center bg-gray-50 border ${isDropdownSelected ? 'border-purple-500 shadow-md shadow-purple-200' : 'border-gray-200'} rounded-xl px-2 w-[28%] sm:w-auto relative cursor-pointer group hover:bg-gray-100 transition-all">
                 <select id="otherCatSelect" onchange="setExpenseCategory(this.value, true)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                     <option value="" disabled ${!isDropdownSelected ? 'selected' : ''}>Diğer Kategoriler</option>
                     ${options}
                 </select>
-                <div class="flex-1 text-[10px] sm:text-xs font-bold ${isDropdownSelected ? 'text-green-600' : 'text-gray-600'} truncate mr-1 select-none pointer-events-none">
+                <div class="flex-1 text-[10px] sm:text-xs font-bold ${isDropdownSelected ? 'text-purple-700' : 'text-gray-600'} truncate mr-1 select-none pointer-events-none">
                     ${dropdownValueDisplay}
                 </div>
-                <button onclick="event.stopPropagation(); openCategoryModal()" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-500 rounded-md z-10 transition-colors" title="Kategorileri Düzenle">
+                <button onclick="event.stopPropagation(); openCategoryModal()" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-purple-500 rounded-md z-10 transition-colors" title="Kategorileri Düzenle">
                     <i class="fas fa-pencil-alt text-[10px]"></i>
                 </button>
             </div>
@@ -2621,7 +2580,7 @@
         // YENİ: Modal İçindeki Kategori Seçenekleri ve Yıldızlama
         function renderCategoryOptions() {
             if (!state.categories) {
-                state.categories = ["Market / Manav", "Kasap", "Akaryakıt", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"];
+                state.categories = ["Market", "Kasap", "Ulaşım", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"];
             }
             if (!state.pinnedCategories) state.pinnedCategories = [];
             
@@ -2629,13 +2588,22 @@
             if(list) {
                 list.innerHTML = state.categories.map((c, i) => {
                     const isPinned = state.pinnedCategories.includes(c);
-                    const starClass = isPinned ? 'fas fa-star text-yellow-400' : 'far fa-star text-gray-300';
+                    const starClass = isPinned ? 'fas fa-star text-yellow-400 drop-shadow-sm' : 'far fa-star text-gray-300';
                     
                     return `
                     <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
                         <div class="flex items-center flex-1">
-                            <button onclick="togglePinCategory('${c}')" class="mr-3 hover:scale-125 transition-transform" title="${isPinned ? 'Sabitlemeyi Kaldır' : 'Hızlı Seçime Sabitle'}"><i class="${starClass} text-lg"></i></button>
-                            ${editingCategoryIndex === i 
+                            <button onclick="togglePinCategory('${c}')" class="mr-3 hover:scale-125 transition-transform" title="${isPinned ? 'Sabitlemeyi Kaldır' : 'Hızlı Seçime Sabitle (Anasayfa)'}"><i class="${starClass} text-lg"></i></button>
+                            ${mergingCategoryIndex === i
+                                ? `<div class="flex gap-2 flex-1 items-center">
+                                     <span class="text-[10px] font-bold text-gray-500">Hedef:</span>
+                                     <select id="mergeSelect_${i}" class="flex-1 p-1.5 border border-indigo-200 rounded-lg text-xs outline-none">
+                                        ${state.categories.filter((_, index) => index !== i).map(c2 => `<option value="${c2}">${c2}</option>`).join('')}
+                                     </select>
+                                     <button onclick="confirmCategoryMerge(${i})" class="text-green-600 hover:text-green-800 ml-1"><i class="fas fa-check"></i></button>
+                                     <button onclick="cancelCategoryMerge()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+                                   </div>`
+                                : editingCategoryIndex === i 
                                 ? `<div class="flex gap-2 flex-1">
                                      <input type="text" id="catEditInput_${i}" value="${c}" class="w-full p-2 border border-blue-200 rounded-lg text-sm" onkeyup="if(event.key==='Enter') saveCategoryEdit(${i})">
                                      <button onclick="saveCategoryEdit(${i})" class="text-green-600 hover:text-green-800"><i class="fas fa-check"></i></button>
@@ -2644,10 +2612,11 @@
                                 : `<span class="text-sm font-bold text-gray-700">${c}</span>`
                             }
                         </div>
-                        ${editingCategoryIndex !== i ? 
+                        ${editingCategoryIndex !== i && mergingCategoryIndex !== i ? 
                         `<div class="flex gap-2 ml-2">
-                            <button onclick="startCategoryEdit(${i})" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pen"></i></button>
-                            <button onclick="deleteCategory(${i})" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button>
+                            <button onclick="startCategoryMerge(${i})" class="text-indigo-400 hover:text-indigo-600" title="Başka Kategoriyle Birleştir"><i class="fas fa-object-group"></i></button>
+                            <button onclick="startCategoryEdit(${i})" class="text-blue-400 hover:text-blue-600" title="Düzenle"><i class="fas fa-pen"></i></button>
+                            <button onclick="deleteCategory(${i})" class="text-red-400 hover:text-red-600" title="Sil"><i class="fas fa-trash"></i></button>
                         </div>` : ''}
                     </div>
                 `}).join('');
@@ -2767,6 +2736,69 @@
                 saveToCloud();
                 renderCategoryOptions();
                 updateDashboardUI();
+            });
+        }
+        
+        // YENİ: Kategori Birleştirme İşlemleri
+        function startCategoryMerge(idx) {
+            mergingCategoryIndex = idx;
+            editingCategoryIndex = -1;
+            renderCategoryOptions();
+        }
+
+        function cancelCategoryMerge() {
+            mergingCategoryIndex = -1;
+            renderCategoryOptions();
+        }
+
+        function confirmCategoryMerge(idx) {
+            const targetCat = document.getElementById(`mergeSelect_${idx}`).value;
+            if(!targetCat) return;
+
+            const cat1 = state.categories[idx];
+            const cat2 = targetCat;
+
+            // İki kategorinin toplam harcamasını hesapla
+            let total1 = 0, total2 = 0;
+            state.expenses.forEach(e => {
+                if(e.category === cat1) total1 += e.amount;
+                if(e.category === cat2) total2 += e.amount;
+            });
+
+            // Mantık: En çok harcama yapılan kategorinin ismini yaşat
+            const winner = total1 > total2 ? cat1 : cat2;
+            const loser = total1 > total2 ? cat2 : cat1;
+
+            showConfirm(`"${loser}" kategorisi silinip, içindeki tüm harcamalar "${winner}" kategorisine aktarılacak. Onaylıyor musunuz?`, () => {
+                // Harcamaları galip kategoriye aktar
+                state.expenses.forEach(e => {
+                    if(e.category === loser) e.category = winner;
+                });
+
+                // Kaybeden kategoriyi listeden sil
+                state.categories = state.categories.filter(c => c !== loser);
+
+                // Eğer kaybeden yıldızlı (sabitlenmiş) ise oradan da çıkar
+                if (state.pinnedCategories) {
+                    const pinIdx = state.pinnedCategories.indexOf(loser);
+                    if (pinIdx > -1) {
+                        state.pinnedCategories.splice(pinIdx, 1);
+                        // Kazananı ekleyebiliriz (3'ten azsa)
+                        if (!state.pinnedCategories.includes(winner) && state.pinnedCategories.length < 3) {
+                            state.pinnedCategories.push(winner);
+                        }
+                    }
+                }
+
+                // Seçili kategori o an silinen ise yeniye geçir
+                if (currentExpenseCategory === loser) currentExpenseCategory = winner;
+
+                mergingCategoryIndex = -1;
+                saveToCloud();
+                renderCategoryOptions();
+                renderQuickCategories();
+                updateDashboardUI();
+                showAppAlert(`Kategoriler birleştirildi. Yeni genel kategori: ${winner}`);
             });
         }
 
