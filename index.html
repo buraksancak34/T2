@@ -1728,20 +1728,35 @@
         function startAdviceRotator() {}
 
         function checkGamificationStatus() {
-            const todayStr = new Date().toLocaleDateString('tr-TR');
+            const now = new Date();
+            const tY = now.getFullYear();
+            const tM = now.getMonth() + 1;
+            const tD = now.getDate();
             const dailyLimit = state.manualDailyLimit || 0;
-            const spentToday = state.expenses.filter(e => e.date === todayStr).reduce((s,e)=>s+e.amount,0);
+            
+            let spentToday = 0;
+            state.expenses.forEach(e => {
+                const p = e.date.split('.');
+                if (p.length === 3 && parseInt(p[0]) === tD && parseInt(p[1]) === tM && parseInt(p[2]) === tY) {
+                    spentToday += e.amount;
+                }
+            });
             
             if (spentToday > dailyLimit && dailyLimit > 0) {
                 return getRandomMessage(messages_highSpend, 'highSpend');
             }
 
             let streak = 0;
-            const now = new Date();
             for (let i = 1; i < 30; i++) {
                 const d = new Date(); d.setDate(now.getDate() - i);
-                const dStr = d.toLocaleDateString('tr-TR');
-                const spentThatDay = state.expenses.filter(e => e.date === dStr).reduce((s,e)=>s+e.amount,0);
+                const sY = d.getFullYear(), sM = d.getMonth() + 1, sD = d.getDate();
+                let spentThatDay = 0;
+                state.expenses.forEach(e => {
+                    const p = e.date.split('.');
+                    if (p.length === 3 && parseInt(p[0]) === sD && parseInt(p[1]) === sM && parseInt(p[2]) === sY) {
+                        spentThatDay += e.amount;
+                    }
+                });
                 if (spentThatDay <= dailyLimit) streak++;
                 else break; 
             }
@@ -2369,14 +2384,23 @@
             let totalSpent = 0;
             let spentToday = 0;
             let spentTodayInBudget = 0;
+
+            const tY = now.getFullYear();
+            const tM = now.getMonth() + 1;
+            const tD = now.getDate();
             
             state.expenses.forEach(e => {
                 const dParts = e.date.split('.');
                 if(dParts.length === 3) {
-                    const d = new Date(dParts[2], dParts[1]-1, dParts[0]);
+                    const eD = parseInt(dParts[0]);
+                    const eM = parseInt(dParts[1]);
+                    const eY = parseInt(dParts[2]);
+                    
+                    const d = new Date(eY, eM-1, eD);
                     d.setHours(0,0,0,0);
                     
-                    if (e.date === todayStr) {
+                    // Metin kıyaslaması yerine tam matematiksel tarih kıyası
+                    if (eD === tD && eM === tM && eY === tY) {
                         spentToday += e.amount;
                         spentTodayInBudget += e.amount;
                     }
@@ -2386,7 +2410,7 @@
                     }
                 }
             });
-
+            
             const cumulative = (dailyLimitToUse * daysPassed) - totalSpent;
             
             document.getElementById('displayDailyLimit').innerText = `₺${Math.floor(dailyLimitToUse - spentTodayInBudget).toLocaleString()}`;
@@ -3042,7 +3066,12 @@
             
             const d = new Date();
             d.setDate(d.getDate() - currentExpenseDateOffset);
-            let finalDate = d.toLocaleDateString('tr-TR');
+            
+            // Cihaz dilinden bağımsız, garantili DD.MM.YYYY formatı
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yyyy = d.getFullYear();
+            let finalDate = `${dd}.${mm}.${yyyy}`;
             
             const selectedCat = currentExpenseCategory || 'Diğer';
             
@@ -3129,19 +3158,31 @@
             
             const d = new Date();
             d.setDate(d.getDate() - currentExpenseDateOffset);
-            const targetDateStr = d.toLocaleDateString('tr-TR');
-            const todayStr = new Date().toLocaleDateString('tr-TR');
+            
+            const targetY = d.getFullYear();
+            const targetM = d.getMonth() + 1;
+            const targetD = d.getDate();
+            
+            const now = new Date();
+            const isToday = (targetY === now.getFullYear() && targetM === (now.getMonth() + 1) && targetD === now.getDate());
+            const displayDateStr = `${String(targetD).padStart(2, '0')}.${String(targetM).padStart(2, '0')}.${targetY}`;
 
             const expensesForDate = state.expenses
                 .map((e, i) => ({ ...e, originalIndex: i }))
-                .filter(e => e.date === targetDateStr)
+                .filter(e => {
+                    const p = e.date.split('.');
+                    if(p.length === 3) {
+                        return parseInt(p[0]) === targetD && parseInt(p[1]) === targetM && parseInt(p[2]) === targetY;
+                    }
+                    return false;
+                })
                 .sort((a, b) => b.ts - a.ts);
 
             let html = `
             <div class="mb-2">
                 <div class="text-center mb-3">
                     <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-100 px-3 py-1 rounded-lg">
-                        ${targetDateStr === todayStr ? 'Bugünkü Harcamalar' : targetDateStr + ' Harcamaları'}
+                        ${isToday ? 'Bugünkü Harcamalar' : displayDateStr + ' Harcamaları'}
                     </span>
                 </div>
                 <div class="space-y-2">`;
@@ -3488,7 +3529,17 @@
                     }] 
                 }, 
                 options: { 
-                    scales: { y: { beginAtZero: true } }, 
+                    scales: { 
+                        y: { beginAtZero: true },
+                        x: { 
+                            ticks: { 
+                                autoSkip: false, // Gizlemeyi kapat
+                                maxRotation: 45, // 45 derece eğik yaz
+                                minRotation: 45,
+                                font: { size: 9 } // Mobilde sığması için fontu hafif küçült
+                            } 
+                        }
+                    }, 
                     plugins: { legend: { display: false } },
                     onClick: (e, elements) => {
                         if (elements.length > 0) {
@@ -4746,4 +4797,5 @@
     </script>
 </body>
 </html>
+
 
