@@ -1036,19 +1036,7 @@
             "Finansal özgürlük yolculuğunda iyi yolculuklar!"
         ];
 
-
-
-
-
-
-
-
-
-
-
-
-
-        const defaultState = { step: 1, salaryDay: 15, manualDailyLimit: 0, incomes: [], bills: [], loans: [], debts: [], otherDebts: [], assets: [], expenses: [], categories: ["Market", "Kasap", "Ulaşım", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"], pinnedCategories: ["Market", "Ulaşım", "Diğer"], monthlyHistory: [] };], assets: [], expenses: [], categories: ["Market / Manav", "Kasap", "Akaryakıt", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"], pinnedCategories: [], monthlyHistory: [] };
+        const defaultState = { step: 1, salaryDay: 15, manualDailyLimit: 0, incomes: [], bills: [], loans: [], debts: [], otherDebts: [], assets: [], expenses: [], categories: ["Market / Manav", "Kasap", "Akaryakıt", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"], pinnedCategories: [], monthlyHistory: [] };
         let state = JSON.parse(JSON.stringify(defaultState));
 
         let db, auth, currentUser = null;
@@ -1065,7 +1053,6 @@
         window.userInvites = [];
         let currentExpenseDateOffset = 0;
         let editingCategoryIndex = -1; 
-        let mergingCategoryIndex = -1; // YENİ: Kategori birleştirme takibi
         let originalAdminUid = null;
         let showAdvancedStats = localStorage.getItem('showAdvancedStats') === 'true'; 
 
@@ -1176,7 +1163,6 @@
             });
             
             editingCategoryIndex = -1;
-            mergingCategoryIndex = -1; // YENİ
         }
 
         function closeAllPopups() { 
@@ -1814,25 +1800,6 @@
                     }
                 }
                 loadFromCloud();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             } catch (e) { console.error("Plan Error:", e); }
         }
 
@@ -2203,7 +2170,7 @@
                     if(!state.reports) state.reports = {}; 
                     
                     if(!state.categories || state.categories.length === 0) {
-                        state.categories = ["Market", "Kasap", "Ulaşım", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"];
+                        state.categories = ["Market / Manav", "Kasap", "Akaryakıt", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"];
                     }
                     
                     showDashboard();
@@ -2271,13 +2238,18 @@
             const container = document.getElementById('quickCategoryContainer');
             if (!container) return;
 
+            const colors = [
+                { bg: 'bg-pink-100', text: 'text-pink-700' },
+                { bg: 'bg-purple-100', text: 'text-purple-700' },
+                { bg: 'bg-orange-100', text: 'text-orange-700' }
+            ];
+
             let html = '';
             top3.forEach((cat, idx) => {
                 const isSelected = currentExpenseCategory === cat;
-                // Deaktifken silik mor, aktifken parlayan koyu mor
-                const bgClass = isSelected ? 'bg-purple-700 shadow-lg shadow-purple-500/60 scale-[1.02] ring-2 ring-purple-300' : 'bg-purple-100/60 hover:bg-purple-200/80';
-                const textClass = isSelected ? 'text-white' : 'text-purple-500';
-                html += `<button onclick="setExpenseCategory('${cat}')" class="flex-1 py-1.5 px-1 rounded-xl text-[10px] sm:text-xs font-black truncate transition-all active:scale-95 ${bgClass} ${textClass}" title="${cat}">${cat}</button>`;
+                const bgClass = isSelected ? 'bg-green-500 shadow-md shadow-green-200' : colors[idx].bg;
+                const textClass = isSelected ? 'text-white' : colors[idx].text;
+                html += `<button onclick="setExpenseCategory('${cat}')" class="flex-1 py-1 px-1 rounded-xl text-[10px] sm:text-xs font-black truncate transition-all active:scale-95 ${bgClass} ${textClass}" title="${cat}">${cat}</button>`;
             });
 
             let isDropdownSelected = !top3.includes(currentExpenseCategory) && currentExpenseCategory !== null;
@@ -2288,15 +2260,15 @@
             let dropdownValueDisplay = isDropdownSelected ? currentExpenseCategory : 'Diğer ▾';
 
             html += `
-            <div class="flex items-center bg-gray-50 border ${isDropdownSelected ? 'border-purple-500 shadow-md shadow-purple-200' : 'border-gray-200'} rounded-xl px-2 w-[28%] sm:w-auto relative cursor-pointer group hover:bg-gray-100 transition-all">
+            <div class="flex items-center bg-gray-50 border ${isDropdownSelected ? 'border-green-500 shadow-sm' : 'border-gray-200'} rounded-xl px-2 w-[28%] sm:w-auto relative cursor-pointer group hover:bg-gray-100 transition-all">
                 <select id="otherCatSelect" onchange="setExpenseCategory(this.value, true)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                     <option value="" disabled ${!isDropdownSelected ? 'selected' : ''}>Diğer Kategoriler</option>
                     ${options}
                 </select>
-                <div class="flex-1 text-[10px] sm:text-xs font-bold ${isDropdownSelected ? 'text-purple-700' : 'text-gray-600'} truncate mr-1 select-none pointer-events-none">
+                <div class="flex-1 text-[10px] sm:text-xs font-bold ${isDropdownSelected ? 'text-green-600' : 'text-gray-600'} truncate mr-1 select-none pointer-events-none">
                     ${dropdownValueDisplay}
                 </div>
-                <button onclick="event.stopPropagation(); openCategoryModal()" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-purple-500 rounded-md z-10 transition-colors" title="Kategorileri Düzenle">
+                <button onclick="event.stopPropagation(); openCategoryModal()" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-500 rounded-md z-10 transition-colors" title="Kategorileri Düzenle">
                     <i class="fas fa-pencil-alt text-[10px]"></i>
                 </button>
             </div>
@@ -2649,7 +2621,7 @@
         // YENİ: Modal İçindeki Kategori Seçenekleri ve Yıldızlama
         function renderCategoryOptions() {
             if (!state.categories) {
-                state.categories = ["Market", "Kasap", "Ulaşım", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"];
+                state.categories = ["Market / Manav", "Kasap", "Akaryakıt", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"];
             }
             if (!state.pinnedCategories) state.pinnedCategories = [];
             
@@ -2657,22 +2629,13 @@
             if(list) {
                 list.innerHTML = state.categories.map((c, i) => {
                     const isPinned = state.pinnedCategories.includes(c);
-                    const starClass = isPinned ? 'fas fa-star text-yellow-400 drop-shadow-sm' : 'far fa-star text-gray-300';
+                    const starClass = isPinned ? 'fas fa-star text-yellow-400' : 'far fa-star text-gray-300';
                     
                     return `
                     <div class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
                         <div class="flex items-center flex-1">
-                            <button onclick="togglePinCategory('${c}')" class="mr-3 hover:scale-125 transition-transform" title="${isPinned ? 'Sabitlemeyi Kaldır' : 'Hızlı Seçime Sabitle (Anasayfa)'}"><i class="${starClass} text-lg"></i></button>
-                            ${mergingCategoryIndex === i
-                                ? `<div class="flex gap-2 flex-1 items-center">
-                                     <span class="text-[10px] font-bold text-gray-500">Hedef:</span>
-                                     <select id="mergeSelect_${i}" class="flex-1 p-1.5 border border-indigo-200 rounded-lg text-xs outline-none">
-                                        ${state.categories.filter((_, index) => index !== i).map(c2 => `<option value="${c2}">${c2}</option>`).join('')}
-                                     </select>
-                                     <button onclick="confirmCategoryMerge(${i})" class="text-green-600 hover:text-green-800 ml-1"><i class="fas fa-check"></i></button>
-                                     <button onclick="cancelCategoryMerge()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
-                                   </div>`
-                                : editingCategoryIndex === i 
+                            <button onclick="togglePinCategory('${c}')" class="mr-3 hover:scale-125 transition-transform" title="${isPinned ? 'Sabitlemeyi Kaldır' : 'Hızlı Seçime Sabitle'}"><i class="${starClass} text-lg"></i></button>
+                            ${editingCategoryIndex === i 
                                 ? `<div class="flex gap-2 flex-1">
                                      <input type="text" id="catEditInput_${i}" value="${c}" class="w-full p-2 border border-blue-200 rounded-lg text-sm" onkeyup="if(event.key==='Enter') saveCategoryEdit(${i})">
                                      <button onclick="saveCategoryEdit(${i})" class="text-green-600 hover:text-green-800"><i class="fas fa-check"></i></button>
@@ -2681,11 +2644,10 @@
                                 : `<span class="text-sm font-bold text-gray-700">${c}</span>`
                             }
                         </div>
-                        ${editingCategoryIndex !== i && mergingCategoryIndex !== i ? 
+                        ${editingCategoryIndex !== i ? 
                         `<div class="flex gap-2 ml-2">
-                            <button onclick="startCategoryMerge(${i})" class="text-indigo-400 hover:text-indigo-600" title="Başka Kategoriyle Birleştir"><i class="fas fa-object-group"></i></button>
-                            <button onclick="startCategoryEdit(${i})" class="text-blue-400 hover:text-blue-600" title="Düzenle"><i class="fas fa-pen"></i></button>
-                            <button onclick="deleteCategory(${i})" class="text-red-400 hover:text-red-600" title="Sil"><i class="fas fa-trash"></i></button>
+                            <button onclick="startCategoryEdit(${i})" class="text-blue-400 hover:text-blue-600"><i class="fas fa-pen"></i></button>
+                            <button onclick="deleteCategory(${i})" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button>
                         </div>` : ''}
                     </div>
                 `}).join('');
@@ -2805,68 +2767,6 @@
                 saveToCloud();
                 renderCategoryOptions();
                 updateDashboardUI();
-            });
-        }
-// YENİ: Kategori Birleştirme İşlemleri
-        function startCategoryMerge(idx) {
-            mergingCategoryIndex = idx;
-            editingCategoryIndex = -1;
-            renderCategoryOptions();
-        }
-
-        function cancelCategoryMerge() {
-            mergingCategoryIndex = -1;
-            renderCategoryOptions();
-        }
-
-        function confirmCategoryMerge(idx) {
-            const targetCat = document.getElementById(`mergeSelect_${idx}`).value;
-            if(!targetCat) return;
-
-            const cat1 = state.categories[idx];
-            const cat2 = targetCat;
-
-            // İki kategorinin toplam harcamasını hesapla
-            let total1 = 0, total2 = 0;
-            state.expenses.forEach(e => {
-                if(e.category === cat1) total1 += e.amount;
-                if(e.category === cat2) total2 += e.amount;
-            });
-
-            // Mantık: En çok harcama yapılan kategorinin ismini yaşat
-            const winner = total1 > total2 ? cat1 : cat2;
-            const loser = total1 > total2 ? cat2 : cat1;
-
-            showConfirm(`"${loser}" kategorisi silinip, içindeki tüm harcamalar "${winner}" kategorisine aktarılacak. Onaylıyor musunuz?`, () => {
-                // Harcamaları galip kategoriye aktar
-                state.expenses.forEach(e => {
-                    if(e.category === loser) e.category = winner;
-                });
-
-                // Kaybeden kategoriyi listeden sil
-                state.categories = state.categories.filter(c => c !== loser);
-
-                // Eğer kaybeden yıldızlı (sabitlenmiş) ise oradan da çıkar
-                if (state.pinnedCategories) {
-                    const pinIdx = state.pinnedCategories.indexOf(loser);
-                    if (pinIdx > -1) {
-                        state.pinnedCategories.splice(pinIdx, 1);
-                        // Kazananı ekleyebiliriz (3'ten azsa)
-                        if (!state.pinnedCategories.includes(winner) && state.pinnedCategories.length < 3) {
-                            state.pinnedCategories.push(winner);
-                        }
-                    }
-                }
-
-                // Seçili kategori o an silinen ise yeniye geçir
-                if (currentExpenseCategory === loser) currentExpenseCategory = winner;
-
-                mergingCategoryIndex = -1;
-                saveToCloud();
-                renderCategoryOptions();
-                renderQuickCategories();
-                updateDashboardUI();
-                showAppAlert(`Kategoriler birleştirildi. Yeni genel kategori: ${winner}`);
             });
         }
 
