@@ -322,24 +322,51 @@
         </div>
 
         <div id="addExpenseSection" class="glass-card p-5 rounded-[2rem] bg-white border border-gray-100 shadow-lg">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="font-black text-lg text-gray-800">Harcama Ekle</h3>
-                <span id="todayTotal" class="text-[9px] font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-md uppercase tracking-wide">Bugün: ₺0</span>
-            </div>
+            
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-black text-lg text-gray-800">Harcama Ekle</h3>
+                    <span id="todayTotal" class="text-[9px] font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-md uppercase tracking-wide">Bugün: ₺0</span>
+                </div>
 
-            <div class="flex justify-center mb-4">
-                <div class="flex items-center gap-3 bg-red-50 p-2 rounded-2xl border border-red-100 shadow-sm w-full max-w-[250px]">
-                    <button onclick="changeExpenseDate(1)" class="w-8 h-8 shrink-0 flex items-center justify-center bg-white rounded-xl text-red-400 hover:text-red-600 shadow-sm transition-transform active:scale-95 border border-red-50"><i class="fas fa-chevron-left text-sm"></i></button>
-                    <div class="relative text-center flex-1">
-                        <div id="expenseDateLabel" class="cursor-pointer hover:text-red-800 select-none flex flex-col items-center justify-center" onclick="document.getElementById('expDateInputHidden').showPicker()">
-                            <span class="text-[12px] font-black text-red-600 block leading-tight">Bugün</span>
-                            <span class="text-[9px] font-bold text-red-400 block leading-tight mt-0.5">(...)</span>
+                <div class="flex justify-center mb-4">
+                    <div class="flex items-center gap-3 bg-red-50 p-2 rounded-2xl border border-red-100 shadow-sm w-full max-w-[250px]">
+                        <button onclick="changeExpenseDate(1)" class="w-8 h-8 shrink-0 flex items-center justify-center bg-white rounded-xl text-red-400 hover:text-red-600 shadow-sm transition-transform active:scale-95 border border-red-50"><i class="fas fa-chevron-left text-sm"></i></button>
+                        <div class="relative text-center flex-1">
+                            <div id="expenseDateLabel" class="cursor-pointer hover:text-red-800 select-none flex flex-col items-center justify-center" onclick="document.getElementById('expDateInputHidden').showPicker()">
+                                <span class="text-[12px] font-black text-red-600 block leading-tight">Bugün</span>
+                                <span class="text-[9px] font-bold text-red-400 block leading-tight mt-0.5">(...)</span>
+                            </div>
+                            <input type="date" id="expDateInputHidden" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onchange="setSpecificDate(this.value)">
                         </div>
-                        <input type="date" id="expDateInputHidden" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onchange="setSpecificDate(this.value)">
+                        <button onclick="changeExpenseDate(-1)" class="w-8 h-8 shrink-0 flex items-center justify-center bg-white rounded-xl text-red-400 hover:text-red-600 shadow-sm transition-transform active:scale-95 border border-red-50"><i class="fas fa-chevron-right text-sm"></i></button>
                     </div>
-                    <button onclick="changeExpenseDate(-1)" class="w-8 h-8 shrink-0 flex items-center justify-center bg-white rounded-xl text-red-400 hover:text-red-600 shadow-sm transition-transform active:scale-95 border border-red-50"><i class="fas fa-chevron-right text-sm"></i></button>
+                </div>
+                
+                <div id="returnToTodayBtnContainer" class="flex justify-center mb-4 hidden animate-fade-in">
+                    <button onclick="returnToToday()" class="bg-green-500 text-white px-5 py-1.5 rounded-full text-[10px] font-black shadow-lg shadow-green-200 hover:bg-green-600 active:scale-95 transition-all flex items-center gap-1 border-2 border-green-100 animate-pulse">
+                        <i class="fas fa-undo"></i> BUGÜNE DÖN
+                    </button>
+                </div>
+                
+                <div class="flex flex-col gap-3">
+                    <div id="quickCategoryContainer" class="flex gap-2 w-full h-[40px] mb-1 items-stretch"></div>
+
+                    <div class="flex flex-row gap-2 items-center w-full">
+                        <input type="number" id="expAmt" placeholder="Tutar (₺)" onkeyup="if(event.key === 'Enter') document.getElementById('expDesc').focus()" class="w-1/3 p-3 bg-blue-50/50 border border-blue-200 rounded-xl font-black text-lg outline-none focus:ring-4 focus:ring-blue-100 transition-all text-center placeholder-gray-400 animate-soft-pulse">
+                        <input type="text" id="expDesc" value="" placeholder="Açıklama" onkeyup="if(event.key === 'Enter') addExpense()" class="flex-1 p-3 bg-gray-50 border border-gray-100 rounded-xl font-bold text-gray-600 outline-none focus:ring-2 focus:ring-blue-500 transition-all text-xs">
+                        <input type="hidden" id="editExpIndex" value="-1">
+                        <button id="addExpBtn" onclick="addExpense()" class="bg-blue-600 text-white w-12 h-12 rounded-xl hover:bg-blue-700 active:scale-90 transition-all shadow-lg shadow-blue-200 flex items-center justify-center shrink-0"><i class="fas fa-plus text-lg"></i></button>
+                    </div>
                 </div>
             </div>
+
+            <div class="mt-6 pt-5 border-t-2 border-dashed border-gray-100">
+                <h3 class="font-black text-gray-800 uppercase tracking-widest text-[10px] mb-3">Harcama Geçmişi</h3>
+                <div id="historyList" class="pb-2"></div>
+            </div>
+            
+        </div>
             
             <div id="returnToTodayBtnContainer" class="flex justify-center mb-4 hidden animate-fade-in">
                 <button onclick="returnToToday()" class="bg-green-500 text-white px-5 py-1.5 rounded-full text-[10px] font-black shadow-lg shadow-green-200 hover:bg-green-600 active:scale-95 transition-all flex items-center gap-1 border-2 border-green-100 animate-pulse">
@@ -4797,6 +4824,7 @@
     </script>
 </body>
 </html>
+
 
 
 
