@@ -905,17 +905,6 @@
     </div>
 
     <script>
-        // --- PWA SERVICE WORKER KAYDI ---
-        if ('serviceWorker' in navigator) {
-          window.addEventListener('load', function() {
-            navigator.serviceWorker.register('./service-worker.js').then(function(registration) {
-              console.log('ServiceWorker başarıyla kaydedildi: ', registration.scope);
-            }, function(err) {
-              console.log('ServiceWorker kaydı başarısız: ', err);
-            });
-          });
-        }
-
         const firebaseConfig = {
             apiKey: "AIzaSyAyUQaeoVWnT4AuzSwD2M17-z1g2optqdA",
             authDomain: "hesapguvende-b07ca.firebaseapp.com",
@@ -1880,7 +1869,7 @@
             document.getElementById('forgotPassText').classList.add('hidden');
         }
 
-        function firebaseRegister() {
+        async function firebaseLogin() {
             if(!isFirebaseReady) return;
             const emailInp = document.getElementById('emailInput').value.trim();
             const pass = document.getElementById('passwordInput').value;
@@ -1965,81 +1954,13 @@
             document.getElementById('emailInput').value = e;
             document.getElementById('passwordInput').value = p;
             document.getElementById('regInviteCode').value = ""; 
-            
-            if(typeof closeWizardScreen === 'function') closeWizardScreen();
-            
             firebaseRegister();
         }
 
         function forgotPassword() {
-        function applyRecoveryPlan(limit) {
-            state.balanceCalcMethod = 'recovery';
-            state.recoveryDailyLimit = limit;
-            state.recoveryStartDate = new Date().toISOString();
-            state.recoveryStartTs = Date.now(); 
-            saveToCloud();
-            
-            closeRecoveryPlanModal();
-            updateDashboardUI();
-            showAppAlert("Hedefe Dönüş planınız başarıyla aktif edildi! Günlük limitiniz kalan günlere göre güncellendi.");
-        }
-
-        function startWizard(isEditMode) {
-            const modal = document.getElementById('wizardScreen');
-            modal.classList.remove('hidden');
-            setTimeout(() => modal.classList.add('open'), 10);
-            document.getElementById('overlay').classList.add('active');
-            
-            if(!isEditMode) { 
-                state = JSON.parse(JSON.stringify(defaultState)); 
-                state.registrationDate = new Date().toISOString(); 
-            }
-            state.step = 1; 
-            renderWizard();
-            pushPanelHistory();
-        }
-        
-        function closeWizardScreen() {
-            const modal = document.getElementById('wizardScreen');
-            modal.classList.remove('open');
-            setTimeout(() => modal.classList.add('hidden'), 300);
-            document.getElementById('overlay').classList.remove('active');
-            popPanelHistory();
-        }
-        
-        function wizardNext() { 
-            if (state.step === 8) { 
-                if(document.getElementById('wizRegEmail')) {
-                    const u = document.getElementById('wizRegName').value.trim();
-                    const e = document.getElementById('wizRegEmail').value.trim();
-                    const p = document.getElementById('wizRegPass').value;
-                    if(!u || !e || !p) {
-                         showAppAlert("Tüm alanları doldurun.");
-                         return;
-                    }
-                    registerFromWizard(); 
-                } else { 
-                    saveState();
-                    closeWizardScreen();
-                    showDashboard(); 
-                } 
-                return; 
-            } 
-            state.step++; renderWizard(); 
-        } 
-
-        function wizardBack() { 
-            if (state.step > 1) { 
-                state.step--; 
-                renderWizard(); 
-            } else { 
-                closeWizardScreen();
-                if(currentUser) showDashboard(); else showLoginScreen(); 
-            } 
-        }
-
-        function getStandardLoans() {
-             return state.loans.filter(l => !l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
+            const email = document.getElementById('emailInput').value.trim();
+            if (!email || !email.includes('@')) return showAppAlert("Lütfen geçerli bir e-posta giriniz.");
+            auth.sendPasswordResetEmail(email).then(() => showAppAlert("Bağlantı gönderildi.")).catch(e => showAppAlert(e.message));
         }
 
         function handleLogout() {
@@ -4216,7 +4137,7 @@
             document.getElementById('quickDailyLimitInput').value = Math.floor(daily);
             document.getElementById('quickManualSavingsInput').value = Math.floor(save); 
             document.getElementById('quickAllocSpendingInput').value = Math.floor(spend); 
-                       
+            
             if(state.remainingAfterFixed > 0) document.getElementById('quickAllocationSlider').value = (spend / state.remainingAfterFixed) * 100; 
             
             state.calculatedMonthlyPool = spend; 
@@ -4398,10 +4319,35 @@
         }
 
         function startWizard(isEditMode) {
-            hideAll(); document.getElementById('wizardScreen').classList.remove('hidden');
-            if(!isEditMode) { state = JSON.parse(JSON.stringify(defaultState)); state.registrationDate = new Date().toISOString(); }
-            state.step = 1; renderWizard();
-        }
+    const wizard = document.getElementById('wizardScreen');
+    wizard.classList.remove('hidden');
+    
+    // Sağdan kayarak gelme animasyonu için 'open' sınıfını ekliyoruz
+    setTimeout(() => wizard.classList.add('open'), 10);
+    
+    // Arka planı karartıyoruz
+    document.getElementById('overlay').classList.add('active');
+
+    if(!isEditMode) { 
+        state = JSON.parse(JSON.stringify(defaultState)); 
+        state.registrationDate = new Date().toISOString(); 
+    }
+    function closeWizardScreen() {
+    const modal = document.getElementById('wizardScreen');
+    modal.classList.remove('open');
+    
+    // Animasyonun bitmesini bekleyip gizliyoruz
+    setTimeout(() => modal.classList.add('hidden'), 300);
+    
+    document.getElementById('overlay').classList.remove('active'); 
+    popPanelHistory();
+}
+    state.step = 1; 
+    renderWizard();
+
+    // Mobil cihazlarda geri tuşuyla kapatabilmek için
+    pushPanelHistory();
+}
         
         function wizardNext() { 
             if (state.step === 8) { 
