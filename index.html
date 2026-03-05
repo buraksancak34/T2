@@ -191,7 +191,7 @@
         </div>
     </div>
 
-    <div id="wizardScreen" class="side-panel side-panel-medium bg-slate-50">
+    <div id="wizardScreen" class="hidden w-full max-w-md glass-card rounded-[2rem] shadow-2xl flex flex-col animate-fade-in my-auto max-h-[90vh]">
         <div class="p-6 h-full flex flex-col">
             <div class="flex justify-between items-center mb-4 pb-4 border-b border-gray-200">
                 <div id="wizardProgress" class="flex gap-1 flex-1 mr-4"></div>
@@ -4318,19 +4318,40 @@
             showAppAlert("Hedefe Dönüş planınız başarıyla aktif edildi! Günlük limitiniz kalan günlere göre güncellendi.");
         }
 
-        function startWizard(isEditMode) {
-    const wizard = document.getElementById('wizardScreen');
-    wizard.classList.remove('hidden');
-    
-    // Sağdan kayarak gelme animasyonu için 'open' sınıfını ekliyoruz
-    setTimeout(() => wizard.classList.add('open'), 10);
-    
-    // Arka planı karartıyoruz
-    document.getElementById('overlay').classList.add('active');
+        // 1. Ekrandaki diğer her şeyi gizleyip sadece sihirbazı ön plana çıkaran fonksiyon
+function hideAll() {
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('dashboardScreen').classList.add('hidden');
+    document.getElementById('bottomNav').classList.add('hidden'); // Sihirbaz açılınca alt menüyü de gizler
+}
 
+// 2. Sihirbazı başlatan ana fonksiyon
+function startWizard(isEditMode) {
+    hideAll(); 
+    document.getElementById('wizardScreen').classList.remove('hidden');
+
+    // Eğer yeni kayıt ise her şeyi sıfırla
     if(!isEditMode) { 
         state = JSON.parse(JSON.stringify(defaultState)); 
         state.registrationDate = new Date().toISOString(); 
+    }
+    
+    state.step = 1; 
+    renderWizard();
+}
+
+// 3. Sihirbazdan "Çarpı" butonuna basıp çıkmak için fonksiyon
+function closeWizardScreen() {
+    document.getElementById('wizardScreen').classList.add('hidden');
+    
+    // Kullanıcı giriş yapmışsa anasayfaya, yapmamışsa kayıt ekranına döndür
+    if (currentUser) {
+        showDashboard();
+        document.getElementById('bottomNav').classList.remove('hidden');
+    } else {
+        showLoginScreen();
+    }
+}
     }
     function closeWizardScreen() {
     const modal = document.getElementById('wizardScreen');
@@ -4822,6 +4843,7 @@
     </script>
 </body>
 </html>
+
 
 
 
