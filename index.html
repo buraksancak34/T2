@@ -191,18 +191,16 @@
         </div>
     </div>
 
-    <div id="wizardScreen" class="hidden w-full max-w-md glass-card rounded-[2rem] shadow-2xl flex flex-col animate-fade-in my-auto max-h-[90vh]">
-        <div class="p-6 h-full flex flex-col">
-            <div class="flex justify-between items-center mb-4 pb-4 border-b border-gray-200">
-                <div id="wizardProgress" class="flex gap-1 flex-1 mr-4"></div>
-                <span class="text-[10px] font-bold text-gray-300 mr-4" id="stepCount">1/8</span>
-                <button onclick="closeWizardScreen()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
-            </div>
-            <div id="wizardContent" class="flex-1 overflow-y-auto custom-scrollbar min-h-[350px] relative"></div>
-            <div class="flex gap-3 mt-4 pt-4 border-t border-gray-200 shrink-0" id="wizardNavBtns">
-                 <button onclick="wizardBack()" class="flex-1 bg-gray-100 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-200 transition-all text-xs">Geri</button>
-                 <button onclick="wizardNext()" id="wizNextBtn" class="flex-[2] bg-blue-600 text-white font-black py-3 rounded-xl shadow-xl active:scale-95 transition-all hover:bg-blue-700 text-xs">Devam Et</button>
-            </div>
+    <div id="wizardScreen" class="hidden w-full max-w-md glass-card p-6 rounded-[2rem] shadow-2xl flex-col my-auto relative overflow-hidden animate-fade-in max-h-[90vh]">
+        <div class="flex justify-between items-center mb-4 pb-4 border-b border-gray-200 shrink-0">
+            <div id="wizardProgress" class="flex gap-1 flex-1 mr-4"></div>
+            <span class="text-[10px] font-bold text-gray-300 mr-4" id="stepCount">1/8</span>
+            <button onclick="closeWizardScreen()" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+        </div>
+        <div id="wizardContent" class="flex-1 overflow-y-auto custom-scrollbar min-h-[350px] relative"></div>
+        <div class="flex gap-3 mt-4 pt-4 border-t border-gray-200 shrink-0" id="wizardNavBtns">
+             <button onclick="wizardBack()" class="flex-1 bg-gray-100 text-gray-600 font-bold py-3 rounded-xl hover:bg-gray-200 transition-all text-xs">Geri</button>
+             <button onclick="wizardNext()" id="wizNextBtn" class="flex-[2] bg-blue-600 text-white font-black py-3 rounded-xl shadow-xl active:scale-95 transition-all hover:bg-blue-700 text-xs">Devam Et</button>
         </div>
     </div>
 
@@ -4318,19 +4316,24 @@
             showAppAlert("Hedefe Dönüş planınız başarıyla aktif edildi! Günlük limitiniz kalan günlere göre güncellendi.");
         }
 
-        // 1. Ekrandaki diğer her şeyi gizleyip sadece sihirbazı ön plana çıkaran fonksiyon
+
+// 1. Ekranda ne varsa gizleyip ortamı sihirbaza hazırlayan fonksiyon
 function hideAll() {
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('dashboardScreen').classList.add('hidden');
-    document.getElementById('bottomNav').classList.add('hidden'); // Sihirbaz açılınca alt menüyü de gizler
+    if(document.getElementById('loginScreen')) document.getElementById('loginScreen').classList.add('hidden');
+    if(document.getElementById('dashboardScreen')) document.getElementById('dashboardScreen').classList.add('hidden');
+    if(document.getElementById('bottomNav')) document.getElementById('bottomNav').classList.add('hidden');
+    document.getElementById('overlay').classList.remove('active'); // Çakışan karanlık arka planları temizler
 }
 
-// 2. Sihirbazı başlatan ana fonksiyon
+// 2. Sihirbazı tam ekran olarak ortada başlatan fonksiyon
 function startWizard(isEditMode) {
     hideAll(); 
-    document.getElementById('wizardScreen').classList.remove('hidden');
+    
+    const wizard = document.getElementById('wizardScreen');
+    wizard.classList.remove('hidden');
+    wizard.classList.add('flex'); // Ortada görünmesi için flex özelliğini veriyoruz
 
-    // Eğer yeni kayıt ise her şeyi sıfırla
+    // Yeni kayıt ise durumu sıfırla
     if(!isEditMode) { 
         state = JSON.parse(JSON.stringify(defaultState)); 
         state.registrationDate = new Date().toISOString(); 
@@ -4340,16 +4343,18 @@ function startWizard(isEditMode) {
     renderWizard();
 }
 
-// 3. Sihirbazdan "Çarpı" butonuna basıp çıkmak için fonksiyon
+// 3. Sihirbazı çarpıdan kapatınca olman gereken yere döndüren fonksiyon
 function closeWizardScreen() {
-    document.getElementById('wizardScreen').classList.add('hidden');
+    const wizard = document.getElementById('wizardScreen');
+    wizard.classList.add('hidden');
+    wizard.classList.remove('flex');
     
-    // Kullanıcı giriş yapmışsa anasayfaya, yapmamışsa kayıt ekranına döndür
+    // Giriş yapılmışsa Anasayfaya, yapılmamışsa Giriş ekranına dön
     if (currentUser) {
-        showDashboard();
+        document.getElementById('dashboardScreen').classList.remove('hidden');
         document.getElementById('bottomNav').classList.remove('hidden');
     } else {
-        showLoginScreen();
+        document.getElementById('loginScreen').classList.remove('hidden');
     }
 }
     }
@@ -4843,6 +4848,7 @@ function closeWizardScreen() {
     </script>
 </body>
 </html>
+
 
 
 
