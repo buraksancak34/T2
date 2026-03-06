@@ -4099,7 +4099,7 @@
             const realNet = grossNet - standardLoans;
             const daysInMonth = getDaysInCurrentPeriod();
 
-            state.remainingAfterFixed = grossNet; 
+state.remainingAfterFixed = grossNet; 
             if(!state.manualDailyLimit) state.manualDailyLimit = Math.max(0, grossNet / daysInMonth);
             
             const content = document.getElementById('quickPlanContent');
@@ -4354,9 +4354,18 @@
         }
 
         function startWizard(isEditMode) {
-            hideAll(); document.getElementById('wizardScreen').classList.remove('hidden');
-            if(!isEditMode) { state = JSON.parse(JSON.stringify(defaultState)); state.registrationDate = new Date().toISOString(); }
-            state.step = 1; renderWizard();
+            hideAll(); 
+            const wizard = document.getElementById('wizardScreen');
+            wizard.classList.remove('hidden');
+            wizard.classList.add('flex');
+            
+            if(!isEditMode) { 
+                state = JSON.parse(JSON.stringify(defaultState)); 
+                state.registrationDate = new Date().toISOString(); 
+            }
+            
+            state.step = 1; 
+            renderWizard();
         }
         
         function wizardNext() { 
@@ -4832,8 +4841,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
