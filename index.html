@@ -1008,8 +1008,28 @@
             "Finansal özgürlük yolculuğunda iyi yolculuklar!"
         ];
 
-        const defaultState = { step: 1, salaryDay: 15, manualDailyLimit: 0, incomes: [], bills: [], loans: [], debts: [], otherDebts: [], assets: [], expenses: [], categories: ["Market", "Kasap", "Ulaşım", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"], pinnedCategories: ["Market", "Ulaşım", "Diğer"], monthlyHistory: [] };
-        let state = JSON.parse(JSON.stringify(defaultState));
+        const defaultState = { 
+    step: 1, 
+    salaryDay: 15, 
+    manualDailyLimit: 0, 
+    incomes: [{ name: 'Maaş', val: '' }], 
+    bills: [
+        { name: 'Kira / Ev Kredisi', val: '' },
+        { name: 'Elektrik', val: '' },
+        { name: 'Su', val: '' },
+        { name: 'Doğalgaz', val: '' },
+        { name: 'İnternet / Telefon', val: '' },
+        { name: 'Aidat', val: '' }
+    ], 
+    loans: [], 
+    debts: [{ name: 'Kredi Kartı', val: '', calcMode: false }], 
+    otherDebts: [], 
+    assets: [], 
+    expenses: [], 
+    categories: ["Market", "Kasap", "Ulaşım", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"], 
+    pinnedCategories: ["Market", "Ulaşım", "Diğer"], 
+    monthlyHistory: [] 
+};
 
         let db, auth, currentUser = null;
         let currentPlanId = null; 
@@ -4319,30 +4339,59 @@
         }
 
         function startWizard(isEditMode) {
-            hideAll(); document.getElementById('wizardScreen').classList.remove('hidden');
-            if(!isEditMode) { state = JSON.parse(JSON.stringify(defaultState)); state.registrationDate = new Date().toISOString(); }
-            state.step = 1; renderWizard();
-        }
+    closeAllPopupsUIOnly(); // Çalışmayan hideAll() yerine bu gelmeli
+    const modal = document.getElementById('wizardScreen');
+    modal.classList.remove('hidden');
+    setTimeout(() => modal.classList.add('open'), 10);
+    document.getElementById('overlay').classList.add('active');
+
+    if(!isEditMode) { 
+        state = JSON.parse(JSON.stringify(defaultState)); 
+        state.registrationDate = new Date().toISOString(); 
+    }
+    state.step = 1; 
+    renderWizard();
+    pushPanelHistory();
+}
+
+function closeWizardScreen() {
+    const modal = document.getElementById('wizardScreen');
+    modal.classList.remove('open');
+    setTimeout(() => modal.classList.add('hidden'), 300);
+    document.getElementById('overlay').classList.remove('active');
+    popPanelHistory();
+    if(currentUser) showDashboard(); else showLoginScreen();
+}
         
-        function wizardNext() { 
-            if (state.step === 8) { 
-                if(document.getElementById('wizRegEmail')) {
-                    const u = document.getElementById('wizRegName').value.trim();
-                    const e = document.getElementById('wizRegEmail').value.trim();
-                    const p = document.getElementById('wizRegPass').value;
-                    if(!u || !e || !p) {
-                         showAppAlert("Tüm alanları doldurun.");
-                         return;
-                    }
-                    registerFromWizard(); 
-                } else { 
-                    saveState(); 
-                    showDashboard(); 
-                } 
-                return; 
-            } 
-            state.step++; renderWizard(); 
+       function wizardNext() { 
+    if (state.step === 8) { 
+        // 1. Doldurulmayan (boş/silik) değerleri veritabanına gitmeden önce temizliyoruz
+        state.incomes = state.incomes.filter(i => i.val && i.val > 0);
+        state.bills = state.bills.filter(b => b.val && b.val > 0);
+        state.debts = state.debts.filter(d => d.val && d.val > 0);
+        state.loans = state.loans.filter(l => l.totalDebt && l.totalDebt > 0);
+        state.otherDebts = state.otherDebts.filter(d => d.val && d.val > 0);
+        state.assets = state.assets.filter(a => a.val && a.val > 0);
+
+        // 2. Kayıt veya Güncelleme işlemi
+        if(document.getElementById('wizRegEmail')) {
+            const u = document.getElementById('wizRegName').value.trim();
+            const e = document.getElementById('wizRegEmail').value.trim();
+            const p = document.getElementById('wizRegPass').value;
+            if(!u || !e || !p) {
+                 showAppAlert("Tüm alanları doldurun.");
+                 return;
+            }
+            registerFromWizard(); 
+        } else { 
+            saveState(); 
+            closeWizardScreen(); // Ekranı düzgünce kapatalım
+            showDashboard(); 
         } 
+        return; 
+    } 
+    state.step++; renderWizard(); 
+}
 
         function wizardBack() { if (state.step > 1) { state.step--; renderWizard(); } else { if(currentUser) showDashboard(); else showLoginScreen(); } }
         
@@ -4797,6 +4846,7 @@
     </script>
 </body>
 </html>
+
 
 
 
