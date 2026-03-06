@@ -191,7 +191,7 @@
         </div>
     </div>
 
-    <div id="wizardScreen" class="side-panel side-panel-medium bg-slate-50">
+    <div id="wizardScreen" class="fixed inset-0 z-[100] bg-slate-50 hidden animate-fade-in flex-col">
         <div class="p-6 h-full flex flex-col">
             <div class="flex justify-between items-center mb-4 pb-4 border-b border-gray-200">
                 <div id="wizardProgress" class="flex gap-1 flex-1 mr-4"></div>
@@ -1163,10 +1163,10 @@
             closeAllPopupsUIOnly();
         });
 
-        function closeAllPopupsUIOnly() {
-            document.getElementById('overlay').classList.remove('active'); 
-            document.getElementById('customConfirmModal').classList.add('hidden');
-            document.getElementById('appAlertModal').classList.add('hidden');
+       function closeAllPopupsUIOnly() {
+    document.getElementById('wizardScreen').classList.add('hidden');
+    document.getElementById('wizardScreen').classList.remove('flex');
+    document.getElementById('overlay').classList.remove('active');
             document.getElementById('specialDayModal').classList.add('hidden');
             document.getElementById('monthlyReportModal').classList.add('hidden');
             document.getElementById('deleteAccountModal').classList.add('hidden');
@@ -4339,26 +4339,25 @@
         }
 
         function startWizard(isEditMode) {
-    closeAllPopupsUIOnly(); // Çalışmayan hideAll() yerine bu gelmeli
+    closeAllPopupsUIOnly();
     const modal = document.getElementById('wizardScreen');
     modal.classList.remove('hidden');
-    setTimeout(() => modal.classList.add('open'), 10);
-    document.getElementById('overlay').classList.add('active');
-
+    modal.classList.add('flex'); // İçeriğin düzgün hizalanması için
+    
     if(!isEditMode) { 
         state = JSON.parse(JSON.stringify(defaultState)); 
         state.registrationDate = new Date().toISOString(); 
     }
     state.step = 1; 
     renderWizard();
-    pushPanelHistory();
+    pushPanelHistory(); // Mobilde "Geri" tuşuna basınca kapanmasını sağlar
 }
 
 function closeWizardScreen() {
     const modal = document.getElementById('wizardScreen');
-    modal.classList.remove('open');
-    setTimeout(() => modal.classList.add('hidden'), 300);
-    document.getElementById('overlay').classList.remove('active');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    
     popPanelHistory();
     if(currentUser) showDashboard(); else showLoginScreen();
 }
@@ -4846,6 +4845,7 @@ function closeWizardScreen() {
     </script>
 </body>
 </html>
+
 
 
 
