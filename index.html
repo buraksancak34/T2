@@ -58,7 +58,7 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .health-detail { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
-        .health-detail.open { max-height: 1500px; transition: max-height 0.5s ease-in; }
+        .health-detail.open { max-height: 1000px; transition: max-height 0.5s ease-in; }
         
         .fade-text { animation: textFade 0.5s ease-in-out; }
         @keyframes textFade { 0% { opacity: 0; } 100% { opacity: 1; } }
@@ -374,7 +374,7 @@
                         <span id="netStatusVal">₺0</span>
                     </div>
                     <div class="flex items-center justify-center mt-4">
-                        <div class="text-center"><span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Aylık Sabit Gider Planı Toplamı</span><br><span id="sumGiderTotalHealth" class="text-lg font-black text-red-600">₺0</span></div>
+                        <div class="text-center"><span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Aylık Sabit Gider</span><br><span id="sumGiderTotalHealth" class="text-lg font-black text-red-600">₺0</span></div>
                     </div>
                 </div>
                 
@@ -431,9 +431,7 @@
                         </div>
                     </div>
                 </div>
-                <div id="fixedExpensesSection" class="w-full pt-2 mt-4 border-t border-gray-100"></div>
-                <div id="specialExpensesSection" class="w-full pt-2"></div>
-                
+                <div id="fixedExpensesSection" class="w-full pt-2"></div>
                 <div class="text-center mt-4 pt-4 border-t border-gray-100/50 flex flex-col items-center gap-3">
                     <button onclick="openContactModal()" class="text-[10px] font-bold text-gray-400 hover:text-blue-500 transition-colors">
                         <i class="fas fa-comment-alt mr-1"></i> Görüş ve Öneri Bildir
@@ -546,7 +544,7 @@
                 <i class="fas fa-plus"></i>
             </div>
         </div>
-        <div class="nav-item gradient-text-plan" onclick="openQuickPlanModal()">
+        <div class="nav-item gradient-text-plan" onclick="startWizard(true)">
             <i class="fas fa-edit"></i>
             <span>Plan</span>
         </div>
@@ -917,6 +915,7 @@
             measurementId: "G-VE0EVVBM0V"
         };
 
+        // --- YENİ MESAJ SETLERİ (VARSAYILAN) ---
         let messages_highSpend = [
             "Cüzdan bugün cardio yaptı… nabız 180.",
             "Limit: ‘Ben bu filmde yokum’ dedi.",
@@ -1010,28 +1009,27 @@
         ];
 
         const defaultState = { 
-            step: 1, 
-            salaryDay: 15, 
-            manualDailyLimit: 0, 
-            incomes: [{ name: 'Maaş', val: '' }], 
-            bills: [
-                { name: 'Kira / Ev Kredisi', val: '' },
-                { name: 'Elektrik', val: '' },
-                { name: 'Su', val: '' },
-                { name: 'Doğalgaz', val: '' },
-                { name: 'İnternet / Telefon', val: '' },
-                { name: 'Aidat', val: '' }
-            ], 
-            loans: [], 
-            debts: [{ name: 'Kredi Kartı', val: '', calcMode: false }], 
-            otherDebts: [], 
-            assets: [], 
-            expenses: [], 
-            specialExpenses: [], // Yeni eklenen kısım
-            categories: ["Market", "Kasap", "Ulaşım", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"], 
-            pinnedCategories: ["Market", "Ulaşım", "Diğer"], 
-            monthlyHistory: [] 
-        };
+    step: 1, 
+    salaryDay: 15, 
+    manualDailyLimit: 0, 
+    incomes: [{ name: 'Maaş', val: '' }], 
+    bills: [
+        { name: 'Kira / Ev Kredisi', val: '' },
+        { name: 'Elektrik', val: '' },
+        { name: 'Su', val: '' },
+        { name: 'Doğalgaz', val: '' },
+        { name: 'İnternet / Telefon', val: '' },
+        { name: 'Aidat', val: '' }
+    ], 
+    loans: [], 
+    debts: [{ name: 'Kredi Kartı', val: '', calcMode: false }], 
+    otherDebts: [], 
+    assets: [], 
+    expenses: [], 
+    categories: ["Market", "Kasap", "Ulaşım", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"], 
+    pinnedCategories: ["Market", "Ulaşım", "Diğer"], 
+    monthlyHistory: [] 
+};
 
         let db, auth, currentUser = null;
         let currentPlanId = null; 
@@ -1061,6 +1059,7 @@
 
         const isMobileView = () => window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
+        // SAĞA KAYDIRARAK (SWIPE) PANEL KAPATMA SİSTEMİ
         let touchStartX = 0;
         let touchEndX = 0;
         document.addEventListener('touchstart', e => {
@@ -1165,9 +1164,9 @@
         });
 
        function closeAllPopupsUIOnly() {
-            document.getElementById('wizardScreen').classList.add('hidden');
-            document.getElementById('wizardScreen').classList.remove('flex');
-            document.getElementById('overlay').classList.remove('active');
+    document.getElementById('wizardScreen').classList.add('hidden');
+    document.getElementById('wizardScreen').classList.remove('flex');
+    document.getElementById('overlay').classList.remove('active');
             document.getElementById('specialDayModal').classList.add('hidden');
             document.getElementById('monthlyReportModal').classList.add('hidden');
             document.getElementById('deleteAccountModal').classList.add('hidden');
@@ -2210,7 +2209,6 @@
                     if(!state.otherDebts) state.otherDebts = [];
                     if(!state.assets) state.assets = [];
                     if(!state.expenses) state.expenses = [];
-                    if(!state.specialExpenses) state.specialExpenses = []; // Fallback for special expenses
                     if(!state.monthlyHistory) state.monthlyHistory = [];
                     if(!state.familyMembers) state.familyMembers = [];
                     if(!state.pinnedCategories) state.pinnedCategories = [];
@@ -2220,6 +2218,7 @@
                         state.categories = ["Market", "Kasap", "Ulaşım", "Dışarıda Yemek", "Eczane / Sağlık", "Eğlence", "Eğitim Ödemeleri", "Vergi / Harç / Sigorta", "Diğer"];
                     }
                     
+                    // Kurtarma modu kalıntısı varsa temizle
                     if (state.balanceCalcMethod === 'recovery') {
                         state.balanceCalcMethod = 'salary';
                         saveToCloud();
@@ -2238,42 +2237,6 @@
             });
         }
         function saveState() { if(currentUser && !isRegistering) saveToCloud(); }
-
-        // --- YENİ EKLENEN YARDIMCI FONKSİYONLAR ---
-        function addSpecialExpense(isWizard) {
-            const prefix = isWizard ? 'wiz' : 'quick';
-            const nameInp = document.getElementById(`${prefix}SpecialName`);
-            const valInp = document.getElementById(`${prefix}SpecialVal`);
-            const name = nameInp.value.trim();
-            const val = parseFloat(valInp.value) || 0;
-            
-            if(!name || val <= 0) return showAppAlert("Lütfen geçerli bir isim ve tutar girin.");
-
-            if(!state.specialExpenses) state.specialExpenses = [];
-            state.specialExpenses.push({name, val});
-            saveState();
-
-            nameInp.value = ''; valInp.value = '';
-
-            if (isWizard) {
-                renderWizard(); 
-            } else {
-                openQuickPlanModal(); 
-            }
-            if (!document.getElementById('dashboardScreen').classList.contains('hidden')) {
-                updateDashboardUI();
-            }
-        }
-
-        function removeSpecialExpense(idx, isWizard) {
-            state.specialExpenses.splice(idx, 1);
-            saveState();
-            if(isWizard) renderWizard(); else openQuickPlanModal();
-            if (!document.getElementById('dashboardScreen').classList.contains('hidden')) {
-                updateDashboardUI();
-            }
-        }
-        // ------------------------------------------
 
         function applyPermissions() {
             const lbl = currentUserRole === 'owner' ? 'Plan Sahibi' : currentUserRole === 'full' ? 'Tam Yetki' : 'Sınırlı Yetki';
@@ -2456,6 +2419,7 @@
                     const d = new Date(eY, eM-1, eD);
                     d.setHours(0,0,0,0);
                     
+                    // Metin kıyaslaması yerine tam matematiksel tarih kıyası
                     if (eD === tD && eM === tM && eY === tY) {
                         spentToday += e.amount;
                         spentTodayInBudget += e.amount;
@@ -2541,20 +2505,22 @@
             const daysInCurrentMonth = getDaysInCurrentPeriod();
             
             const normalBills = state.bills.reduce((s, b) => s + (b.val||0), 0);
-            const loansTreatedAsBills = state.loans.filter(l => l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
-            const totalSpecials = (state.specialExpenses||[]).reduce((s, x) => s + (x.val||0), 0); // Özel harcamalar eklendi
             
+            const loansTreatedAsBills = state.loans.filter(l => l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
             const standardLoans = state.loans.filter(l => !l.excludeFromDebt && !l.excludeFromBudget).reduce((s, l) => s + (l.monthly || 0), 0);
 
             const totalFix = normalBills + loansTreatedAsBills;
             const totalInc = state.incomes.reduce((s, i) => s + (i.val||0), 0);
             
-            const totalMonthlyOutflow = totalFix + standardLoans + totalSpecials; // Çıkışlara dahil edildi
-            const grossNet = totalInc - totalFix - totalSpecials; // Gelirden düşüldü
+            const grossNet = totalInc - totalFix; 
+            const realNet = grossNet - standardLoans;
             
             let monthlySpend = (state.manualDailyLimit || 0) * daysInCurrentMonth;
+            
             const calcSavings = Math.max(0, grossNet - monthlySpend);
             
+            const totalMonthlyOutflow = totalFix + standardLoans;
+
             document.getElementById('sumSavings').innerText = `₺${Math.floor(calcSavings).toLocaleString()}`;
             document.getElementById('sumGiderTotalHealth').innerText = `₺${Math.floor(totalMonthlyOutflow).toLocaleString()}`;
             document.getElementById('netStatusVal').innerText = `${net>=0?'+':'-'}₺${Math.abs(Math.floor(net)).toLocaleString()}`;
@@ -2580,56 +2546,10 @@
             renderFamilyList();
             renderDetailedHealthLists();
             
-            // --- ÖZEL HARCAMALAR KISMI RENDER EDİLİYOR ---
-            const activeSpecials = state.specialExpenses || [];
-            const specSection = document.getElementById('specialExpensesSection');
-            
-            if (activeSpecials.length > 0) {
-                const specRows = activeSpecials.map(x => `
-                    <div class="flex justify-between items-center p-2.5 rounded-xl text-[10px] font-bold text-gray-600 bg-gray-50 border border-gray-100 shadow-sm mb-1">
-                        <span>${x.name}</span>
-                        <span class="font-black text-orange-600 text-xs">-₺${Math.floor(x.val).toLocaleString()}</span>
-                    </div>
-                `).join('');
-
-                const specAccordion = `
-                <div class="border border-orange-100 rounded-2xl overflow-hidden bg-orange-50/50 shadow-sm mb-4 mt-2">
-                    <div onclick="document.getElementById('specDetails').classList.toggle('open');" class="flex justify-between items-center p-3 cursor-pointer hover:bg-orange-100/50 transition-colors">
-                        <div class="flex items-center gap-2">
-                            <div class="w-6 h-6 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center"><i class="fas fa-gift text-xs"></i></div>
-                            <span class="text-[10px] font-black text-orange-900 uppercase tracking-wide">Bu Döneme Özel Ekstralar</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="font-black text-orange-900 text-sm">-₺${totalSpecials.toLocaleString()}</span>
-                            <i class="fas fa-chevron-down text-orange-400 text-xs"></i>
-                        </div>
-                    </div>
-                    <div id="specDetails" class="health-detail space-y-2 px-3 pb-3">
-                        ${specRows}
-                        <button onclick="openQuickPlanModal()" class="w-full py-2 text-[10px] font-bold text-orange-500 hover:text-orange-700 bg-white border border-dashed border-orange-200 rounded-xl transition-colors mt-2"><i class="fas fa-edit"></i> Planı Güncelle & Özel Harcama Ekle</button>
-                    </div>
-                </div>`;
-                specSection.innerHTML = specAccordion;
-                specSection.classList.remove('hidden');
-            } else {
-                const specAccordion = `
-                <div class="border border-orange-100 rounded-2xl overflow-hidden bg-orange-50/30 shadow-sm mb-4 mt-2">
-                    <div class="flex flex-col p-3">
-                        <div class="flex items-center gap-2 mb-2">
-                            <div class="w-6 h-6 bg-orange-100 text-orange-400 rounded-full flex items-center justify-center"><i class="fas fa-gift text-xs"></i></div>
-                            <span class="text-[10px] font-black text-orange-700 uppercase tracking-wide">Bu Döneme Özel Ekstralar</span>
-                        </div>
-                        <p class="text-[9px] text-gray-500 mb-2">Bu ay için tek seferlik özel bir gideriniz (Örn: Tatil, Eşya) varsa buradan ekleyebilirsiniz. Günlük harcama limitinizden düşülmeden direkt ana bütçeden ayrılır.</p>
-                        <button onclick="openQuickPlanModal()" class="w-full py-2 text-[10px] font-bold text-orange-500 hover:text-orange-600 bg-white border border-dashed border-orange-200 rounded-xl transition-colors"><i class="fas fa-plus"></i> Bu Döneme Özel Harcama Ekle</button>
-                    </div>
-                </div>`;
-                specSection.innerHTML = specAccordion;
-                specSection.classList.remove('hidden');
-            }
-            // ----------------------------------------------
-            
             updateExpenseDateLabel();
+            
             renderQuickCategories();
+
             checkMonthlyReport();
         }
         
@@ -3167,6 +3087,7 @@
             const d = new Date();
             d.setDate(d.getDate() - currentExpenseDateOffset);
             
+            // Cihaz dilinden bağımsız, garantili DD.MM.YYYY formatı
             const dd = String(d.getDate()).padStart(2, '0');
             const mm = String(d.getMonth() + 1).padStart(2, '0');
             const yyyy = d.getFullYear();
@@ -3601,6 +3522,7 @@
             let finalLabels = [];
             let finalData = [];
             
+            // Eğer 7'den fazla kategori varsa diğerlerini "Diğerleri" altında topla
             if (sortedKeys.length > 7) {
                 finalLabels = sortedKeys.slice(0, 7);
                 finalData = sortedData.slice(0, 7);
@@ -3631,10 +3553,10 @@
                         y: { beginAtZero: true },
                         x: { 
                             ticks: { 
-                                autoSkip: false, 
-                                maxRotation: 45, 
+                                autoSkip: false, // Gizlemeyi kapat
+                                maxRotation: 45, // 45 derece eğik yaz
                                 minRotation: 45,
-                                font: { size: 9 } 
+                                font: { size: 9 } // Mobilde sığması için fontu hafif küçült
                             } 
                         }
                     }, 
@@ -3659,6 +3581,7 @@
                 if (!cat || cat === 'Diğer') cat = 'Diğer / Özel';
                 
                 if (categoryName === 'Diğerleri (Toplu)') {
+                    // Eğer toplu diğerlerine tıklandıysa ilk 7 haricindekileri bul
                     const expenseMap = {};
                     window.lastFilteredExpenses.forEach(ex => {
                         let k = ex.category;
@@ -4922,9 +4845,3 @@ function closeWizardScreen() {
     </script>
 </body>
 </html>
-
-
-
-
-
-
